@@ -1,0 +1,5 @@
+---
+lookup_options:
+  "^opn::.*":
+    merge:
+      strategy: deep
