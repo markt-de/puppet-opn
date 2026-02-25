@@ -26,7 +26,10 @@
 
 ## Overview
 
-A Puppet module to manage [OPNsense](https://opnsense.org/) firewalls via the OPNsense REST API. It provides the following resource types for one or more OPNsense devices:
+A Puppet module to manage [OPNsense](https://opnsense.org/) firewalls via the OPNsense REST API. It is meant as a replacement for [puppet-opnsense](https://github.com/andreas-stuerz/puppet-opnsense).
+
+
+This module provides the following resource types for one or more OPNsense devices:
 
 | Type | Manages |
 |------|---------|
@@ -57,11 +60,11 @@ A Puppet module to manage [OPNsense](https://opnsense.org/) firewalls via the OP
 | `opn_zabbix_agent_userparameter` | Zabbix Agent UserParameter entries |
 | `opn_zabbix_proxy` | Zabbix Proxy settings (singleton per device) |
 
-No external tools are required. Communication with the OPNsense API is done natively using Ruby's built-in HTTP library.
-
 ## Requirements
 
 One or more OPNsense firewalls with API access enabled. API credentials can be created in OPNsense under **System → Access → Users → (User) → API keys**.
+
+No external tools are required. Communication with the OPNsense API is done natively using Ruby's built-in HTTP library.
 
 ## Usage
 
