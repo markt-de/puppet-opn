@@ -8,6 +8,7 @@ module PuppetX
     # are no-ops because the hash is cleared after the first run.
     module HaproxyReconfigure
       @devices_to_reconfigure = {}
+      @devices_with_errors = {}
 
       # Registers a device as having pending HAProxy changes.
       # Subsequent calls for the same device are ignored (client already stored).
@@ -18,12 +19,29 @@ module PuppetX
         @devices_to_reconfigure[device_name] ||= client
       end
 
+      # Registers a device as having a resource evaluation error.
+      # Used to suppress reconfigure when the HAProxy config may be inconsistent.
+      #
+      # @param device_name [String]
+      def self.mark_error(device_name)
+        @devices_with_errors[device_name] = true
+      end
+
       # Called once after ALL opn_haproxy_* resources are evaluated.
       # Runs configtest, then reconfigure for each device with pending changes.
-      # Clears the tracking hash so subsequent calls from other provider classes
+      # Skips devices where a resource evaluation error was recorded.
+      # Clears the tracking hashes so subsequent calls from other provider classes
       # are no-ops.
       def self.run
         @devices_to_reconfigure.each do |device_name, client|
+          if @devices_with_errors[device_name]
+            Puppet.err(
+              "opn_haproxy: skipping reconfigure for '#{device_name}' " \
+              "because one or more resources failed to evaluate",
+            )
+            next
+          end
+
           begin
             result      = client.get('haproxy/service/configtest')
             test_output = result.is_a?(Hash) ? result['result'].to_s : ''
@@ -58,6 +76,7 @@ module PuppetX
           end
         end
         @devices_to_reconfigure.clear
+        @devices_with_errors.clear
       end
     end
   end

@@ -111,4 +111,39 @@ Puppet::Type.newtype(:opn_haproxy_backend) do
     device = self[:device]
     ["/etc/puppet/opn/#{device}.yaml"]
   end
+
+  autorequire(:opn_haproxy_server) do
+    device = self[:device]
+    config = self[:config] || {}
+    config['linkedServers'].to_s.split(',').map(&:strip).reject(&:empty?)
+                           .map { |s| "#{s}@#{device}" }
+  end
+
+  autorequire(:opn_haproxy_action) do
+    device = self[:device]
+    config = self[:config] || {}
+    config['linkedActions'].to_s.split(',').map(&:strip).reject(&:empty?)
+                           .map { |s| "#{s}@#{device}" }
+  end
+
+  autorequire(:opn_haproxy_errorfile) do
+    device = self[:device]
+    config = self[:config] || {}
+    config['linkedErrorfiles'].to_s.split(',').map(&:strip).reject(&:empty?)
+                              .map { |s| "#{s}@#{device}" }
+  end
+
+  autorequire(:opn_haproxy_user) do
+    device = self[:device]
+    config = self[:config] || {}
+    config['basicAuthUsers'].to_s.split(',').map(&:strip).reject(&:empty?)
+                            .map { |s| "#{s}@#{device}" }
+  end
+
+  autorequire(:opn_haproxy_group) do
+    device = self[:device]
+    config = self[:config] || {}
+    config['basicAuthGroups'].to_s.split(',').map(&:strip).reject(&:empty?)
+                             .map { |s| "#{s}@#{device}" }
+  end
 end
