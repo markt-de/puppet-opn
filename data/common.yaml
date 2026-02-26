@@ -1,5 +1,6 @@
 ---
 opn::config_dir: '/etc/puppet/opn'
+opn::cron_jobs: {}
 opn::devices: {}
 opn::firewall_aliases: {}
 opn::firewall_categories: {}
@@ -22,8 +23,15 @@ opn::haproxy_mapfiles: {}
 opn::haproxy_resolvers: {}
 opn::haproxy_servers: {}
 opn::haproxy_users: {}
+opn::hasyncs: {}
 opn::owner: 'root'
 opn::plugins: {}
+opn::snapshots: {}
+opn::syslog_destinations: {}
+opn::trust_cas: {}
+opn::trust_certs: {}
+opn::trust_crls: {}
+opn::tunables: {}
 opn::users: {}
 opn::zabbix_agent_aliases: {}
 opn::zabbix_agent_userparameters: {}

@@ -8,6 +8,7 @@
     - [Basic usage](#basic-usage)
     - [Multiple devices](#multiple-devices)
     - [Resource identifiers](#resource-identifiers)
+    - [Managing cron jobs](#managing-cron-jobs)
     - [Managing plugins](#managing-plugins)
     - [Managing firewall aliases](#managing-firewall-aliases)
     - [Managing firewall categories](#managing-firewall-categories)
@@ -15,7 +16,14 @@
     - [Managing firewall rules](#managing-firewall-rules)
     - [Managing users](#managing-users)
     - [Managing groups](#managing-groups)
+    - [Managing HA sync](#managing-ha-sync)
     - [Managing HAProxy](#managing-haproxy)
+    - [Managing snapshots](#managing-snapshots)
+    - [Managing syslog destinations](#managing-syslog-destinations)
+    - [Managing trust CAs](#managing-trust-cas)
+    - [Managing trust certificates](#managing-trust-certificates)
+    - [Managing trust CRLs](#managing-trust-crls)
+    - [Managing tunables](#managing-tunables)
     - [Managing Zabbix Proxy](#managing-zabbix-proxy)
     - [Managing Zabbix Agent](#managing-zabbix-agent)
     - [Using types directly](#using-types-directly)
@@ -33,6 +41,7 @@ This module provides the following resource types for one or more OPNsense devic
 
 | Type | Manages |
 |------|---------|
+| `opn_cron` | Cron jobs |
 | `opn_firewall_alias` | Firewall aliases |
 | `opn_firewall_category` | Firewall categories |
 | `opn_firewall_group` | Firewall interface groups |
@@ -53,7 +62,14 @@ This module provides the following resource types for one or more OPNsense devic
 | `opn_haproxy_resolver` | HAProxy DNS resolvers |
 | `opn_haproxy_server` | HAProxy backend servers |
 | `opn_haproxy_user` | HAProxy user-list users |
+| `opn_hasync` | HA sync / CARP settings (singleton per device) |
 | `opn_plugin` | Firmware plugins / packages |
+| `opn_snapshot` | ZFS snapshots |
+| `opn_syslog` | Syslog remote destinations |
+| `opn_trust_ca` | Trust Certificate Authorities |
+| `opn_trust_cert` | Trust certificates |
+| `opn_trust_crl` | Trust Certificate Revocation Lists |
+| `opn_tunable` | System tunables (sysctl) |
 | `opn_user` | Local users |
 | `opn_zabbix_agent` | Zabbix Agent settings (singleton per device) |
 | `opn_zabbix_agent_alias` | Zabbix Agent Alias entries |
@@ -150,9 +166,32 @@ opn_haproxy_server { 'web-primary@opnsense01.example.com':
 }
 ```
 
-The same pattern applies to all list-based types: `opn_firewall_alias`, `opn_firewall_category`, `opn_firewall_group`, `opn_firewall_rule`, `opn_user`, `opn_group`, all `opn_haproxy_*` types, `opn_zabbix_agent_userparameter`, and `opn_zabbix_agent_alias`.
+The same pattern applies to all list-based types: `opn_cron`, `opn_firewall_alias`, `opn_firewall_category`, `opn_firewall_group`, `opn_firewall_rule`, `opn_user`, `opn_group`, all `opn_haproxy_*` types, `opn_snapshot`, `opn_syslog`, `opn_trust_ca`, `opn_trust_cert`, `opn_trust_crl`, `opn_tunable`, `opn_zabbix_agent_userparameter`, and `opn_zabbix_agent_alias`.
 
-**Singleton resources** (`opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
+**Singleton resources** (`opn_hasync`, `opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
+
+### Managing cron jobs
+
+Cron jobs can be managed via the `cron_jobs` parameter or directly via the `opn_cron` type. The job **description** is used as the resource identifier and must be unique per device. After any change, Puppet calls `cron/service/reconfigure` once per device.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  cron_jobs => {
+    'Reload HAProxy' => {
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'command' => 'haproxy reload',
+      'minutes' => '0',
+      'hours'   => '3',
+      'days'    => '*',
+      'months'  => '*',
+      'weekdays'=> '*',
+      'enabled' => '1',
+    },
+  },
+}
+```
 
 ### Managing plugins
 
@@ -304,6 +343,28 @@ class { 'opn':
 }
 ```
 
+### Managing HA sync
+
+HA sync (XMLRPC/CARP) settings are managed as a singleton resource per device via the `hasyncs` parameter or directly via the `opn_hasync` type. The `hasyncs` hash is keyed by **device name**. After any change, Puppet calls `core/hasync/reconfigure` once per device.
+
+The `password` field is excluded from idempotency checks because OPNsense does not return it in plaintext.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  hasyncs => {
+    'opnsense01.example.com' => {
+      'ensure'          => 'present',
+      'pfsyncenabled'   => '1',
+      'pfsyncinterface' => 'lan',
+      'synchronizetoip' => '10.0.0.2',
+      'username'        => 'root',
+      'password'        => 'secret',
+    },
+  },
+}
+```
+
 ### Managing HAProxy
 
 HAProxy resources are managed via the `haproxy_*` parameters of the `opn` class or directly via the corresponding `opn_haproxy_*` types.
@@ -346,6 +407,129 @@ class { 'opn':
       'mode'             => 'http',
       'description'      => 'HTTP listener',
       'enabled'          => '1',
+    },
+  },
+}
+```
+
+### Managing snapshots
+
+ZFS snapshots can be managed via the `snapshots` parameter or directly via the `opn_snapshot` type. The snapshot **name** is used as the resource identifier. The `active` property controls whether a snapshot is the active boot target.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  snapshots => {
+    'pre-upgrade' => {
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'active'  => true,
+      'note'    => 'Snapshot before upgrade',
+    },
+  },
+}
+```
+
+### Managing syslog destinations
+
+Syslog remote destinations can be managed via the `syslog_destinations` parameter or directly via the `opn_syslog` type. The destination **description** is used as the resource identifier. After any change, Puppet calls `syslog/service/reconfigure` once per device.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  syslog_destinations => {
+    'Central syslog' => {
+      'devices'   => ['opnsense01.example.com'],
+      'ensure'    => 'present',
+      'transport' => 'udp4',
+      'hostname'  => 'syslog.example.com',
+      'port'      => '514',
+      'enabled'   => '1',
+    },
+  },
+}
+```
+
+### Managing trust CAs
+
+Trust Certificate Authorities can be managed via the `trust_cas` parameter or directly via the `opn_trust_ca` type. The CA **description** (`descr`) is used as the resource identifier.
+
+Many fields (action, key_type, digest, etc.) are only relevant during initial creation and are ignored during idempotency checks.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  trust_cas => {
+    'Internal CA' => {
+      'devices'    => ['opnsense01.example.com'],
+      'ensure'     => 'present',
+      'action'     => 'internal',
+      'key_type'   => 'RSA',
+      'digest'     => 'SHA256',
+      'lifetime'   => '3650',
+      'country'    => 'DE',
+      'commonname' => 'Internal CA',
+    },
+  },
+}
+```
+
+### Managing trust certificates
+
+Trust certificates can be managed via the `trust_certs` parameter or directly via the `opn_trust_cert` type. The certificate **description** (`descr`) is used as the resource identifier. Like CAs, volatile fields are only used during creation.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  trust_certs => {
+    'web.example.com' => {
+      'devices'    => ['opnsense01.example.com'],
+      'ensure'     => 'present',
+      'action'     => 'internal',
+      'caref'      => '<ca-uuid>',
+      'key_type'   => 'RSA',
+      'digest'     => 'SHA256',
+      'lifetime'   => '365',
+      'commonname' => 'web.example.com',
+    },
+  },
+}
+```
+
+### Managing trust CRLs
+
+Certificate Revocation Lists can be managed via the `trust_crls` parameter or directly via the `opn_trust_crl` type. The hash key is the **CA description** that the CRL belongs to. The provider resolves the CA description to the internal `caref` identifier automatically.
+
+Each CA can have at most one CRL. The `set` endpoint creates or updates the CRL.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  trust_crls => {
+    'Internal CA' => {
+      'devices'   => ['opnsense01.example.com'],
+      'ensure'    => 'present',
+      'descr'     => 'CRL for Internal CA',
+      'lifetime'  => '9999',
+      'crlmethod' => 'internal',
+    },
+  },
+}
+```
+
+### Managing tunables
+
+System tunables (sysctl variables) can be managed via the `tunables` parameter or directly via the `opn_tunable` type. The **tunable name** (e.g. `kern.maxproc`) is used as the resource identifier. After any change, Puppet calls `core/tunables/reconfigure` once per device.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  tunables => {
+    'kern.maxproc' => {
+      'devices'     => ['opnsense01.example.com'],
+      'ensure'      => 'present',
+      'value'       => '4096',
+      'description' => 'Maximum number of processes',
     },
   },
 }
@@ -457,6 +641,19 @@ class { 'opn':
 All types can also be used directly without the `opn` wrapper class, provided the credential file already exists at `$config_dir/<device_name>.yaml`.
 
 ```puppet
+opn_cron { 'Daily firmware check@opnsense01.example.com':
+  ensure => present,
+  config => {
+    'command'  => 'firmware auto-update',
+    'minutes'  => '0',
+    'hours'    => '3',
+    'days'     => '*',
+    'months'   => '*',
+    'weekdays' => '*',
+    'enabled'  => '1',
+  },
+}
+
 opn_plugin { 'os-haproxy@opnsense01.example.com':
   ensure => present,
 }
@@ -535,6 +732,76 @@ opn_haproxy_frontend { 'http_in@opnsense01.example.com':
     'mode'        => 'http',
     'description' => 'HTTP listener',
     'enabled'     => '1',
+  },
+}
+
+opn_hasync { 'opnsense01.example.com':
+  ensure => present,
+  config => {
+    'pfsyncenabled'   => '1',
+    'pfsyncinterface' => 'lan',
+    'synchronizetoip' => '10.0.0.2',
+    'username'        => 'root',
+    'password'        => 'secret',
+  },
+}
+
+opn_snapshot { 'pre-upgrade@opnsense01.example.com':
+  ensure => present,
+  active => true,
+  config => {
+    'note' => 'Snapshot before upgrade',
+  },
+}
+
+opn_syslog { 'Central syslog@opnsense01.example.com':
+  ensure => present,
+  config => {
+    'transport' => 'udp4',
+    'hostname'  => 'syslog.example.com',
+    'port'      => '514',
+    'enabled'   => '1',
+  },
+}
+
+opn_trust_ca { 'Internal CA@opnsense01.example.com':
+  ensure => present,
+  config => {
+    'action'     => 'internal',
+    'key_type'   => 'RSA',
+    'digest'     => 'SHA256',
+    'lifetime'   => '3650',
+    'country'    => 'DE',
+    'commonname' => 'Internal CA',
+  },
+}
+
+opn_trust_cert { 'web.example.com@opnsense01.example.com':
+  ensure => present,
+  config => {
+    'action'     => 'internal',
+    'caref'      => '<ca-uuid>',
+    'key_type'   => 'RSA',
+    'digest'     => 'SHA256',
+    'lifetime'   => '365',
+    'commonname' => 'web.example.com',
+  },
+}
+
+opn_trust_crl { 'Internal CA@opnsense01.example.com':
+  ensure => present,
+  config => {
+    'descr'     => 'CRL for Internal CA',
+    'lifetime'  => '9999',
+    'crlmethod' => 'internal',
+  },
+}
+
+opn_tunable { 'kern.maxproc@opnsense01.example.com':
+  ensure => present,
+  config => {
+    'value'       => '4096',
+    'description' => 'Maximum number of processes',
   },
 }
 

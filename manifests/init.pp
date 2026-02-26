@@ -12,6 +12,14 @@
 #   Directory where per-device YAML credential files are stored.
 #   Default values per OS are defined in the module's Hiera data.
 #
+# @param cron_jobs
+#   Hash of cron jobs to manage across devices.
+#   Each key is the cron job description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_cron.
+#
 # @param devices
 #   Hash of OPNsense devices to manage. Each key is the device name used as
 #   suffix in opn_* resource titles (format: "resource@device_name").
@@ -186,6 +194,13 @@
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #     - All other keys are passed as the 'config' hash to opn_haproxy_user.
 #
+# @param hasyncs
+#   Hash of HA sync configurations, one per device.
+#   Each key is the device name (not a "name@device" title).
+#   Each value is a hash with:
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_hasync.
+#
 # @param owner
 #   Owner of the config directory and credential files.
 #
@@ -196,6 +211,55 @@
 #     - devices [Array] List of device names to manage the plugin on.
 #                       Defaults to all devices in $devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
+#
+# @param snapshots
+#   Hash of ZFS snapshots to manage across devices.
+#   Each key is the snapshot name.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - active  [Boolean] Whether snapshot is the active boot target.
+#     - All other keys are passed as the 'config' hash to opn_snapshot.
+#
+# @param syslog_destinations
+#   Hash of syslog destinations to manage across devices.
+#   Each key is the syslog destination description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_syslog.
+#
+# @param trust_cas
+#   Hash of trust CAs to manage across devices.
+#   Each key is the CA description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_trust_ca.
+#
+# @param trust_certs
+#   Hash of trust certificates to manage across devices.
+#   Each key is the certificate description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_trust_cert.
+#
+# @param trust_crls
+#   Hash of trust CRLs to manage across devices.
+#   Each key is the CA description the CRL belongs to.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_trust_crl.
+#
+# @param tunables
+#   Hash of system tunables to manage across devices.
+#   Each key is the sysctl variable name (e.g. 'kern.maxproc').
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_tunable.
 #
 # @param users
 #   Hash of local users to manage across devices.
@@ -265,6 +329,7 @@
 #
 class opn (
   Stdlib::Absolutepath $config_dir,
+  Hash                 $cron_jobs,
   Hash                 $devices,
   Hash                 $firewall_aliases,
   Hash                 $firewall_categories,
@@ -287,8 +352,15 @@ class opn (
   Hash                 $haproxy_resolvers,
   Hash                 $haproxy_servers,
   Hash                 $haproxy_users,
+  Hash                 $hasyncs,
   String               $owner,
   Hash                 $plugins,
+  Hash                 $snapshots,
+  Hash                 $syslog_destinations,
+  Hash                 $trust_cas,
+  Hash                 $trust_certs,
+  Hash                 $trust_crls,
+  Hash                 $tunables,
   Hash                 $users,
   Hash                 $zabbix_agent_aliases,
   Hash                 $zabbix_agent_userparameters,
@@ -325,6 +397,27 @@ class opn (
       content   => stdlib::to_yaml($device_config),
       show_diff => false,
       require   => File[$config_dir],
+    }
+  }
+
+  # Manage cron jobs across devices
+  $cron_jobs.each |String $job_desc, Hash $job_options| {
+    $job_devices = 'devices' in $job_options ? {
+      true    => $job_options['devices'],
+      default => keys($devices),
+    }
+    $job_ensure = 'ensure' in $job_options ? {
+      true    => $job_options['ensure'],
+      default => 'present',
+    }
+    $job_config = $job_options - ['devices', 'ensure']
+
+    $job_devices.each |String $device_name| {
+      opn_cron { "${job_desc}@${device_name}":
+        ensure  => $job_ensure,
+        config  => $job_config,
+        require => File["${config_dir}/${device_name}.yaml"],
+      }
     }
   }
 
@@ -748,6 +841,21 @@ class opn (
     }
   }
 
+  # Manage HA sync settings per device (singleton per device)
+  $hasyncs.each |String $device_name, Hash $hasync_options| {
+    $hasync_ensure = 'ensure' in $hasync_options ? {
+      true    => $hasync_options['ensure'],
+      default => 'present',
+    }
+    $hasync_config = $hasync_options - ['ensure']
+
+    opn_hasync { $device_name:
+      ensure  => $hasync_ensure,
+      config  => $hasync_config,
+      require => File["${config_dir}/${device_name}.yaml"],
+    }
+  }
+
   # Manage plugins across devices
   $plugins.each |String $plugin_name, Hash $plugin_options| {
     $plugin_devices = 'devices' in $plugin_options ? {
@@ -762,6 +870,137 @@ class opn (
     $plugin_devices.each |String $device_name| {
       opn_plugin { "${plugin_name}@${device_name}":
         ensure  => $plugin_ensure,
+        require => File["${config_dir}/${device_name}.yaml"],
+      }
+    }
+  }
+
+  # Manage ZFS snapshots across devices
+  $snapshots.each |String $snap_name, Hash $snap_options| {
+    $snap_devices = 'devices' in $snap_options ? {
+      true    => $snap_options['devices'],
+      default => keys($devices),
+    }
+    $snap_ensure = 'ensure' in $snap_options ? {
+      true    => $snap_options['ensure'],
+      default => 'present',
+    }
+    $snap_active = 'active' in $snap_options ? {
+      true    => $snap_options['active'],
+      default => undef,
+    }
+    $snap_config = $snap_options - ['devices', 'ensure', 'active']
+
+    $snap_devices.each |String $device_name| {
+      opn_snapshot { "${snap_name}@${device_name}":
+        ensure  => $snap_ensure,
+        active  => $snap_active,
+        config  => $snap_config,
+        require => File["${config_dir}/${device_name}.yaml"],
+      }
+    }
+  }
+
+  # Manage syslog destinations across devices
+  $syslog_destinations.each |String $dest_desc, Hash $dest_options| {
+    $dest_devices = 'devices' in $dest_options ? {
+      true    => $dest_options['devices'],
+      default => keys($devices),
+    }
+    $dest_ensure = 'ensure' in $dest_options ? {
+      true    => $dest_options['ensure'],
+      default => 'present',
+    }
+    $dest_config = $dest_options - ['devices', 'ensure']
+
+    $dest_devices.each |String $device_name| {
+      opn_syslog { "${dest_desc}@${device_name}":
+        ensure  => $dest_ensure,
+        config  => $dest_config,
+        require => File["${config_dir}/${device_name}.yaml"],
+      }
+    }
+  }
+
+  # Manage trust CAs across devices
+  $trust_cas.each |String $ca_descr, Hash $ca_options| {
+    $ca_devices = 'devices' in $ca_options ? {
+      true    => $ca_options['devices'],
+      default => keys($devices),
+    }
+    $ca_ensure = 'ensure' in $ca_options ? {
+      true    => $ca_options['ensure'],
+      default => 'present',
+    }
+    $ca_config = $ca_options - ['devices', 'ensure']
+
+    $ca_devices.each |String $device_name| {
+      opn_trust_ca { "${ca_descr}@${device_name}":
+        ensure  => $ca_ensure,
+        config  => $ca_config,
+        require => File["${config_dir}/${device_name}.yaml"],
+      }
+    }
+  }
+
+  # Manage trust certificates across devices
+  $trust_certs.each |String $cert_descr, Hash $cert_options| {
+    $cert_devices = 'devices' in $cert_options ? {
+      true    => $cert_options['devices'],
+      default => keys($devices),
+    }
+    $cert_ensure = 'ensure' in $cert_options ? {
+      true    => $cert_options['ensure'],
+      default => 'present',
+    }
+    $cert_config = $cert_options - ['devices', 'ensure']
+
+    $cert_devices.each |String $device_name| {
+      opn_trust_cert { "${cert_descr}@${device_name}":
+        ensure  => $cert_ensure,
+        config  => $cert_config,
+        require => File["${config_dir}/${device_name}.yaml"],
+      }
+    }
+  }
+
+  # Manage trust CRLs across devices
+  $trust_crls.each |String $crl_ca_descr, Hash $crl_options| {
+    $crl_devices = 'devices' in $crl_options ? {
+      true    => $crl_options['devices'],
+      default => keys($devices),
+    }
+    $crl_ensure = 'ensure' in $crl_options ? {
+      true    => $crl_options['ensure'],
+      default => 'present',
+    }
+    $crl_config = $crl_options - ['devices', 'ensure']
+
+    $crl_devices.each |String $device_name| {
+      opn_trust_crl { "${crl_ca_descr}@${device_name}":
+        ensure  => $crl_ensure,
+        config  => $crl_config,
+        require => File["${config_dir}/${device_name}.yaml"],
+      }
+    }
+  }
+
+  # Manage system tunables across devices
+  $tunables.each |String $tunable_key, Hash $tunable_options| {
+    $tunable_devices = 'devices' in $tunable_options ? {
+      true    => $tunable_options['devices'],
+      default => keys($devices),
+    }
+    $tunable_ensure = 'ensure' in $tunable_options ? {
+      true    => $tunable_options['ensure'],
+      default => 'present',
+    }
+    $tunable_config = $tunable_options - ['devices', 'ensure']
+
+    $tunable_devices.each |String $device_name| {
+      opn_tunable { "${tunable_key}@${device_name}":
+        ensure  => $tunable_ensure,
+        config  => $tunable_config,
         require => File["${config_dir}/${device_name}.yaml"],
       }
     }
