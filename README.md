@@ -18,6 +18,7 @@
     - [Managing groups](#managing-groups)
     - [Managing HA sync](#managing-ha-sync)
     - [Managing HAProxy](#managing-haproxy)
+    - [Managing HAProxy settings](#managing-haproxy-settings)
     - [Managing snapshots](#managing-snapshots)
     - [Managing syslog destinations](#managing-syslog-destinations)
     - [Managing trust CAs](#managing-trust-cas)
@@ -61,6 +62,7 @@ This module provides the following resource types for one or more OPNsense devic
 | `opn_haproxy_mapfile` | HAProxy map files |
 | `opn_haproxy_resolver` | HAProxy DNS resolvers |
 | `opn_haproxy_server` | HAProxy backend servers |
+| `opn_haproxy_settings` | HAProxy global settings (singleton per device) |
 | `opn_haproxy_user` | HAProxy user-list users |
 | `opn_hasync` | HA sync / CARP settings (singleton per device) |
 | `opn_plugin` | Firmware plugins / packages |
@@ -168,7 +170,7 @@ opn_haproxy_server { 'web-primary@opnsense01.example.com':
 
 The same pattern applies to all list-based types: `opn_cron`, `opn_firewall_alias`, `opn_firewall_category`, `opn_firewall_group`, `opn_firewall_rule`, `opn_user`, `opn_group`, all `opn_haproxy_*` types, `opn_snapshot`, `opn_syslog`, `opn_trust_ca`, `opn_trust_cert`, `opn_trust_crl`, `opn_tunable`, `opn_zabbix_agent_userparameter`, and `opn_zabbix_agent_alias`.
 
-**Singleton resources** (`opn_hasync`, `opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
+**Singleton resources** (`opn_haproxy_settings`, `opn_hasync`, `opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
 
 ### Managing cron jobs
 
@@ -188,6 +190,18 @@ class { 'opn':
       'months'  => '*',
       'weekdays'=> '*',
       'enabled' => '1',
+    },
+    'HAProxy: sync certificates' => {
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'command' => 'haproxy cert_sync_bulk',
+      'minutes' => '0',
+      'hours'   => '1',
+      'days'    => '*',
+      'months'  => '*',
+      'weekdays'=> '*',
+      'enabled' => '1',
+      'origin'  => 'HAProxy',
     },
   },
 }
@@ -371,6 +385,8 @@ HAProxy resources are managed via the `haproxy_*` parameters of the `opn` class 
 
 After any HAProxy change (create, update, or delete), Puppet runs `haproxy/service/configtest` once per device. If the config test reports an **ALERT**, the reconfigure step is skipped and Puppet logs an error. A **WARNING** is logged but reconfigure proceeds. The actual `haproxy/service/reconfigure` call is made at most once per device per Puppet run, regardless of how many HAProxy resources changed.
 
+HAProxy frontend and backend types support automatic resolution of trust certificate, CA, and CRL references. Instead of using internal `refid` values, you can specify certificate/CA descriptions directly (e.g. `'ssl_certificates' => 'My Web Cert,My API Cert'`). Cron job references in `opn_haproxy_settings` are resolved by description.
+
 ```puppet
 class { 'opn':
   devices => {
@@ -407,6 +423,35 @@ class { 'opn':
       'mode'             => 'http',
       'description'      => 'HTTP listener',
       'enabled'          => '1',
+    },
+  },
+}
+```
+
+### Managing HAProxy settings
+
+HAProxy global settings (`general` and `maintenance` sections) are managed via the `haproxy_settings` parameter or directly via the `opn_haproxy_settings` type. This is a singleton resource keyed by device name.
+
+User/group references in `general.stats` are resolved by name. Cron job references in `maintenance.cronjobs` are resolved by description.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  haproxy_settings => {
+    'opnsense01.example.com' => {
+      'ensure' => 'present',
+      'general' => {
+        'enabled' => '1',
+        'stats'   => {
+          'enabled' => '0',
+        },
+      },
+      'maintenance' => {
+        'cronjobs' => {
+          # Add a reference to an existing cron job.
+          'syncCertsCron' => 'HAProxy: sync certificates',
+        },
+      },
     },
   },
 }
@@ -732,6 +777,15 @@ opn_haproxy_frontend { 'http_in@opnsense01.example.com':
     'mode'        => 'http',
     'description' => 'HTTP listener',
     'enabled'     => '1',
+  },
+}
+
+opn_haproxy_settings { 'opnsense01.example.com':
+  ensure => present,
+  config => {
+    'general' => {
+      'enabled' => '1',
+    },
   },
 }
 

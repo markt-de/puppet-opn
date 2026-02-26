@@ -13,12 +13,21 @@ Puppet::Type.type(:opn_haproxy_frontend).provide(:opnsense_api) do
 
   def self.relation_fields
     {
-      'defaultBackend'         => { endpoint: 'haproxy/settings/search_backends',   multiple: false },
-      'linkedActions'          => { endpoint: 'haproxy/settings/search_actions',    multiple: true  },
-      'linkedErrorfiles'       => { endpoint: 'haproxy/settings/search_errorfiles', multiple: true  },
-      'basicAuthUsers'         => { endpoint: 'haproxy/settings/search_users',      multiple: true  },
-      'basicAuthGroups'        => { endpoint: 'haproxy/settings/search_groups',     multiple: true  },
-      'linkedCpuAffinityRules' => { endpoint: 'haproxy/settings/search_cpus',       multiple: true  },
+      'defaultBackend'         => { endpoint: 'haproxy/settings/search_backends',      multiple: false },
+      'linkedActions'          => { endpoint: 'haproxy/settings/search_actions',       multiple: true  },
+      'linkedErrorfiles'       => { endpoint: 'haproxy/settings/search_errorfiles',    multiple: true  },
+      'basicAuthUsers'         => { endpoint: 'haproxy/settings/search_users',         multiple: true  },
+      'basicAuthGroups'        => { endpoint: 'haproxy/settings/search_groups',        multiple: true  },
+      'linkedCpuAffinityRules' => { endpoint: 'haproxy/settings/search_cpus',          multiple: true  },
+      'linkedServers'          => { endpoint: 'haproxy/settings/search_servers',       multiple: true  },
+      'linkedFcgi'             => { endpoint: 'haproxy/settings/search_fcgis',         multiple: true  },
+      'linkedResolver'         => { endpoint: 'haproxy/settings/searchresolvers',      multiple: false },
+      'healthCheck'            => { endpoint: 'haproxy/settings/search_healthchecks',  multiple: false },
+      'linkedMailer'           => { endpoint: 'haproxy/settings/searchmailers',        multiple: false },
+      'ssl_certificates'       => { endpoint: 'trust/cert/search', multiple: true,  id_field: 'refid', name_field: 'descr' },
+      'ssl_default_certificate' => { endpoint: 'trust/cert/search', multiple: false, id_field: 'refid', name_field: 'descr' },
+      'ssl_clientAuthCAs'      => { endpoint: 'trust/ca/search',   multiple: true,  id_field: 'refid', name_field: 'descr' },
+      'ssl_clientAuthCRLs'     => { endpoint: 'trust/crl/search',  multiple: true,  id_field: 'refid', name_field: 'crl_descr', method: :get },
     }.freeze
   end
 

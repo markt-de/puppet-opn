@@ -186,6 +186,13 @@
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #     - All other keys are passed as the 'config' hash to opn_haproxy_server.
 #
+# @param haproxy_settings
+#   Hash of HAProxy global settings, one per device.
+#   Each key is the device name (not a "name@device" title).
+#   Each value is a hash with:
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_haproxy_settings.
+#
 # @param haproxy_users
 #   Hash of HAProxy user-list users to manage across devices.
 #   Each key is the user name.
@@ -351,6 +358,7 @@ class opn (
   Hash                 $haproxy_mapfiles,
   Hash                 $haproxy_resolvers,
   Hash                 $haproxy_servers,
+  Hash                 $haproxy_settings,
   Hash                 $haproxy_users,
   Hash                 $hasyncs,
   String               $owner,
@@ -817,6 +825,21 @@ class opn (
         config  => $haproxy_server_config,
         require => File["${config_dir}/${device_name}.yaml"],
       }
+    }
+  }
+
+  # Manage HAProxy global settings per device (singleton per device)
+  $haproxy_settings.each |String $device_name, Hash $settings_options| {
+    $haproxy_settings_ensure = 'ensure' in $settings_options ? {
+      true    => $settings_options['ensure'],
+      default => 'present',
+    }
+    $haproxy_settings_config = $settings_options - ['ensure']
+
+    opn_haproxy_settings { $device_name:
+      ensure  => $haproxy_settings_ensure,
+      config  => $haproxy_settings_config,
+      require => File["${config_dir}/${device_name}.yaml"],
     }
   }
 

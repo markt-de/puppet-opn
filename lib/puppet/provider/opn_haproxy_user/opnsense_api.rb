@@ -13,8 +13,7 @@ Puppet::Type.type(:opn_haproxy_user).provide(:opnsense_api) do
 
   def self.relation_fields
     {
-      'allowedUsers'  => { endpoint: 'haproxy/settings/search_users',  multiple: true },
-      'allowedGroups' => { endpoint: 'haproxy/settings/search_groups', multiple: true },
+      'linkedActions' => { endpoint: 'haproxy/settings/search_actions', multiple: true },
     }.freeze
   end
 

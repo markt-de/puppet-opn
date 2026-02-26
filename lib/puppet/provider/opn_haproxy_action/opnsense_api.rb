@@ -13,9 +13,14 @@ Puppet::Type.type(:opn_haproxy_action).provide(:opnsense_api) do
 
   def self.relation_fields
     {
-      'allowedUsers'  => { endpoint: 'haproxy/settings/search_users',    multiple: true  },
-      'allowedGroups' => { endpoint: 'haproxy/settings/search_groups',   multiple: true  },
-      'use_backend'   => { endpoint: 'haproxy/settings/search_backends', multiple: false },
+      'linkedAcls'                   => { endpoint: 'haproxy/settings/search_acls',     multiple: true  },
+      'use_backend'                  => { endpoint: 'haproxy/settings/search_backends',  multiple: false },
+      'use_server'                   => { endpoint: 'haproxy/settings/search_servers',   multiple: false },
+      'mapfile'                      => { endpoint: 'haproxy/settings/search_mapfiles',  multiple: false },
+      'map_data_use_backend_file'    => { endpoint: 'haproxy/settings/search_mapfiles',  multiple: false },
+      'map_data_use_backend_default' => { endpoint: 'haproxy/settings/search_backends',  multiple: false },
+      'map_use_backend_file'         => { endpoint: 'haproxy/settings/search_mapfiles',  multiple: false },
+      'map_use_backend_default'      => { endpoint: 'haproxy/settings/search_backends',  multiple: false },
     }.freeze
   end
 

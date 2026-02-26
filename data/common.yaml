@@ -22,6 +22,7 @@ opn::haproxy_mailers: {}
 opn::haproxy_mapfiles: {}
 opn::haproxy_resolvers: {}
 opn::haproxy_servers: {}
+opn::haproxy_settings: {}
 opn::haproxy_users: {}
 opn::hasyncs: {}
 opn::owner: 'root'
