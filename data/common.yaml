@@ -1,12 +1,14 @@
 ---
-opn::config_dir: '/etc/puppet/opn'
+opn::config::config_dir: '/etc/puppet/opn'
+opn::config::devices: {}
+opn::config::group: 'root'
+opn::config::owner: 'root'
 opn::cron_jobs: {}
 opn::devices: {}
 opn::firewall_aliases: {}
 opn::firewall_categories: {}
 opn::firewall_groups: {}
 opn::firewall_rules: {}
-opn::group: 'root'
 opn::groups: {}
 opn::haproxy_acls: {}
 opn::haproxy_actions: {}
@@ -25,7 +27,6 @@ opn::haproxy_servers: {}
 opn::haproxy_settings: {}
 opn::haproxy_users: {}
 opn::hasyncs: {}
-opn::owner: 'root'
 opn::plugins: {}
 opn::snapshots: {}
 opn::syslog_destinations: {}
