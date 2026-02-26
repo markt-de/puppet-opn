@@ -3,6 +3,7 @@
 #### Table of Contents
 
 1. [Overview](#overview)
+1. [Design](#design)
 1. [Requirements](#requirements)
 1. [Usage](#usage)
     - [Basic usage](#basic-usage)
@@ -78,11 +79,19 @@ This module provides the following resource types for one or more OPNsense devic
 | `opn_zabbix_agent_userparameter` | Zabbix Agent UserParameter entries |
 | `opn_zabbix_proxy` | Zabbix Proxy settings (singleton per device) |
 
+## Design
+
+- No external tools required — only Ruby's built-in HTTP library
+- Simple, uniform provider implementation — low maintenance overhead
+- Validation delegated to the OPNsense API — no duplication of API logic in providers
+- Integrated UUID resolver for ModelRelationField and CertificateField references
+- Automatic reload/reconfigure after configuration changes (once per device per run)
+- Config passthrough — the `config` hash is sent to the API as-is, new API fields work without code changes
+- Custom fact (`opnsense`) exposes version and installed plugins on OPNsense hosts
+
 ## Requirements
 
 One or more OPNsense firewalls with API access enabled. API credentials can be created in OPNsense under **System → Access → Users → (User) → API keys**.
-
-No external tools are required. Communication with the OPNsense API is done natively using Ruby's built-in HTTP library.
 
 ## Usage
 
