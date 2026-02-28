@@ -25,20 +25,18 @@ Puppet::Type.type(:opn_plugin).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client    = api_client(device_name)
-        pkg_names = fetch_installed_plugins(client, device_name)
+      client    = api_client(device_name)
+      pkg_names = fetch_installed_plugins(client, device_name)
 
-        pkg_names.each do |pkg_name|
-          instances << new(
-            ensure: :present,
-            name:   "#{pkg_name}@#{device_name}",
-            device: device_name,
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning("opn_plugin: failed to fetch plugins from '#{device_name}': #{e.message}")
+      pkg_names.each do |pkg_name|
+        instances << new(
+          ensure: :present,
+          name:   "#{pkg_name}@#{device_name}",
+          device: device_name,
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.warning("opn_plugin: failed to fetch plugins from '#{device_name}': #{e.message}")
     end
 
     instances

@@ -10,8 +10,8 @@ Puppet::Type.type(:opn_firewall_rule).provide(:opnsense_api) do
   # Populated by create/destroy/flush; consumed by post_resource_eval.
   @devices_to_reconfigure = {}
 
-  def self.devices_to_reconfigure
-    @devices_to_reconfigure
+  class << self
+    attr_reader :devices_to_reconfigure
   end
 
   # Called by Puppet once after ALL opn_firewall_rule resources have been
@@ -19,21 +19,19 @@ Puppet::Type.type(:opn_firewall_rule).provide(:opnsense_api) do
   # device that had at least one rule change, then clears the tracking hash.
   def self.post_resource_eval
     @devices_to_reconfigure.each do |device_name, client|
-      begin
-        result = client.post('firewall/filter/apply', {})
-        # Guard against non-Hash responses (e.g. JSON null → nil).
-        # Strip whitespace and downcase because OPNsense returns "OK\n\n".
-        status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
-        if status == 'ok'
-          Puppet.notice("opn_firewall_rule: apply on '#{device_name}' completed")
-        else
-          Puppet.warning(
-            "opn_firewall_rule: apply on '#{device_name}' returned unexpected status: #{result.inspect}",
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.err("opn_firewall_rule: apply on '#{device_name}' failed: #{e.message}")
+      result = client.post('firewall/filter/apply', {})
+      # Guard against non-Hash responses (e.g. JSON null → nil).
+      # Strip whitespace and downcase because OPNsense returns "OK\n\n".
+      status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
+      if status == 'ok'
+        Puppet.notice("opn_firewall_rule: apply on '#{device_name}' completed")
+      else
+        Puppet.warning(
+          "opn_firewall_rule: apply on '#{device_name}' returned unexpected status: #{result.inspect}",
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.err("opn_firewall_rule: apply on '#{device_name}' failed: #{e.message}")
     end
     @devices_to_reconfigure.clear
   end
@@ -53,31 +51,29 @@ Puppet::Type.type(:opn_firewall_rule).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.post('firewall/filter/search_rule', {})
-        rows     = response['rows'] || []
+      client   = api_client(device_name)
+      response = client.post('firewall/filter/search_rule', {})
+      rows     = response['rows'] || []
 
-        rows.each do |rule_data|
-          description = rule_data['description']
-          next if description.nil? || description.empty?
+      rows.each do |rule_data|
+        description = rule_data['description']
+        next if description.nil? || description.empty?
 
-          resource_name = "#{description}@#{device_name}"
-          config = rule_data.reject { |k, _| k == 'uuid' }
+        resource_name = "#{description}@#{device_name}"
+        config = rule_data.reject { |k, _| k == 'uuid' }
 
-          instances << new(
-            ensure: :present,
-            name:   resource_name,
-            device: device_name,
-            uuid:   rule_data['uuid'],
-            config: config,
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning(
-          "opn_firewall_rule: failed to fetch rules from '#{device_name}': #{e.message}",
+        instances << new(
+          ensure: :present,
+          name:   resource_name,
+          device: device_name,
+          uuid:   rule_data['uuid'],
+          config: config,
         )
       end
+    rescue Puppet::Error => e
+      Puppet.warning(
+        "opn_firewall_rule: failed to fetch rules from '#{device_name}': #{e.message}",
+      )
     end
 
     instances

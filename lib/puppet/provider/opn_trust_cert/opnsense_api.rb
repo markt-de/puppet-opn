@@ -5,13 +5,13 @@ require 'puppet_x/opn/api_client'
 Puppet::Type.type(:opn_trust_cert).provide(:opnsense_api) do
   desc 'Manages OPNsense trust certificates via the REST API.'
 
-  VOLATILE_FIELDS = %w[
-    action key_type digest cert_type lifetime private_key_location
-    city state organization organizationalunit country email commonname
-    ocsp_uri altnames_dns altnames_ip altnames_uri altnames_email
-    crt_payload csr_payload prv_payload rfc3280_purpose in_use is_user
-    name valid_from valid_to
-  ].freeze
+  def self.volatile_fields
+    ['action', 'key_type', 'digest', 'cert_type', 'lifetime', 'private_key_location',
+     'city', 'state', 'organization', 'organizationalunit', 'country', 'email', 'commonname',
+     'ocsp_uri', 'altnames_dns', 'altnames_ip', 'altnames_uri', 'altnames_email',
+     'crt_payload', 'csr_payload', 'prv_payload', 'rfc3280_purpose', 'in_use', 'is_user',
+     'name', 'valid_from', 'valid_to']
+  end
 
   def self.api_client(device_name)
     PuppetX::Opn::ApiClient.from_device(device_name)
@@ -21,26 +21,24 @@ Puppet::Type.type(:opn_trust_cert).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.post('trust/cert/search', {})
-        rows     = response['rows'] || []
+      client   = api_client(device_name)
+      response = client.post('trust/cert/search', {})
+      rows     = response['rows'] || []
 
-        rows.each do |row|
-          descr = row['descr'].to_s
-          next if descr.empty?
+      rows.each do |row|
+        descr = row['descr'].to_s
+        next if descr.empty?
 
-          instances << new(
-            ensure: :present,
-            name:   "#{descr}@#{device_name}",
-            device: device_name,
-            uuid:   row['uuid'],
-            config: row.reject { |k, _| k == 'uuid' },
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning("opn_trust_cert: failed to fetch from '#{device_name}': #{e.message}")
+        instances << new(
+          ensure: :present,
+          name:   "#{descr}@#{device_name}",
+          device: device_name,
+          uuid:   row['uuid'],
+          config: row.reject { |k, _| k == 'uuid' },
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.warning("opn_trust_cert: failed to fetch from '#{device_name}': #{e.message}")
     end
 
     instances
@@ -65,9 +63,8 @@ Puppet::Type.type(:opn_trust_cert).provide(:opnsense_api) do
     config['descr'] = descr
 
     result = client.post('trust/cert/add', { 'cert' => config })
-    unless result['result'].to_s.strip.downcase == 'saved'
-      raise Puppet::Error, "opn_trust_cert: failed to create '#{descr}': #{result.inspect}"
-    end
+    return if result['result'].to_s.strip.downcase == 'saved'
+    raise Puppet::Error, "opn_trust_cert: failed to create '#{descr}': #{result.inspect}"
   end
 
   def destroy
@@ -100,13 +97,12 @@ Puppet::Type.type(:opn_trust_cert).provide(:opnsense_api) do
     descr  = resource_item_name
     config = @pending_config.dup
     config['descr'] = descr
-    VOLATILE_FIELDS.each { |f| config.delete(f) }
+    self.class.volatile_fields.each { |f| config.delete(f) }
 
     result = client.post("trust/cert/set/#{uuid}", { 'cert' => config })
-    unless result['result'].to_s.strip.downcase == 'saved'
-      raise Puppet::Error,
-            "opn_trust_cert: failed to update '#{descr}' (uuid: #{uuid}): #{result.inspect}"
-    end
+    return if result['result'].to_s.strip.downcase == 'saved'
+    raise Puppet::Error,
+          "opn_trust_cert: failed to update '#{descr}' (uuid: #{uuid}): #{result.inspect}"
   end
 
   private

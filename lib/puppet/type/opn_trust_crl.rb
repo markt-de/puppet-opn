@@ -93,13 +93,12 @@ Puppet::Type.newtype(:opn_trust_crl) do
       raise ArgumentError, 'config must be a Hash' unless value.is_a?(Hash)
     end
 
-    SKIP_FIELDS = %w[serial caref text].freeze
-
     def insync?(is)
       return false unless is.is_a?(Hash)
 
+      skip_fields = ['serial', 'caref', 'text']
       should.each_pair do |key, value|
-        next if SKIP_FIELDS.include?(key)
+        next if skip_fields.include?(key)
         next if key.start_with?('revoked_reason_')
         return false unless is[key].to_s == value.to_s
       end

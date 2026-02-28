@@ -97,12 +97,11 @@ Puppet::Type.newtype(:opn_snapshot) do
       raise ArgumentError, 'config must be a Hash' unless value.is_a?(Hash)
     end
 
-    READONLY_FIELDS = %w[name active dataset mountpoint size created].freeze
-
     def insync?(is)
       return false unless is.is_a?(Hash)
 
-      should.reject { |k, _| READONLY_FIELDS.include?(k) }.all? do |key, value|
+      readonly = ['name', 'active', 'dataset', 'mountpoint', 'size', 'created']
+      should.reject { |k, _| readonly.include?(k) }.all? do |key, value|
         is[key].to_s == value.to_s
       end
     end

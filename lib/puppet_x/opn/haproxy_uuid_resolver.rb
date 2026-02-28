@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module PuppetX
+module PuppetX # rubocop:disable Style/ClassAndModuleChildren
   module Opn
     # Resolves ModelRelationField UUIDs/IDs <-> names for HAProxy resources.
     #
@@ -14,7 +14,7 @@ module PuppetX
     # - Cron job fields — id_field: 'uuid', name_field: 'description'
     # - Dot-path fields for nested configs — e.g. 'general.stats.allowedUsers'
     module HaproxyUuidResolver
-      UUID_RE = /\A[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/.freeze
+      UUID_RE = %r{\A[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}\z}
 
       @cache = {}
 
@@ -34,7 +34,7 @@ module PuppetX
         id_to_name = {}
         name_to_id = {}
         begin
-          response = method == :get ? client.get(endpoint) : client.post(endpoint, {})
+          response = (method == :get) ? client.get(endpoint) : client.post(endpoint, {})
           rows = response['rows'] || []
           rows.each do |row|
             id   = row[id_field].to_s
@@ -82,13 +82,13 @@ module PuppetX
           map = entry[:id_to_name] || {}
 
           parent[last_key] = if opts[:multiple]
-            value.to_s.split(',').map { |item|
-              item = item.strip
-              map[item] || item
-            }.join(',')
-          else
-            map[value.to_s] || value.to_s
-          end
+                               value.to_s.split(',').map { |item|
+                                 item = item.strip
+                                 map[item] || item
+                               }.join(',')
+                             else
+                               map[value.to_s] || value.to_s
+                             end
         end
         result
       end
@@ -121,33 +121,32 @@ module PuppetX
                    id_field: id_field, name_field: name_field, method: http_method)
           entry = @cache[key] || {}
           id_to_name = entry[:id_to_name] || {}
-          name_to_id = entry[:name_to_id] || {}
 
           parent[last_key] = if opts[:multiple]
-            value.to_s.split(',').map { |item|
-              item = item.strip
-              next item if id_to_name.key?(item)
-              next item if UUID_RE.match?(item)
+                               value.to_s.split(',').map { |item|
+                                 item = item.strip
+                                 next item if id_to_name.key?(item)
+                                 next item if UUID_RE.match?(item)
 
-              resolved = resolve_with_retry(
-                client, device, opts[:endpoint],
-                id_field, name_field, http_method, item
-              )
-              resolved
-            }.join(',')
-          else
-            str = value.to_s
-            if id_to_name.key?(str)
-              str
-            elsif UUID_RE.match?(str)
-              str
-            else
-              resolve_with_retry(
-                client, device, opts[:endpoint],
-                id_field, name_field, http_method, str
-              )
-            end
-          end
+                                 resolved = resolve_with_retry(
+                                   client, device, opts[:endpoint],
+                                   id_field, name_field, http_method, item
+                                 )
+                                 resolved
+                               }.join(',')
+                             else
+                               str = value.to_s
+                               if id_to_name.key?(str)
+                                 str
+                               elsif UUID_RE.match?(str)
+                                 str
+                               else
+                                 resolve_with_retry(
+                                   client, device, opts[:endpoint],
+                                   id_field, name_field, http_method, str
+                                 )
+                               end
+                             end
         end
         result
       end

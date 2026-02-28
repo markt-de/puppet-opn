@@ -6,7 +6,7 @@ require 'puppet_x/opn/haproxy_reconfigure'
 Puppet::Type.type(:opn_haproxy_mailer).provide(:opnsense_api) do
   desc 'Manages OPNsense HAProxy mailers via the REST API.'
 
-  # Note: mailer endpoints use no underscore separator (HAProxy plugin peculiarity):
+  # NOTE: mailer endpoints use no underscore separator (HAProxy plugin peculiarity):
   #   searchmailers / addmailer / setmailer / delmailer
 
   def self.api_client(device_name)
@@ -17,26 +17,24 @@ Puppet::Type.type(:opn_haproxy_mailer).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.post('haproxy/settings/searchmailers', {})
-        rows     = response['rows'] || []
+      client   = api_client(device_name)
+      response = client.post('haproxy/settings/searchmailers', {})
+      rows     = response['rows'] || []
 
-        rows.each do |row|
-          item_name = row['name'].to_s
-          next if item_name.empty?
+      rows.each do |row|
+        item_name = row['name'].to_s
+        next if item_name.empty?
 
-          instances << new(
-            ensure: :present,
-            name:   "#{item_name}@#{device_name}",
-            device: device_name,
-            uuid:   row['uuid'],
-            config: row.reject { |k, _| k == 'uuid' },
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning("opn_haproxy_mailer: failed to fetch from '#{device_name}': #{e.message}")
+        instances << new(
+          ensure: :present,
+          name:   "#{item_name}@#{device_name}",
+          device: device_name,
+          uuid:   row['uuid'],
+          config: row.reject { |k, _| k == 'uuid' },
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.warning("opn_haproxy_mailer: failed to fetch from '#{device_name}': #{e.message}")
     end
 
     instances

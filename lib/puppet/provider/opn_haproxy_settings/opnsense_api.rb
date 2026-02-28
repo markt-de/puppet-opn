@@ -22,31 +22,31 @@ Puppet::Type.type(:opn_haproxy_settings).provide(:opnsense_api) do
     }.freeze
   end
 
-  SETTINGS_SECTIONS = %w[general maintenance].freeze
+  def self.settings_sections
+    ['general', 'maintenance'].freeze
+  end
 
   def self.instances
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.get('haproxy/settings/get')
-        data     = response['haproxy'] || {}
+      client   = api_client(device_name)
+      response = client.get('haproxy/settings/get')
+      data     = response['haproxy'] || {}
 
-        config = data.select { |k, _| SETTINGS_SECTIONS.include?(k) }
-        config = normalize_config(config)
-        config = PuppetX::Opn::HaproxyUuidResolver.translate_to_names(
-          client, device_name, relation_fields, config
-        )
+      config = data.slice(*settings_sections)
+      config = normalize_config(config)
+      config = PuppetX::Opn::HaproxyUuidResolver.translate_to_names(
+        client, device_name, relation_fields, config
+      )
 
-        instances << new(
-          ensure: :present,
-          name:   device_name,
-          config: config,
-        )
-      rescue Puppet::Error => e
-        Puppet.warning("opn_haproxy_settings: failed to fetch from '#{device_name}': #{e.message}")
-      end
+      instances << new(
+        ensure: :present,
+        name:   device_name,
+        config: config,
+      )
+    rescue Puppet::Error => e
+      Puppet.warning("opn_haproxy_settings: failed to fetch from '#{device_name}': #{e.message}")
     end
 
     instances
@@ -125,10 +125,9 @@ Puppet::Type.type(:opn_haproxy_settings).provide(:opnsense_api) do
     )
 
     result = client.post('haproxy/settings/set', { 'haproxy' => config })
-    unless result['result'].to_s.strip.downcase == 'saved'
-      raise Puppet::Error,
-            "opn_haproxy_settings: failed to save settings for '#{resource[:name]}': #{result.inspect}"
-    end
+    return if result['result'].to_s.strip.downcase == 'saved'
+    raise Puppet::Error,
+          "opn_haproxy_settings: failed to save settings for '#{resource[:name]}': #{result.inspect}"
   end
 
   def apply_config(config)

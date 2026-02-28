@@ -7,25 +7,23 @@ Puppet::Type.type(:opn_syslog).provide(:opnsense_api) do
 
   @devices_to_reconfigure = {}
 
-  def self.devices_to_reconfigure
-    @devices_to_reconfigure
+  class << self
+    attr_reader :devices_to_reconfigure
   end
 
   def self.post_resource_eval
     @devices_to_reconfigure.each do |device_name, client|
-      begin
-        result = client.post('syslog/service/reconfigure', {})
-        status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
-        if status == 'ok'
-          Puppet.notice("opn_syslog: reconfigure on '#{device_name}' completed")
-        else
-          Puppet.warning(
-            "opn_syslog: reconfigure on '#{device_name}' returned unexpected status: #{result.inspect}",
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.err("opn_syslog: reconfigure on '#{device_name}' failed: #{e.message}")
+      result = client.post('syslog/service/reconfigure', {})
+      status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
+      if status == 'ok'
+        Puppet.notice("opn_syslog: reconfigure on '#{device_name}' completed")
+      else
+        Puppet.warning(
+          "opn_syslog: reconfigure on '#{device_name}' returned unexpected status: #{result.inspect}",
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.err("opn_syslog: reconfigure on '#{device_name}' failed: #{e.message}")
     end
     @devices_to_reconfigure.clear
   end
@@ -38,26 +36,24 @@ Puppet::Type.type(:opn_syslog).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.post('syslog/settings/search_destinations', {})
-        rows     = response['rows'] || []
+      client   = api_client(device_name)
+      response = client.post('syslog/settings/search_destinations', {})
+      rows     = response['rows'] || []
 
-        rows.each do |row|
-          description = row['description'].to_s
-          next if description.empty?
+      rows.each do |row|
+        description = row['description'].to_s
+        next if description.empty?
 
-          instances << new(
-            ensure: :present,
-            name:   "#{description}@#{device_name}",
-            device: device_name,
-            uuid:   row['uuid'],
-            config: row.reject { |k, _| k == 'uuid' },
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning("opn_syslog: failed to fetch from '#{device_name}': #{e.message}")
+        instances << new(
+          ensure: :present,
+          name:   "#{description}@#{device_name}",
+          device: device_name,
+          uuid:   row['uuid'],
+          config: row.reject { |k, _| k == 'uuid' },
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.warning("opn_syslog: failed to fetch from '#{device_name}': #{e.message}")
     end
 
     instances

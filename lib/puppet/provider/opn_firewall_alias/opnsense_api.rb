@@ -10,8 +10,8 @@ Puppet::Type.type(:opn_firewall_alias).provide(:opnsense_api) do
   # Populated by create/destroy/flush; consumed by post_resource_eval.
   @devices_to_reconfigure = {}
 
-  def self.devices_to_reconfigure
-    @devices_to_reconfigure
+  class << self
+    attr_reader :devices_to_reconfigure
   end
 
   # Called by Puppet once after ALL opn_firewall_alias resources have been
@@ -19,19 +19,17 @@ Puppet::Type.type(:opn_firewall_alias).provide(:opnsense_api) do
   # per device that had at least one alias change, then clears the tracking hash.
   def self.post_resource_eval
     @devices_to_reconfigure.each do |device_name, client|
-      begin
-        result = client.post('firewall/alias/reconfigure', {})
-        status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
-        if status == 'ok'
-          Puppet.notice("opn_firewall_alias: reconfigure of '#{device_name}' completed")
-        else
-          Puppet.warning(
-            "opn_firewall_alias: reconfigure of '#{device_name}' returned unexpected status: #{result.inspect}",
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.err("opn_firewall_alias: reconfigure of '#{device_name}' failed: #{e.message}")
+      result = client.post('firewall/alias/reconfigure', {})
+      status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
+      if status == 'ok'
+        Puppet.notice("opn_firewall_alias: reconfigure of '#{device_name}' completed")
+      else
+        Puppet.warning(
+          "opn_firewall_alias: reconfigure of '#{device_name}' returned unexpected status: #{result.inspect}",
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.err("opn_firewall_alias: reconfigure of '#{device_name}' failed: #{e.message}")
     end
     @devices_to_reconfigure.clear
   end
@@ -52,31 +50,29 @@ Puppet::Type.type(:opn_firewall_alias).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client = api_client(device_name)
-        response = client.post('firewall/alias/search_item', {})
-        rows = response['rows'] || []
+      client = api_client(device_name)
+      response = client.post('firewall/alias/search_item', {})
+      rows = response['rows'] || []
 
-        rows.each do |alias_data|
-          alias_name = alias_data['name']
-          next if alias_name.nil? || alias_name.empty?
+      rows.each do |alias_data|
+        alias_name = alias_data['name']
+        next if alias_name.nil? || alias_name.empty?
 
-          resource_name = "#{alias_name}@#{device_name}"
+        resource_name = "#{alias_name}@#{device_name}"
 
-          # Build config hash from API data, excluding internal fields
-          config = alias_data.reject { |k, _| k == 'uuid' }
+        # Build config hash from API data, excluding internal fields
+        config = alias_data.reject { |k, _| k == 'uuid' }
 
-          instances << new(
-            ensure: :present,
-            name:   resource_name,
-            device: device_name,
-            uuid:   alias_data['uuid'],
-            config: config,
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning("opn_firewall_alias: failed to fetch aliases from '#{device_name}': #{e.message}")
+        instances << new(
+          ensure: :present,
+          name:   resource_name,
+          device: device_name,
+          uuid:   alias_data['uuid'],
+          config: config,
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.warning("opn_firewall_alias: failed to fetch aliases from '#{device_name}': #{e.message}")
     end
 
     instances

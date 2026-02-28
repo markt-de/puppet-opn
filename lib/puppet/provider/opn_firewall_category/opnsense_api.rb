@@ -20,31 +20,29 @@ Puppet::Type.type(:opn_firewall_category).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.post('firewall/category/search_item', {})
-        rows     = response['rows'] || []
+      client   = api_client(device_name)
+      response = client.post('firewall/category/search_item', {})
+      rows     = response['rows'] || []
 
-        rows.each do |cat_data|
-          cat_name = cat_data['name']
-          next if cat_name.nil? || cat_name.empty?
+      rows.each do |cat_data|
+        cat_name = cat_data['name']
+        next if cat_name.nil? || cat_name.empty?
 
-          resource_name = "#{cat_name}@#{device_name}"
-          config = cat_data.reject { |k, _| k == 'uuid' }
+        resource_name = "#{cat_name}@#{device_name}"
+        config = cat_data.reject { |k, _| k == 'uuid' }
 
-          instances << new(
-            ensure: :present,
-            name:   resource_name,
-            device: device_name,
-            uuid:   cat_data['uuid'],
-            config: config,
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning(
-          "opn_firewall_category: failed to fetch categories from '#{device_name}': #{e.message}",
+        instances << new(
+          ensure: :present,
+          name:   resource_name,
+          device: device_name,
+          uuid:   cat_data['uuid'],
+          config: config,
         )
       end
+    rescue Puppet::Error => e
+      Puppet.warning(
+        "opn_firewall_category: failed to fetch categories from '#{device_name}': #{e.message}",
+      )
     end
 
     instances
@@ -70,10 +68,10 @@ Puppet::Type.type(:opn_firewall_category).provide(:opnsense_api) do
     config['name'] = cat_name
 
     result = client.post('firewall/category/add_item', { 'category' => config })
-    unless result['result'].to_s.strip.downcase == 'saved'
-      raise Puppet::Error,
-            "opn_firewall_category: failed to create '#{cat_name}': #{result.inspect}"
-    end
+    return if result['result'].to_s.strip.downcase == 'saved'
+
+    raise Puppet::Error,
+          "opn_firewall_category: failed to create '#{cat_name}': #{result.inspect}"
   end
 
   def destroy
@@ -109,10 +107,9 @@ Puppet::Type.type(:opn_firewall_category).provide(:opnsense_api) do
     config['name'] = cat_name
 
     result = client.post("firewall/category/set_item/#{uuid}", { 'category' => config })
-    unless result['result'].to_s.strip.downcase == 'saved'
-      raise Puppet::Error,
-            "opn_firewall_category: failed to update '#{cat_name}' (uuid: #{uuid}): #{result.inspect}"
-    end
+    return if result['result'].to_s.strip.downcase == 'saved'
+    raise Puppet::Error,
+          "opn_firewall_category: failed to update '#{cat_name}' (uuid: #{uuid}): #{result.inspect}"
   end
 
   private

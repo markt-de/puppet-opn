@@ -13,41 +13,39 @@ Puppet::Type.type(:opn_trust_crl).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client = api_client(device_name)
+      client = api_client(device_name)
 
-        # CRL search returns all CAs with optional CRL info.
-        # Each row has: descr (CA description), refid (CA ref), crl_descr (CRL description).
-        crl_response = client.get('trust/crl/search')
-        crl_rows = crl_response['rows'] || []
+      # CRL search returns all CAs with optional CRL info.
+      # Each row has: descr (CA description), refid (CA ref), crl_descr (CRL description).
+      crl_response = client.get('trust/crl/search')
+      crl_rows = crl_response['rows'] || []
 
-        crl_rows.each do |crl_entry|
-          caref = crl_entry['refid']
-          next unless caref
+      crl_rows.each do |crl_entry|
+        caref = crl_entry['refid']
+        next unless caref
 
-          # Only include CAs that actually have a CRL
-          crl_descr = crl_entry['crl_descr'].to_s
-          next if crl_descr.empty?
+        # Only include CAs that actually have a CRL
+        crl_descr = crl_entry['crl_descr'].to_s
+        next if crl_descr.empty?
 
-          ca_descr = crl_entry['descr']
-          next unless ca_descr
+        ca_descr = crl_entry['descr']
+        next unless ca_descr
 
-          # Fetch full CRL details
-          crl_detail = client.get("trust/crl/get/#{caref}")
-          crl_data = crl_detail['crl'] || {}
-          config = normalize_crl_config(crl_data)
+        # Fetch full CRL details
+        crl_detail = client.get("trust/crl/get/#{caref}")
+        crl_data = crl_detail['crl'] || {}
+        config = normalize_crl_config(crl_data)
 
-          instances << new(
-            ensure: :present,
-            name:   "#{ca_descr}@#{device_name}",
-            device: device_name,
-            caref:  caref,
-            config: config,
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning("opn_trust_crl: failed to fetch from '#{device_name}': #{e.message}")
+        instances << new(
+          ensure: :present,
+          name:   "#{ca_descr}@#{device_name}",
+          device: device_name,
+          caref:  caref,
+          config: config,
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.warning("opn_trust_crl: failed to fetch from '#{device_name}': #{e.message}")
     end
 
     instances
@@ -90,10 +88,9 @@ Puppet::Type.type(:opn_trust_crl).provide(:opnsense_api) do
 
     # CrlController::setAction returns { 'status' => 'saved' } (not 'result')
     result = client.post("trust/crl/set/#{caref}", { 'crl' => config })
-    unless result['status'].to_s.strip.downcase == 'saved'
-      raise Puppet::Error,
-            "opn_trust_crl: failed to create CRL for '#{resource_item_name}': #{result.inspect}"
-    end
+    return if result['status'].to_s.strip.downcase == 'saved'
+    raise Puppet::Error,
+          "opn_trust_crl: failed to create CRL for '#{resource_item_name}': #{result.inspect}"
   end
 
   def destroy
@@ -127,11 +124,10 @@ Puppet::Type.type(:opn_trust_crl).provide(:opnsense_api) do
     config = @pending_config.dup
 
     result = client.post("trust/crl/set/#{caref}", { 'crl' => config })
-    unless result['status'].to_s.strip.downcase == 'saved'
-      raise Puppet::Error,
-            "opn_trust_crl: failed to update CRL for '#{resource_item_name}' " \
-            "(caref: #{caref}): #{result.inspect}"
-    end
+    return if result['status'].to_s.strip.downcase == 'saved'
+    raise Puppet::Error,
+          "opn_trust_crl: failed to update CRL for '#{resource_item_name}' " \
+          "(caref: #{caref}): #{result.inspect}"
   end
 
   private

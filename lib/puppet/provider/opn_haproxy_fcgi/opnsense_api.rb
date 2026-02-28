@@ -14,26 +14,24 @@ Puppet::Type.type(:opn_haproxy_fcgi).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.post('haproxy/settings/search_fcgis', {})
-        rows     = response['rows'] || []
+      client   = api_client(device_name)
+      response = client.post('haproxy/settings/search_fcgis', {})
+      rows     = response['rows'] || []
 
-        rows.each do |row|
-          item_name = row['name'].to_s
-          next if item_name.empty?
+      rows.each do |row|
+        item_name = row['name'].to_s
+        next if item_name.empty?
 
-          instances << new(
-            ensure: :present,
-            name:   "#{item_name}@#{device_name}",
-            device: device_name,
-            uuid:   row['uuid'],
-            config: row.reject { |k, _| k == 'uuid' },
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning("opn_haproxy_fcgi: failed to fetch from '#{device_name}': #{e.message}")
+        instances << new(
+          ensure: :present,
+          name:   "#{item_name}@#{device_name}",
+          device: device_name,
+          uuid:   row['uuid'],
+          config: row.reject { |k, _| k == 'uuid' },
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.warning("opn_haproxy_fcgi: failed to fetch from '#{device_name}': #{e.message}")
     end
 
     instances

@@ -17,19 +17,17 @@ Puppet::Type.type(:opn_zabbix_proxy).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.get('zabbixproxy/general/get')
-        settings = response['general'] || {}
+      client   = api_client(device_name)
+      response = client.get('zabbixproxy/general/get')
+      settings = response['general'] || {}
 
-        instances << new(
-          ensure: :present,
-          name:   device_name,
-          config: settings,
-        )
-      rescue Puppet::Error => e
-        Puppet.warning("opn_zabbix_proxy: failed to fetch from '#{device_name}': #{e.message}")
-      end
+      instances << new(
+        ensure: :present,
+        name:   device_name,
+        config: settings,
+      )
+    rescue Puppet::Error => e
+      Puppet.warning("opn_zabbix_proxy: failed to fetch from '#{device_name}': #{e.message}")
     end
 
     instances
@@ -84,10 +82,9 @@ Puppet::Type.type(:opn_zabbix_proxy).provide(:opnsense_api) do
 
   def save_settings(client, config)
     result = client.post('zabbixproxy/general/set', { 'general' => config })
-    unless result['result'].to_s.strip.downcase == 'saved'
-      raise Puppet::Error,
-            "opn_zabbix_proxy: failed to save settings for '#{resource[:name]}': #{result.inspect}"
-    end
+    return if result['result'].to_s.strip.downcase == 'saved'
+    raise Puppet::Error,
+          "opn_zabbix_proxy: failed to save settings for '#{resource[:name]}': #{result.inspect}"
   end
 
   def apply_config(config)

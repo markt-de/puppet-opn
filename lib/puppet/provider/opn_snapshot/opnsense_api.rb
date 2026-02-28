@@ -13,36 +13,34 @@ Puppet::Type.type(:opn_snapshot).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.get('core/snapshots/search')
-        rows     = response['rows'] || []
+      client   = api_client(device_name)
+      response = client.get('core/snapshots/search')
+      rows     = response['rows'] || []
 
-        rows.each do |row|
-          item_name = row['name'].to_s
-          next if item_name.empty?
+      rows.each do |row|
+        item_name = row['name'].to_s
+        next if item_name.empty?
 
-          active = row['active'].to_s == '-' ? :false : :true
+        active = (row['active'].to_s == '-') ? :false : :true
 
-          # Fetch note via get endpoint (not included in search results)
-          detail = client.get("core/snapshots/get/#{row['uuid']}")
-          note = detail.is_a?(Hash) ? detail['note'].to_s : ''
+        # Fetch note via get endpoint (not included in search results)
+        detail = client.get("core/snapshots/get/#{row['uuid']}")
+        note = detail.is_a?(Hash) ? detail['note'].to_s : ''
 
-          config = row.reject { |k, _| k == 'uuid' }
-          config['note'] = note
+        config = row.reject { |k, _| k == 'uuid' }
+        config['note'] = note
 
-          instances << new(
-            ensure: :present,
-            name:   "#{item_name}@#{device_name}",
-            device: device_name,
-            uuid:   row['uuid'],
-            active: active,
-            config: config,
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning("opn_snapshot: failed to fetch from '#{device_name}': #{e.message}")
+        instances << new(
+          ensure: :present,
+          name:   "#{item_name}@#{device_name}",
+          device: device_name,
+          uuid:   row['uuid'],
+          active: active,
+          config: config,
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.warning("opn_snapshot: failed to fetch from '#{device_name}': #{e.message}")
     end
 
     instances
@@ -75,13 +73,12 @@ Puppet::Type.type(:opn_snapshot).provide(:opnsense_api) do
     end
 
     # If active => true requested, find the new snapshot's UUID and activate it
-    if resource[:active] == :true
-      new_uuid = find_uuid_by_name(client, item_name)
-      if new_uuid
-        client.post("core/snapshots/activate/#{new_uuid}", {})
-      else
-        Puppet.warning("opn_snapshot: created '#{item_name}' but could not find UUID for activation")
-      end
+    return unless resource[:active] == :true
+    new_uuid = find_uuid_by_name(client, item_name)
+    if new_uuid
+      client.post("core/snapshots/activate/#{new_uuid}", {})
+    else
+      Puppet.warning("opn_snapshot: created '#{item_name}' but could not find UUID for activation")
     end
   end
 
@@ -143,10 +140,9 @@ Puppet::Type.type(:opn_snapshot).provide(:opnsense_api) do
     params['note'] = config['note'] if config.key?('note')
 
     result = client.post("core/snapshots/set/#{uuid}", params)
-    if result.is_a?(Hash) && result['status'].to_s.strip.downcase == 'failed'
-      raise Puppet::Error,
-            "opn_snapshot: failed to update '#{item_name}' (uuid: #{uuid}): #{result.inspect}"
-    end
+    return unless result.is_a?(Hash) && result['status'].to_s.strip.downcase == 'failed'
+    raise Puppet::Error,
+          "opn_snapshot: failed to update '#{item_name}' (uuid: #{uuid}): #{result.inspect}"
   end
 
   private

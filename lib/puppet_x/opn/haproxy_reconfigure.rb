@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module PuppetX
+module PuppetX # rubocop:disable Style/ClassAndModuleChildren
   module Opn
     # Shared module used by all opn_haproxy_* providers to coordinate
     # configtest and reconfigure calls. Each provider's post_resource_eval
@@ -37,7 +37,7 @@ module PuppetX
           if @devices_with_errors[device_name]
             Puppet.err(
               "opn_haproxy: skipping reconfigure for '#{device_name}' " \
-              "because one or more resources failed to evaluate",
+              'because one or more resources failed to evaluate',
             )
             next
           end

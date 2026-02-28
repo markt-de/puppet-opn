@@ -6,7 +6,7 @@ require 'uri'
 require 'yaml'
 require 'openssl'
 
-module PuppetX
+module PuppetX # rubocop:disable Style/ClassAndModuleChildren
   module Opn
     # HTTP client for communicating with the OPNsense REST API.
     # Credentials and connection details are read from YAML config files
@@ -17,8 +17,8 @@ module PuppetX
 
       # Path to the provider config file written by the opn Puppet class.
       # Uses Puppet[:confdir] so it is automatically correct on every OS:
-      #   Linux   → /etc/puppetlabs/puppet/opn_provider.yaml
-      #   FreeBSD → /usr/local/etc/puppet/opn_provider.yaml
+      #   Linux   -> /etc/puppetlabs/puppet/opn_provider.yaml
+      #   FreeBSD -> /usr/local/etc/puppet/opn_provider.yaml
       # This value equals ${settings::confdir} in Puppet manifests.
       def self.provider_config_path
         File.join(Puppet[:confdir], 'opn_provider.yaml')
@@ -30,8 +30,8 @@ module PuppetX
       def self.config_base_dir
         path = provider_config_path
         if File.exist?(path)
-          config = YAML.safe_load(File.read(path))
-          config.is_a?(Hash) && config['config_dir'] ? config['config_dir'] : default_config_dir
+          config = YAML.safe_load_file(path)
+          (config.is_a?(Hash) && config['config_dir']) ? config['config_dir'] : default_config_dir
         else
           default_config_dir
         end
@@ -67,7 +67,7 @@ module PuppetX
                 'Ensure the opn class is applied before using opn_* resources.'
         end
 
-        config = YAML.safe_load(File.read(config_path))
+        config = YAML.safe_load_file(config_path)
         unless config.is_a?(Hash)
           raise Puppet::Error, "OPNsense config file '#{config_path}' is not a valid YAML hash."
         end
@@ -155,11 +155,9 @@ module PuppetX
 
           # 307/308 preserve the original method and body.
           # 301/302 conventionally switch to GET.
-          if [307, 308].include?(code)
-            return http_request(method, new_uri, data, redirect_count + 1)
-          else
-            return http_request(:get, new_uri, nil, redirect_count + 1)
-          end
+          return http_request(method, new_uri, data, redirect_count + 1) if [307, 308].include?(code)
+
+          return http_request(:get, new_uri, nil, redirect_count + 1)
         end
 
         handle_response(response, uri.to_s)
@@ -204,7 +202,7 @@ module PuppetX
 
       def handle_response(response, request_uri)
         code = response.code.to_i
-        unless (200..299).include?(code)
+        unless (200..299).cover?(code)
           raise Puppet::Error, "OPNsense API error #{code} for '#{request_uri}': #{response.body}"
         end
 

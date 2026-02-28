@@ -95,16 +95,13 @@ Puppet::Type.newtype(:opn_trust_ca) do
       raise ArgumentError, 'config must be a Hash' unless value.is_a?(Hash)
     end
 
-    VOLATILE_FIELDS = %w[
-      action key_type digest lifetime city state organization
-      organizationalunit country email commonname ocsp_uri
-      crt_payload prv_payload refcount name valid_from valid_to
-    ].freeze
-
     def insync?(is)
       return false unless is.is_a?(Hash)
 
-      should.reject { |k, _| k == 'descr' || VOLATILE_FIELDS.include?(k) }.all? do |key, value|
+      volatile = ['action', 'key_type', 'digest', 'lifetime', 'city', 'state', 'organization',
+                  'organizationalunit', 'country', 'email', 'commonname', 'ocsp_uri',
+                  'crt_payload', 'prv_payload', 'refcount', 'name', 'valid_from', 'valid_to']
+      should.reject { |k, _| k == 'descr' || volatile.include?(k) }.all? do |key, value|
         is[key].to_s == value.to_s
       end
     end

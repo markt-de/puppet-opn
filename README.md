@@ -695,10 +695,10 @@ class { 'opn':
 All types can also be used directly without the `opn` wrapper class, provided the credential file already exists at `$config_dir/<device_name>.yaml`.
 
 ```puppet
-opn_cron { 'Daily firmware check@opnsense01.example.com':
+opn_cron { 'Daily haproxy reload@opnsense01.example.com':
   ensure => present,
   config => {
-    'command'  => 'firmware auto-update',
+    'command'  => 'haproxy reload',
     'minutes'  => '0',
     'hours'    => '3',
     'days'     => '*',

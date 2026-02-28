@@ -24,7 +24,7 @@ Puppet::Type.type(:opn_haproxy_frontend).provide(:opnsense_api) do
       'linkedResolver'         => { endpoint: 'haproxy/settings/searchresolvers',      multiple: false },
       'healthCheck'            => { endpoint: 'haproxy/settings/search_healthchecks',  multiple: false },
       'linkedMailer'           => { endpoint: 'haproxy/settings/searchmailers',        multiple: false },
-      'ssl_certificates'       => { endpoint: 'trust/cert/search', multiple: true,  id_field: 'refid', name_field: 'descr' },
+      'ssl_certificates'       => { endpoint: 'trust/cert/search', multiple: true, id_field: 'refid', name_field: 'descr' },
       'ssl_default_certificate' => { endpoint: 'trust/cert/search', multiple: false, id_field: 'refid', name_field: 'descr' },
       'ssl_clientAuthCAs'      => { endpoint: 'trust/ca/search',   multiple: true,  id_field: 'refid', name_field: 'descr' },
       'ssl_clientAuthCRLs'     => { endpoint: 'trust/crl/search',  multiple: true,  id_field: 'refid', name_field: 'crl_descr', method: :get },
@@ -35,29 +35,27 @@ Puppet::Type.type(:opn_haproxy_frontend).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.post('haproxy/settings/search_frontends', {})
-        rows     = response['rows'] || []
+      client   = api_client(device_name)
+      response = client.post('haproxy/settings/search_frontends', {})
+      rows     = response['rows'] || []
 
-        rows.each do |row|
-          item_name = row['name'].to_s
-          next if item_name.empty?
+      rows.each do |row|
+        item_name = row['name'].to_s
+        next if item_name.empty?
 
-          instances << new(
-            ensure: :present,
-            name:   "#{item_name}@#{device_name}",
-            device: device_name,
-            uuid:   row['uuid'],
-            config: PuppetX::Opn::HaproxyUuidResolver.translate_to_names(
-              client, device_name, relation_fields,
-              row.reject { |k, _| k == 'uuid' },
-            ),
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning("opn_haproxy_frontend: failed to fetch from '#{device_name}': #{e.message}")
+        instances << new(
+          ensure: :present,
+          name:   "#{item_name}@#{device_name}",
+          device: device_name,
+          uuid:   row['uuid'],
+          config: PuppetX::Opn::HaproxyUuidResolver.translate_to_names(
+            client, device_name, relation_fields,
+            row.reject { |k, _| k == 'uuid' }
+          ),
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.warning("opn_haproxy_frontend: failed to fetch from '#{device_name}': #{e.message}")
     end
 
     instances

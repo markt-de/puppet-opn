@@ -17,11 +17,11 @@ Puppet::Type.newtype(:opn_cron) do
     All configuration validation is delegated to the OPNsense API. The `config`
     hash is passed through to the API without modification.
 
-    @example Create a daily backup cron job
-      opn_cron { 'Daily backup@opnsense.example.com':
+    @example Create a daily reload cron job
+      opn_cron { 'Daily haproxy reload@opnsense.example.com':
         ensure => present,
         config => {
-          'command'  => 'firmware auto-update',
+          'command'  => 'haproxy reload',
           'minutes'  => '0',
           'hours'    => '3',
           'days'     => '*',

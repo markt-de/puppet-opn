@@ -19,28 +19,26 @@ Puppet::Type.type(:opn_zabbix_agent_alias).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.get('zabbixagent/settings/get')
-        items    = response.dig('zabbixagent', 'aliases', 'alias') || {}
+      client   = api_client(device_name)
+      response = client.get('zabbixagent/settings/get')
+      items    = response.dig('zabbixagent', 'aliases', 'alias') || {}
 
-        items.each do |uuid, item|
-          item_key = item['key'].to_s
-          next if item_key.empty?
+      items.each do |uuid, item|
+        item_key = item['key'].to_s
+        next if item_key.empty?
 
-          instances << new(
-            ensure: :present,
-            name:   "#{item_key}@#{device_name}",
-            device: device_name,
-            uuid:   uuid,
-            config: item.reject { |k, _| k == 'id' },
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning(
-          "opn_zabbix_agent_alias: failed to fetch from '#{device_name}': #{e.message}",
+        instances << new(
+          ensure: :present,
+          name:   "#{item_key}@#{device_name}",
+          device: device_name,
+          uuid:   uuid,
+          config: item.reject { |k, _| k == 'id' },
         )
       end
+    rescue Puppet::Error => e
+      Puppet.warning(
+        "opn_zabbix_agent_alias: failed to fetch from '#{device_name}': #{e.message}",
+      )
     end
 
     instances

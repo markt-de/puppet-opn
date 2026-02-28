@@ -9,8 +9,8 @@ Puppet::Type.type(:opn_firewall_group).provide(:opnsense_api) do
   # Maps device_name => ApiClient instance.
   @devices_to_reconfigure = {}
 
-  def self.devices_to_reconfigure
-    @devices_to_reconfigure
+  class << self
+    attr_reader :devices_to_reconfigure
   end
 
   # Called by Puppet once after ALL opn_firewall_group resources have been
@@ -18,19 +18,17 @@ Puppet::Type.type(:opn_firewall_group).provide(:opnsense_api) do
   # at least one group change, then clears the tracking hash.
   def self.post_resource_eval
     @devices_to_reconfigure.each do |device_name, client|
-      begin
-        result = client.post('firewall/group/reconfigure', {})
-        status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
-        if status == 'ok'
-          Puppet.notice("opn_firewall_group: reconfigure of '#{device_name}' completed")
-        else
-          Puppet.warning(
-            "opn_firewall_group: reconfigure of '#{device_name}' returned unexpected status: #{result.inspect}",
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.err("opn_firewall_group: reconfigure of '#{device_name}' failed: #{e.message}")
+      result = client.post('firewall/group/reconfigure', {})
+      status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
+      if status == 'ok'
+        Puppet.notice("opn_firewall_group: reconfigure of '#{device_name}' completed")
+      else
+        Puppet.warning(
+          "opn_firewall_group: reconfigure of '#{device_name}' returned unexpected status: #{result.inspect}",
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.err("opn_firewall_group: reconfigure of '#{device_name}' failed: #{e.message}")
     end
     @devices_to_reconfigure.clear
   end
@@ -52,35 +50,33 @@ Puppet::Type.type(:opn_firewall_group).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.post('firewall/group/search_item', {})
-        rows     = response['rows'] || []
+      client   = api_client(device_name)
+      response = client.post('firewall/group/search_item', {})
+      rows     = response['rows'] || []
 
-        rows.each do |group_data|
-          uuid = group_data['uuid'].to_s
-          # Skip system-managed groups: they have non-UUID values (e.g. "enc0", "openvpn")
-          next unless uuid.match?(/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i)
+      rows.each do |group_data|
+        uuid = group_data['uuid'].to_s
+        # Skip system-managed groups: they have non-UUID values (e.g. "enc0", "openvpn")
+        next unless uuid.match?(%r{\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z}i)
 
-          ifname = group_data['ifname']
-          next if ifname.nil? || ifname.empty?
+        ifname = group_data['ifname']
+        next if ifname.nil? || ifname.empty?
 
-          resource_name = "#{ifname}@#{device_name}"
-          config = group_data.reject { |k, _| k == 'uuid' }
+        resource_name = "#{ifname}@#{device_name}"
+        config = group_data.reject { |k, _| k == 'uuid' }
 
-          instances << new(
-            ensure: :present,
-            name:   resource_name,
-            device: device_name,
-            uuid:   uuid,
-            config: config,
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.warning(
-          "opn_firewall_group: failed to fetch groups from '#{device_name}': #{e.message}",
+        instances << new(
+          ensure: :present,
+          name:   resource_name,
+          device: device_name,
+          uuid:   uuid,
+          config: config,
         )
       end
+    rescue Puppet::Error => e
+      Puppet.warning(
+        "opn_firewall_group: failed to fetch groups from '#{device_name}': #{e.message}",
+      )
     end
 
     instances

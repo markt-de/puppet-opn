@@ -1,0 +1,36 @@
+---
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        puppet_version: [8]
+
+    name: Check / Puppet ${{ matrix.puppet_version }}
+    runs-on: ubuntu-24.04
+    container: puppet/pdk:latest
+
+    steps:
+      - name: Install build-essential
+        run: |
+          export DEBIAN_FRONTEND=noninteractive;
+          apt-get --yes update
+          apt-get --yes install build-essential
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run pdk validate
+        run: pdk validate --format=text --puppet-version ${{ matrix.puppet_version }}
+
+      - name: Run pdk test unit
+        run: pdk test unit --format=text --puppet-version ${{ matrix.puppet_version }}

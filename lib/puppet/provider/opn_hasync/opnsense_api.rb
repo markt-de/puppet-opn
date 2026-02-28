@@ -7,25 +7,23 @@ Puppet::Type.type(:opn_hasync).provide(:opnsense_api) do
 
   @devices_to_reconfigure = {}
 
-  def self.devices_to_reconfigure
-    @devices_to_reconfigure
+  class << self
+    attr_reader :devices_to_reconfigure
   end
 
   def self.post_resource_eval
     @devices_to_reconfigure.each do |device_name, client|
-      begin
-        result = client.post('core/hasync/reconfigure', {})
-        status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
-        if status == 'ok'
-          Puppet.notice("opn_hasync: reconfigure on '#{device_name}' completed")
-        else
-          Puppet.warning(
-            "opn_hasync: reconfigure on '#{device_name}' returned unexpected status: #{result.inspect}",
-          )
-        end
-      rescue Puppet::Error => e
-        Puppet.err("opn_hasync: reconfigure on '#{device_name}' failed: #{e.message}")
+      result = client.post('core/hasync/reconfigure', {})
+      status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
+      if status == 'ok'
+        Puppet.notice("opn_hasync: reconfigure on '#{device_name}' completed")
+      else
+        Puppet.warning(
+          "opn_hasync: reconfigure on '#{device_name}' returned unexpected status: #{result.inspect}",
+        )
       end
+    rescue Puppet::Error => e
+      Puppet.err("opn_hasync: reconfigure on '#{device_name}' failed: #{e.message}")
     end
     @devices_to_reconfigure.clear
   end
@@ -38,21 +36,19 @@ Puppet::Type.type(:opn_hasync).provide(:opnsense_api) do
     instances = []
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
-      begin
-        client   = api_client(device_name)
-        response = client.get('core/hasync/get')
-        data     = response['hasync'] || {}
+      client   = api_client(device_name)
+      response = client.get('core/hasync/get')
+      data     = response['hasync'] || {}
 
-        config = normalize_config(data)
+      config = normalize_config(data)
 
-        instances << new(
-          ensure: :present,
-          name:   device_name,
-          config: config,
-        )
-      rescue Puppet::Error => e
-        Puppet.warning("opn_hasync: failed to fetch from '#{device_name}': #{e.message}")
-      end
+      instances << new(
+        ensure: :present,
+        name:   device_name,
+        config: config,
+      )
+    rescue Puppet::Error => e
+      Puppet.warning("opn_hasync: failed to fetch from '#{device_name}': #{e.message}")
     end
 
     instances
@@ -120,10 +116,9 @@ Puppet::Type.type(:opn_hasync).provide(:opnsense_api) do
 
   def save_settings(client, config)
     result = client.post('core/hasync/set', { 'hasync' => config })
-    unless result['result'].to_s.strip.downcase == 'saved'
-      raise Puppet::Error,
-            "opn_hasync: failed to save settings for '#{resource[:name]}': #{result.inspect}"
-    end
+    return if result['result'].to_s.strip.downcase == 'saved'
+    raise Puppet::Error,
+          "opn_hasync: failed to save settings for '#{resource[:name]}': #{result.inspect}"
   end
 
   def apply_config(config)

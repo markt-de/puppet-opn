@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module PuppetX
+module PuppetX # rubocop:disable Style/ClassAndModuleChildren
   module Opn
     # Shared module used by all opn_zabbix_agent_* providers to coordinate
     # reconfigure calls. Each provider's post_resource_eval delegates here.
@@ -23,20 +23,18 @@ module PuppetX
       # the tracking hash so subsequent calls are no-ops.
       def self.run
         @devices_to_reconfigure.each do |device_name, client|
-          begin
-            reconf = client.post('zabbixagent/service/reconfigure', {})
-            status = reconf.is_a?(Hash) ? reconf['status'].to_s.strip.downcase : nil
-            if status == 'ok'
-              Puppet.notice("opn_zabbix_agent: reconfigure of '#{device_name}' completed")
-            else
-              Puppet.warning(
-                "opn_zabbix_agent: reconfigure of '#{device_name}' returned unexpected " \
-                "status: #{reconf.inspect}",
-              )
-            end
-          rescue Puppet::Error => e
-            Puppet.err("opn_zabbix_agent: reconfigure of '#{device_name}' failed: #{e.message}")
+          reconf = client.post('zabbixagent/service/reconfigure', {})
+          status = reconf.is_a?(Hash) ? reconf['status'].to_s.strip.downcase : nil
+          if status == 'ok'
+            Puppet.notice("opn_zabbix_agent: reconfigure of '#{device_name}' completed")
+          else
+            Puppet.warning(
+              "opn_zabbix_agent: reconfigure of '#{device_name}' returned unexpected " \
+              "status: #{reconf.inspect}",
+            )
           end
+        rescue Puppet::Error => e
+          Puppet.err("opn_zabbix_agent: reconfigure of '#{device_name}' failed: #{e.message}")
         end
         @devices_to_reconfigure.clear
       end
