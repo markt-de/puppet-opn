@@ -9,6 +9,7 @@
     - [Basic usage](#basic-usage)
     - [Multiple devices](#multiple-devices)
     - [Resource identifiers](#resource-identifiers)
+    - [Managing ACME Client](#managing-acme-client)
     - [Managing cron jobs](#managing-cron-jobs)
     - [Managing plugins](#managing-plugins)
     - [Managing firewall aliases](#managing-firewall-aliases)
@@ -43,14 +44,19 @@ This module provides the following resource types for one or more OPNsense devic
 
 | Type | Manages |
 |------|---------|
+| `opn_acmeclient_account` | ACME Client accounts |
+| `opn_acmeclient_action` | ACME Client automation actions |
+| `opn_acmeclient_certificate` | ACME Client certificates |
+| `opn_acmeclient_settings` | ACME Client global settings (singleton per device) |
+| `opn_acmeclient_validation` | ACME Client validation methods |
 | `opn_cron` | Cron jobs |
 | `opn_firewall_alias` | Firewall aliases |
 | `opn_firewall_category` | Firewall categories |
 | `opn_firewall_group` | Firewall interface groups |
 | `opn_firewall_rule` | Firewall filter rules (new GUI) |
 | `opn_group` | Local groups |
-| `opn_haproxy_acl` | HAProxy ACL rules |
-| `opn_haproxy_action` | HAProxy actions |
+| `opn_haproxy_acl` | HAProxy ACLs (conditions) |
+| `opn_haproxy_action` | HAProxy actions (rules) |
 | `opn_haproxy_backend` | HAProxy backend pools |
 | `opn_haproxy_cpu` | HAProxy CPU affinity / thread binding |
 | `opn_haproxy_errorfile` | HAProxy error files |
@@ -177,9 +183,76 @@ opn_haproxy_server { 'web-primary@opnsense01.example.com':
 }
 ```
 
-The same pattern applies to all list-based types: `opn_cron`, `opn_firewall_alias`, `opn_firewall_category`, `opn_firewall_group`, `opn_firewall_rule`, `opn_user`, `opn_group`, all `opn_haproxy_*` types, `opn_snapshot`, `opn_syslog`, `opn_trust_ca`, `opn_trust_cert`, `opn_trust_crl`, `opn_tunable`, `opn_zabbix_agent_userparameter`, and `opn_zabbix_agent_alias`.
+The same pattern applies to all list-based types: `opn_acmeclient_account`, `opn_acmeclient_action`, `opn_acmeclient_certificate`, `opn_acmeclient_validation`, `opn_cron`, `opn_firewall_alias`, `opn_firewall_category`, `opn_firewall_group`, `opn_firewall_rule`, `opn_user`, `opn_group`, all `opn_haproxy_*` types, `opn_snapshot`, `opn_syslog`, `opn_trust_ca`, `opn_trust_cert`, `opn_trust_crl`, `opn_tunable`, `opn_zabbix_agent_userparameter`, and `opn_zabbix_agent_alias`.
 
-**Singleton resources** (`opn_haproxy_settings`, `opn_hasync`, `opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
+**Singleton resources** (`opn_acmeclient_settings`, `opn_haproxy_settings`, `opn_hasync`, `opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
+
+### Managing ACME Client
+
+ACME Client resources (accounts, actions, certificates, validations, settings) are managed via the `acmeclient_*` parameters or directly via the corresponding `opn_acmeclient_*` types. The plugin `os-acme-client` must be installed on the device.
+
+Certificate relation fields (`account`, `validationMethod`, `restartActions`) and validation relation fields (`http_haproxyFrontends`) accept names which are automatically resolved to UUIDs. Settings relation fields (`UpdateCron`, `haproxyAclRef`, `haproxyActionRef`, `haproxyServerRef`, `haproxyBackendRef`) are also resolved by name.
+
+Only changes to `opn_acmeclient_settings` trigger `acmeclient/service/reconfigure`. The other four types do not trigger a reconfigure.
+
+Note that some items in Acme Client must have `enabled=1` set, otherwise they cannot be used/referenced by other items.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  plugins => {
+    'os-acme-client' => {
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+    },
+  },
+  acmeclient_accounts => {
+    'le-account' => {
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'ca'      => 'letsencrypt',
+      'email'   => 'admin@example.com',
+      'enabled' => '1',
+    },
+  },
+  acmeclient_actions => {
+    'restart_haproxy' => {
+      'devices'                 => ['opnsense01.example.com'],
+      'ensure'                  => 'present',
+      'type'                    => 'configd_generic',
+      'configd_generic_command' => 'haproxy restart',
+      'enabled'                 => '1',
+    },
+  },
+  acmeclient_validations => {
+    'http-01' => {
+      'devices'      => ['opnsense01.example.com'],
+      'ensure'       => 'present',
+      'method'       => 'http01',
+      'http_service' => 'haproxy',
+      'enabled'      => '1',
+    },
+  },
+  acmeclient_certificates => {
+    'web.example.com' => {
+      'devices'          => ['opnsense01.example.com'],
+      'ensure'           => 'present',
+      'altNames'         => 'www.example.com',
+      'account'          => 'le-account',
+      'validationMethod' => 'http-01',
+      'restartActions'   => 'restart_haproxy',
+      'enabled'          => '1',
+    },
+  },
+  acmeclient_settings => {
+    'opnsense01.example.com' => {
+      'ensure'      => 'present',
+      'environment' => 'stg',
+      'autoRenewal' => '1',
+    },
+  },
+}
+```
 
 ### Managing cron jobs
 

@@ -4,6 +4,45 @@
 # provider configuration (config directory, credential files) to opn::config
 # and creates opn_* resources for one or more OPNsense devices.
 #
+# @param acmeclient_accounts
+#   Hash of ACME Client accounts to manage across devices.
+#   Each key is the account name.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_acmeclient_account.
+#
+# @param acmeclient_actions
+#   Hash of ACME Client automation actions to manage across devices.
+#   Each key is the action name.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_acmeclient_action.
+#
+# @param acmeclient_certificates
+#   Hash of ACME Client certificates to manage across devices.
+#   Each key is the certificate name.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_acmeclient_certificate.
+#
+# @param acmeclient_settings
+#   Hash of ACME Client global settings, one per device.
+#   Each key is the device name (not a "name@device" title).
+#   Each value is a hash with:
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_acmeclient_settings.
+#
+# @param acmeclient_validations
+#   Hash of ACME Client validation methods to manage across devices.
+#   Each key is the validation method name.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_acmeclient_validation.
+#
 # @param cron_jobs
 #   Hash of cron jobs to manage across devices.
 #   Each key is the cron job description.
@@ -320,6 +359,11 @@
 #   }
 #
 class opn (
+  Hash                 $acmeclient_accounts,
+  Hash                 $acmeclient_actions,
+  Hash                 $acmeclient_certificates,
+  Hash                 $acmeclient_settings,
+  Hash                 $acmeclient_validations,
   Hash                 $cron_jobs,
   Hash                 $devices,
   Hash                 $firewall_aliases,
@@ -361,6 +405,105 @@ class opn (
     devices => $devices,
   }
   contain 'opn::config'
+
+  # Manage ACME Client accounts across devices
+  $acmeclient_accounts.each |String $item_name, Hash $item_options| {
+    $acme_account_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $acme_account_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $acme_account_config = $item_options - ['devices', 'ensure']
+
+    $acme_account_devices.each |String $device_name| {
+      opn_acmeclient_account { "${item_name}@${device_name}":
+        ensure  => $acme_account_ensure,
+        config  => $acme_account_config,
+        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+      }
+    }
+  }
+
+  # Manage ACME Client automation actions across devices
+  $acmeclient_actions.each |String $item_name, Hash $item_options| {
+    $acme_action_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $acme_action_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $acme_action_config = $item_options - ['devices', 'ensure']
+
+    $acme_action_devices.each |String $device_name| {
+      opn_acmeclient_action { "${item_name}@${device_name}":
+        ensure  => $acme_action_ensure,
+        config  => $acme_action_config,
+        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+      }
+    }
+  }
+
+  # Manage ACME Client certificates across devices
+  $acmeclient_certificates.each |String $item_name, Hash $item_options| {
+    $acme_cert_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $acme_cert_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $acme_cert_config = $item_options - ['devices', 'ensure']
+
+    $acme_cert_devices.each |String $device_name| {
+      opn_acmeclient_certificate { "${item_name}@${device_name}":
+        ensure  => $acme_cert_ensure,
+        config  => $acme_cert_config,
+        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+      }
+    }
+  }
+
+  # Manage ACME Client settings per device (singleton per device)
+  $acmeclient_settings.each |String $device_name, Hash $settings_options| {
+    $acme_settings_ensure = 'ensure' in $settings_options ? {
+      true    => $settings_options['ensure'],
+      default => 'present',
+    }
+    $acme_settings_config = $settings_options - ['ensure']
+
+    opn_acmeclient_settings { $device_name:
+      ensure  => $acme_settings_ensure,
+      config  => $acme_settings_config,
+      require => File["${opn::config::config_dir}/${device_name}.yaml"],
+    }
+  }
+
+  # Manage ACME Client validation methods across devices
+  $acmeclient_validations.each |String $item_name, Hash $item_options| {
+    $acme_validation_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $acme_validation_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $acme_validation_config = $item_options - ['devices', 'ensure']
+
+    $acme_validation_devices.each |String $device_name| {
+      opn_acmeclient_validation { "${item_name}@${device_name}":
+        ensure  => $acme_validation_ensure,
+        config  => $acme_validation_config,
+        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+      }
+    }
+  }
 
   # Manage cron jobs across devices
   $cron_jobs.each |String $job_desc, Hash $job_options| {

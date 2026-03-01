@@ -3,6 +3,11 @@ opn::config::config_dir: '/etc/puppet/opn'
 opn::config::devices: {}
 opn::config::group: 'root'
 opn::config::owner: 'root'
+opn::acmeclient_accounts: {}
+opn::acmeclient_actions: {}
+opn::acmeclient_certificates: {}
+opn::acmeclient_settings: {}
+opn::acmeclient_validations: {}
 opn::cron_jobs: {}
 opn::devices: {}
 opn::firewall_aliases: {}
