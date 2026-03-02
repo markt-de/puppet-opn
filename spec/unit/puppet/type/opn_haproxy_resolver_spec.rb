@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_haproxy_resolver) do
   let(:type_name) { :opn_haproxy_resolver }
-  let(:title) { 'dns_resolver@fw01' }
+  let(:title) { 'dns_resolver@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

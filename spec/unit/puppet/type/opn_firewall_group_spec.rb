@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_firewall_group) do
   let(:type_name) { :opn_firewall_group }
-  let(:title) { 'dmz@fw01' }
+  let(:title) { 'dmz@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

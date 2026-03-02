@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_syslog) do
   let(:type_name) { :opn_syslog }
-  let(:title) { 'Central syslog@fw01' }
+  let(:title) { 'Central syslog@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

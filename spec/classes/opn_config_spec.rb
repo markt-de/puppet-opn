@@ -43,8 +43,8 @@ describe 'opn::config' do
           {
             'config_dir' => '/etc/puppet/opn',
             'devices'    => {
-              'fw01' => {
-                'url'        => 'https://fw01.example.com/api',
+              'opnsense01' => {
+                'url'        => 'https://opnsense01.example.com/api',
                 'api_key'    => 'mykey',
                 'api_secret' => 'mysecret',
               },
@@ -57,7 +57,7 @@ describe 'opn::config' do
         it { is_expected.to compile.with_all_deps }
 
         it 'creates per-device YAML file with mode 0600' do
-          is_expected.to contain_file('/etc/puppet/opn/fw01.yaml').with(
+          is_expected.to contain_file('/etc/puppet/opn/opnsense01.yaml').with(
             ensure: 'file',
             owner: 'root',
             group: 'root',
@@ -67,7 +67,7 @@ describe 'opn::config' do
         end
 
         it 'requires the config directory' do
-          is_expected.to contain_file('/etc/puppet/opn/fw01.yaml').that_requires(
+          is_expected.to contain_file('/etc/puppet/opn/opnsense01.yaml').that_requires(
             'File[/etc/puppet/opn]',
           )
         end

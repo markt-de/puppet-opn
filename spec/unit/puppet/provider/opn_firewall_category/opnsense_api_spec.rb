@@ -9,8 +9,8 @@ describe Puppet::Type.type(:opn_firewall_category).provider(:opnsense_api) do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
     described_class.instance_variable_set(:@devices_to_reconfigure, {}) if described_class.instance_variable_defined?(:@devices_to_reconfigure)
   end
 
@@ -23,7 +23,7 @@ describe Puppet::Type.type(:opn_firewall_category).provider(:opnsense_api) do
                                      .and_return({ 'rows' => [{ 'uuid' => 'aaa-bbb', 'name' => 'web_servers', 'color' => 'red' }] })
       instances = described_class.instances
       expect(instances.size).to eq(1)
-      expect(instances[0].name).to eq('web_servers@fw01')
+      expect(instances[0].name).to eq('web_servers@opnsense01')
       expect(instances[0].instance_variable_get(:@property_hash)[:config]).to include('name' => 'web_servers', 'color' => 'red')
       expect(instances[0].instance_variable_get(:@property_hash)[:config]).not_to have_key('uuid')
     end
@@ -47,15 +47,15 @@ describe Puppet::Type.type(:opn_firewall_category).provider(:opnsense_api) do
     it 'matches instances to resources' do
       allow(client).to receive(:post).with('firewall/category/search_item', {})
                                      .and_return({ 'rows' => [{ 'uuid' => 'aaa-bbb', 'name' => 'web_servers', 'color' => 'red' }] })
-      resource = type_class.new(name: 'web_servers@fw01')
-      described_class.prefetch({ 'web_servers@fw01' => resource })
-      expect(resource.provider.name).to eq('web_servers@fw01')
+      resource = type_class.new(name: 'web_servers@opnsense01')
+      described_class.prefetch({ 'web_servers@opnsense01' => resource })
+      expect(resource.provider.name).to eq('web_servers@opnsense01')
     end
   end
 
   describe '#create' do
     it 'calls the add_item endpoint' do
-      resource = type_class.new(name: 'web_servers@fw01', config: { 'color' => 'red' })
+      resource = type_class.new(name: 'web_servers@opnsense01', config: { 'color' => 'red' })
       provider = described_class.new
       resource.provider = provider
       expect(client).to receive(:post).with(
@@ -66,7 +66,7 @@ describe Puppet::Type.type(:opn_firewall_category).provider(:opnsense_api) do
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'web_servers@fw01', config: { 'color' => 'red' })
+      resource = type_class.new(name: 'web_servers@opnsense01', config: { 'color' => 'red' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
@@ -76,11 +76,11 @@ describe Puppet::Type.type(:opn_firewall_category).provider(:opnsense_api) do
 
   describe '#destroy' do
     it 'calls the del_item endpoint' do
-      resource = type_class.new(name: 'web_servers@fw01')
+      resource = type_class.new(name: 'web_servers@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'web_servers@fw01', device: 'fw01', uuid: 'aaa-bbb',
+                                       ensure: :present, name: 'web_servers@opnsense01', device: 'opnsense01', uuid: 'aaa-bbb',
                                      })
       expect(client).to receive(:post).with('firewall/category/del_item/aaa-bbb', {})
                                       .and_return({ 'result' => 'deleted' })
@@ -88,11 +88,11 @@ describe Puppet::Type.type(:opn_firewall_category).provider(:opnsense_api) do
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'web_servers@fw01')
+      resource = type_class.new(name: 'web_servers@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'web_servers@fw01', device: 'fw01', uuid: 'aaa-bbb',
+                                       ensure: :present, name: 'web_servers@opnsense01', device: 'opnsense01', uuid: 'aaa-bbb',
                                      })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
       expect { provider.destroy }.to raise_error(Puppet::Error)
@@ -101,11 +101,11 @@ describe Puppet::Type.type(:opn_firewall_category).provider(:opnsense_api) do
 
   describe '#flush' do
     it 'calls the set_item endpoint when config has changed' do
-      resource = type_class.new(name: 'web_servers@fw01', config: { 'color' => 'blue' })
+      resource = type_class.new(name: 'web_servers@opnsense01', config: { 'color' => 'blue' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'web_servers@fw01', device: 'fw01', uuid: 'aaa-bbb',
+                                       ensure: :present, name: 'web_servers@opnsense01', device: 'opnsense01', uuid: 'aaa-bbb',
         config: { 'name' => 'web_servers', 'color' => 'red' },
                                      })
       provider.instance_variable_set(:@pending_config, { 'color' => 'blue' })
@@ -117,22 +117,22 @@ describe Puppet::Type.type(:opn_firewall_category).provider(:opnsense_api) do
     end
 
     it 'does nothing when no pending config' do
-      resource = type_class.new(name: 'web_servers@fw01')
+      resource = type_class.new(name: 'web_servers@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'web_servers@fw01', device: 'fw01', uuid: 'aaa-bbb',
+                                       ensure: :present, name: 'web_servers@opnsense01', device: 'opnsense01', uuid: 'aaa-bbb',
                                      })
       provider.flush
       # No API call expected
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'web_servers@fw01', config: { 'color' => 'blue' })
+      resource = type_class.new(name: 'web_servers@opnsense01', config: { 'color' => 'blue' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'web_servers@fw01', device: 'fw01', uuid: 'aaa-bbb',
+                                       ensure: :present, name: 'web_servers@opnsense01', device: 'opnsense01', uuid: 'aaa-bbb',
                                      })
       provider.instance_variable_set(:@pending_config, { 'color' => 'blue' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })

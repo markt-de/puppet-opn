@@ -36,7 +36,7 @@ describe PuppetX::Opn::ApiClient do
     let(:config_dir) { Dir.mktmpdir }
     let(:device_config) do
       {
-        'url'        => 'https://fw01.example.com/api',
+        'url'        => 'https://opnsense01.example.com/api',
         'api_key'    => 'key1',
         'api_secret' => 'secret1',
         'ssl_verify' => false,
@@ -51,9 +51,9 @@ describe PuppetX::Opn::ApiClient do
     after(:each) { FileUtils.rm_rf(config_dir) }
 
     it 'creates client from YAML' do
-      File.write(File.join(config_dir, 'fw01.yaml'), YAML.dump(device_config))
-      client = described_class.from_device('fw01')
-      expect(client.instance_variable_get(:@url)).to eq('https://fw01.example.com/api')
+      File.write(File.join(config_dir, 'opnsense01.yaml'), YAML.dump(device_config))
+      client = described_class.from_device('opnsense01')
+      expect(client.instance_variable_get(:@url)).to eq('https://opnsense01.example.com/api')
       expect(client.instance_variable_get(:@api_key)).to eq('key1')
       expect(client.instance_variable_get(:@ssl_verify)).to be false
       expect(client.instance_variable_get(:@timeout)).to eq(30)
@@ -89,9 +89,9 @@ describe PuppetX::Opn::ApiClient do
     after(:each) { FileUtils.rm_rf(config_dir) }
 
     it 'returns names from YAML files' do
-      File.write(File.join(config_dir, 'fw01.yaml'), '')
+      File.write(File.join(config_dir, 'opnsense01.yaml'), '')
       File.write(File.join(config_dir, 'fw02.yaml'), '')
-      expect(described_class.device_names).to contain_exactly('fw01', 'fw02')
+      expect(described_class.device_names).to contain_exactly('opnsense01', 'fw02')
     end
 
     it 'returns empty array when no files' do

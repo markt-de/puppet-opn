@@ -10,8 +10,8 @@ describe Puppet::Type.type(:opn_zabbix_agent_alias).provider(:opnsense_api) do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
     PuppetX::Opn::ZabbixAgentReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
   end
 
@@ -38,7 +38,7 @@ describe Puppet::Type.type(:opn_zabbix_agent_alias).provider(:opnsense_api) do
                                     .and_return(api_response)
       instances = described_class.instances
       expect(instances.size).to eq(1)
-      expect(instances[0].name).to eq('ping@fw01')
+      expect(instances[0].name).to eq('ping@opnsense01')
     end
 
     it 'stores uuid and device in property_hash' do
@@ -47,7 +47,7 @@ describe Puppet::Type.type(:opn_zabbix_agent_alias).provider(:opnsense_api) do
       instances = described_class.instances
       hash = instances[0].instance_variable_get(:@property_hash)
       expect(hash[:uuid]).to eq('uuid1')
-      expect(hash[:device]).to eq('fw01')
+      expect(hash[:device]).to eq('opnsense01')
     end
 
     it 'stores config without id key' do
@@ -87,7 +87,7 @@ describe Puppet::Type.type(:opn_zabbix_agent_alias).provider(:opnsense_api) do
 
   describe '#create' do
     it 'calls addAlias endpoint with key from name' do
-      resource = type_class.new(name: 'ping@fw01', config: { 'sourceKey' => 'icmpping' })
+      resource = type_class.new(name: 'ping@opnsense01', config: { 'sourceKey' => 'icmpping' })
       provider = described_class.new
       resource.provider = provider
       expect(client).to receive(:post).with(
@@ -98,7 +98,7 @@ describe Puppet::Type.type(:opn_zabbix_agent_alias).provider(:opnsense_api) do
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'ping@fw01', config: { 'sourceKey' => 'icmpping' })
+      resource = type_class.new(name: 'ping@opnsense01', config: { 'sourceKey' => 'icmpping' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
@@ -108,11 +108,11 @@ describe Puppet::Type.type(:opn_zabbix_agent_alias).provider(:opnsense_api) do
 
   describe '#destroy' do
     it 'calls delAlias endpoint with uuid' do
-      resource = type_class.new(name: 'ping@fw01')
+      resource = type_class.new(name: 'ping@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'ping@fw01', device: 'fw01', uuid: 'uuid1',
+                                       ensure: :present, name: 'ping@opnsense01', device: 'opnsense01', uuid: 'uuid1',
                                      })
       expect(client).to receive(:post).with('zabbixagent/settings/delAlias/uuid1', {})
                                       .and_return({ 'result' => 'deleted' })
@@ -120,11 +120,11 @@ describe Puppet::Type.type(:opn_zabbix_agent_alias).provider(:opnsense_api) do
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'ping@fw01')
+      resource = type_class.new(name: 'ping@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'ping@fw01', device: 'fw01', uuid: 'uuid1',
+                                       ensure: :present, name: 'ping@opnsense01', device: 'opnsense01', uuid: 'uuid1',
                                      })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
       expect { provider.destroy }.to raise_error(Puppet::Error)
@@ -133,11 +133,11 @@ describe Puppet::Type.type(:opn_zabbix_agent_alias).provider(:opnsense_api) do
 
   describe '#flush' do
     it 'calls setAlias endpoint with uuid and pending config' do
-      resource = type_class.new(name: 'ping@fw01', config: { 'sourceKey' => 'icmpping[,1]' })
+      resource = type_class.new(name: 'ping@opnsense01', config: { 'sourceKey' => 'icmpping[,1]' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'ping@fw01', device: 'fw01', uuid: 'uuid1',
+                                       ensure: :present, name: 'ping@opnsense01', device: 'opnsense01', uuid: 'uuid1',
         config: { 'key' => 'ping', 'sourceKey' => 'icmpping' },
                                      })
       provider.instance_variable_set(:@pending_config, { 'sourceKey' => 'icmpping[,1]' })
@@ -149,22 +149,22 @@ describe Puppet::Type.type(:opn_zabbix_agent_alias).provider(:opnsense_api) do
     end
 
     it 'does nothing when no pending config' do
-      resource = type_class.new(name: 'ping@fw01')
+      resource = type_class.new(name: 'ping@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'ping@fw01', device: 'fw01', uuid: 'uuid1',
+                                       ensure: :present, name: 'ping@opnsense01', device: 'opnsense01', uuid: 'uuid1',
                                      })
       provider.flush
       # No API call expected
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'ping@fw01', config: { 'sourceKey' => 'test' })
+      resource = type_class.new(name: 'ping@opnsense01', config: { 'sourceKey' => 'test' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'ping@fw01', device: 'fw01', uuid: 'uuid1',
+                                       ensure: :present, name: 'ping@opnsense01', device: 'opnsense01', uuid: 'uuid1',
                                      })
       provider.instance_variable_set(:@pending_config, { 'sourceKey' => 'test' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })

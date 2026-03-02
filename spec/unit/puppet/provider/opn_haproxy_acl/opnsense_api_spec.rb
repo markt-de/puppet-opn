@@ -12,8 +12,8 @@ RSpec.describe provider_class do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_with_errors, {})
     PuppetX::Opn::HaproxyUuidResolver.instance_variable_set(:@cache, {})
@@ -49,7 +49,7 @@ RSpec.describe provider_class do
 
       instances = described_class.instances
       expect(instances.size).to eq(1)
-      expect(instances.first.get(:name)).to eq('is_https@fw01')
+      expect(instances.first.get(:name)).to eq('is_https@opnsense01')
       expect(instances.first.get(:config)).to eq({ 'name' => 'is_https', 'use_backend' => 'web_backend' })
     end
 
@@ -67,8 +67,8 @@ RSpec.describe provider_class do
       allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_names)
         .and_return({ 'name' => 'is_https', 'expression' => 'ssl_fc' })
 
-      resource = type_class.new(name: 'is_https@fw01', config: { 'expression' => 'ssl_fc' })
-      resources = { 'is_https@fw01' => resource }
+      resource = type_class.new(name: 'is_https@opnsense01', config: { 'expression' => 'ssl_fc' })
+      resources = { 'is_https@opnsense01' => resource }
       described_class.prefetch(resources)
       expect(resource.provider).not_to be_nil
       expect(resource.provider.get(:uuid)).to eq('aaa')
@@ -84,23 +84,23 @@ RSpec.describe provider_class do
 
   describe '#exists?' do
     it 'returns true when ensure is present' do
-      provider = described_class.new(ensure: :present, name: 'is_https@fw01')
+      provider = described_class.new(ensure: :present, name: 'is_https@opnsense01')
       expect(provider.exists?).to be true
     end
 
     it 'returns false when ensure is absent' do
-      provider = described_class.new(ensure: :absent, name: 'is_https@fw01')
+      provider = described_class.new(ensure: :absent, name: 'is_https@opnsense01')
       expect(provider.exists?).to be false
     end
   end
 
   describe '#create' do
     it 'translates names to UUIDs before API call' do
-      resource = type_class.new(name: 'is_https@fw01', config: { 'expression' => 'ssl_fc' })
+      resource = type_class.new(name: 'is_https@opnsense01', config: { 'expression' => 'ssl_fc' })
       provider = described_class.new(resource)
       expect(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'is_https', 'expression' => 'ssl_fc' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('fw01', client)
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
       allow(client).to receive(:post).with('haproxy/settings/add_acl', { 'acl' => { 'name' => 'is_https', 'expression' => 'ssl_fc' } })
                                      .and_return({ 'result' => 'saved' })
 
@@ -108,12 +108,12 @@ RSpec.describe provider_class do
     end
 
     it 'marks error on failure' do
-      resource = type_class.new(name: 'is_https@fw01', config: { 'expression' => 'ssl_fc' })
+      resource = type_class.new(name: 'is_https@opnsense01', config: { 'expression' => 'ssl_fc' })
       provider = described_class.new(resource)
       allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'is_https', 'expression' => 'ssl_fc' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('fw01')
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')
 
       expect { provider.create }.to raise_error(Puppet::Error)
     end
@@ -121,15 +121,15 @@ RSpec.describe provider_class do
 
   describe '#destroy' do
     it 'deletes the ACL and marks reconfigure' do
-      resource = type_class.new(name: 'is_https@fw01')
+      resource = type_class.new(name: 'is_https@opnsense01')
       provider = described_class.new(
         ensure: :present,
-        name: 'is_https@fw01',
-        device: 'fw01',
+        name: 'is_https@opnsense01',
+        device: 'opnsense01',
         uuid: 'aaa-bbb',
       )
       provider.resource = resource
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('fw01', client)
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
       expect(client).to receive(:post).with('haproxy/settings/del_acl/aaa-bbb', {})
                                       .and_return({ 'result' => 'deleted' })
 
@@ -137,16 +137,16 @@ RSpec.describe provider_class do
     end
 
     it 'marks error on failure' do
-      resource = type_class.new(name: 'is_https@fw01')
+      resource = type_class.new(name: 'is_https@opnsense01')
       provider = described_class.new(
         ensure: :present,
-        name: 'is_https@fw01',
-        device: 'fw01',
+        name: 'is_https@opnsense01',
+        device: 'opnsense01',
         uuid: 'aaa-bbb',
       )
       provider.resource = resource
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('fw01')
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')
 
       expect { provider.destroy }.to raise_error(Puppet::Error)
     end
@@ -154,11 +154,11 @@ RSpec.describe provider_class do
 
   describe '#flush' do
     it 'translates names to UUIDs and updates the ACL' do
-      resource = type_class.new(name: 'is_https@fw01', config: { 'expression' => 'hdr(host)' })
+      resource = type_class.new(name: 'is_https@opnsense01', config: { 'expression' => 'hdr(host)' })
       provider = described_class.new(
         ensure: :present,
-        name: 'is_https@fw01',
-        device: 'fw01',
+        name: 'is_https@opnsense01',
+        device: 'opnsense01',
         uuid: 'aaa-bbb',
         config: { 'name' => 'is_https', 'expression' => 'ssl_fc' },
       )
@@ -167,7 +167,7 @@ RSpec.describe provider_class do
 
       expect(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'is_https', 'expression' => 'hdr(host)' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('fw01', client)
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
       allow(client).to receive(:post)
         .with('haproxy/settings/set_acl/aaa-bbb', { 'acl' => { 'name' => 'is_https', 'expression' => 'hdr(host)' } })
         .and_return({ 'result' => 'saved' })
@@ -176,11 +176,11 @@ RSpec.describe provider_class do
     end
 
     it 'does nothing when no pending config' do
-      resource = type_class.new(name: 'is_https@fw01', config: { 'expression' => 'ssl_fc' })
+      resource = type_class.new(name: 'is_https@opnsense01', config: { 'expression' => 'ssl_fc' })
       provider = described_class.new(
         ensure: :present,
-        name: 'is_https@fw01',
-        device: 'fw01',
+        name: 'is_https@opnsense01',
+        device: 'opnsense01',
         uuid: 'aaa-bbb',
       )
       provider.resource = resource
@@ -190,11 +190,11 @@ RSpec.describe provider_class do
     end
 
     it 'marks error on failure' do
-      resource = type_class.new(name: 'is_https@fw01', config: { 'expression' => 'hdr(host)' })
+      resource = type_class.new(name: 'is_https@opnsense01', config: { 'expression' => 'hdr(host)' })
       provider = described_class.new(
         ensure: :present,
-        name: 'is_https@fw01',
-        device: 'fw01',
+        name: 'is_https@opnsense01',
+        device: 'opnsense01',
         uuid: 'aaa-bbb',
         config: { 'name' => 'is_https', 'expression' => 'ssl_fc' },
       )
@@ -204,7 +204,7 @@ RSpec.describe provider_class do
       allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'is_https', 'expression' => 'hdr(host)' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('fw01')
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')
 
       expect { provider.flush }.to raise_error(Puppet::Error)
     end

@@ -22,8 +22,8 @@
 # @example Standalone usage
 #   class { 'opn::config':
 #     devices => {
-#       'fw01' => {
-#         'url'        => 'https://fw01.example.com/api',
+#       'opnsense01' => {
+#         'url'        => 'https://opnsense01.example.com/api',
 #         'api_key'    => 'key',
 #         'api_secret' => 'secret',
 #       },

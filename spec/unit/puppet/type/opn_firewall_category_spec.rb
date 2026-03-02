@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_firewall_category) do
   let(:type_name) { :opn_firewall_category }
-  let(:title) { 'web_traffic@fw01' }
+  let(:title) { 'web_traffic@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

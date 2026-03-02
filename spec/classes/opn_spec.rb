@@ -17,8 +17,8 @@ describe 'opn' do
         let(:params) do
           {
             'devices' => {
-              'fw01' => {
-                'url'        => 'https://fw01/api',
+              'opnsense01' => {
+                'url'        => 'https://opnsense01/api',
                 'api_key'    => 'k',
                 'api_secret' => 's',
               },
@@ -37,7 +37,7 @@ describe 'opn' do
         end
 
         it 'creates the per-device YAML credential file' do
-          is_expected.to contain_file("#{config_dir}/fw01.yaml").with(
+          is_expected.to contain_file("#{config_dir}/opnsense01.yaml").with(
             ensure: 'file',
             mode: '0600',
             show_diff: false,
@@ -49,8 +49,8 @@ describe 'opn' do
         let(:params) do
           {
             'devices' => {
-              'fw01' => {
-                'url'        => 'https://fw01/api',
+              'opnsense01' => {
+                'url'        => 'https://opnsense01/api',
                 'api_key'    => 'k',
                 'api_secret' => 's',
               },
@@ -67,7 +67,7 @@ describe 'opn' do
         it { is_expected.to compile.with_all_deps }
 
         it 'creates a firewall rule resource with correct title' do
-          is_expected.to contain_opn_firewall_rule('Allow HTTP@fw01').with(
+          is_expected.to contain_opn_firewall_rule('Allow HTTP@opnsense01').with(
             ensure: 'present',
           )
         end
@@ -77,8 +77,8 @@ describe 'opn' do
         let(:params) do
           {
             'devices' => {
-              'fw01' => {
-                'url'        => 'https://fw01/api',
+              'opnsense01' => {
+                'url'        => 'https://opnsense01/api',
                 'api_key'    => 'k',
                 'api_secret' => 's',
               },
@@ -92,7 +92,7 @@ describe 'opn' do
         it { is_expected.to compile.with_all_deps }
 
         it 'creates a plugin resource' do
-          is_expected.to contain_opn_plugin('os-haproxy@fw01').with(
+          is_expected.to contain_opn_plugin('os-haproxy@opnsense01').with(
             ensure: 'present',
           )
         end
@@ -102,14 +102,14 @@ describe 'opn' do
         let(:params) do
           {
             'devices' => {
-              'fw01' => {
-                'url'        => 'https://fw01/api',
+              'opnsense01' => {
+                'url'        => 'https://opnsense01/api',
                 'api_key'    => 'k',
                 'api_secret' => 's',
               },
             },
             'haproxy_settings' => {
-              'fw01' => {
+              'opnsense01' => {
                 'general' => { 'enabled' => '1' },
               },
             },
@@ -119,7 +119,7 @@ describe 'opn' do
         it { is_expected.to compile.with_all_deps }
 
         it 'creates haproxy_settings keyed by device' do
-          is_expected.to contain_opn_haproxy_settings('fw01').with(
+          is_expected.to contain_opn_haproxy_settings('opnsense01').with(
             ensure: 'present',
           )
         end
@@ -129,8 +129,8 @@ describe 'opn' do
         let(:params) do
           {
             'devices' => {
-              'fw01' => {
-                'url'        => 'https://fw01/api',
+              'opnsense01' => {
+                'url'        => 'https://opnsense01/api',
                 'api_key'    => 'k',
                 'api_secret' => 's',
               },
@@ -147,7 +147,7 @@ describe 'opn' do
         it { is_expected.to compile.with_all_deps }
 
         it 'creates a snapshot resource' do
-          is_expected.to contain_opn_snapshot('stable@fw01').with(
+          is_expected.to contain_opn_snapshot('stable@opnsense01').with(
             ensure: 'present',
           )
         end

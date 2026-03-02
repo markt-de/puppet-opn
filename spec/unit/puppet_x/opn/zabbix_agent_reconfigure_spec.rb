@@ -12,21 +12,21 @@ describe PuppetX::Opn::ZabbixAgentReconfigure do
 
   describe '.mark' do
     it 'registers a device' do
-      described_class.mark('fw01', client)
-      expect(described_class.instance_variable_get(:@devices_to_reconfigure)).to have_key('fw01')
+      described_class.mark('opnsense01', client)
+      expect(described_class.instance_variable_get(:@devices_to_reconfigure)).to have_key('opnsense01')
     end
 
     it 'does not overwrite an existing entry' do
       other_client = instance_double('PuppetX::Opn::ApiClient')
-      described_class.mark('fw01', client)
-      described_class.mark('fw01', other_client)
-      expect(described_class.instance_variable_get(:@devices_to_reconfigure)['fw01']).to eq(client)
+      described_class.mark('opnsense01', client)
+      described_class.mark('opnsense01', other_client)
+      expect(described_class.instance_variable_get(:@devices_to_reconfigure)['opnsense01']).to eq(client)
     end
   end
 
   describe '.run' do
     it 'reconfigures each registered device' do
-      described_class.mark('fw01', client)
+      described_class.mark('opnsense01', client)
       expect(client).to receive(:post).with('zabbixagent/service/reconfigure', {})
                                       .and_return({ 'status' => 'ok' })
 
@@ -34,7 +34,7 @@ describe PuppetX::Opn::ZabbixAgentReconfigure do
     end
 
     it 'clears tracking hash after run' do
-      described_class.mark('fw01', client)
+      described_class.mark('opnsense01', client)
       allow(client).to receive(:post).and_return({ 'status' => 'ok' })
 
       described_class.run
@@ -43,7 +43,7 @@ describe PuppetX::Opn::ZabbixAgentReconfigure do
     end
 
     it 'logs warning on unexpected status' do
-      described_class.mark('fw01', client)
+      described_class.mark('opnsense01', client)
       allow(client).to receive(:post).and_return({ 'status' => 'error' })
 
       expect(Puppet).to receive(:warning).with(%r{unexpected status})
@@ -51,7 +51,7 @@ describe PuppetX::Opn::ZabbixAgentReconfigure do
     end
 
     it 'handles API errors gracefully' do
-      described_class.mark('fw01', client)
+      described_class.mark('opnsense01', client)
       allow(client).to receive(:post).and_raise(Puppet::Error, 'connection failed')
 
       expect(Puppet).to receive(:err).with(%r{failed})

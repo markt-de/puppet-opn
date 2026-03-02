@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_zabbix_agent_userparameter) do
   let(:type_name) { :opn_zabbix_agent_userparameter }
-  let(:title) { 'custom.uptime@fw01' }
+  let(:title) { 'custom.uptime@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

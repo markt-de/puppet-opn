@@ -9,8 +9,8 @@ describe Puppet::Type.type(:opn_trust_crl).provider(:opnsense_api) do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
   end
 
   it_behaves_like 'opn provider basics'
@@ -24,7 +24,7 @@ describe Puppet::Type.type(:opn_trust_crl).provider(:opnsense_api) do
                                     .and_return({ 'crl' => { 'descr' => 'CRL for My Root CA', 'lifetime' => '9999' } })
       instances = described_class.instances
       expect(instances.size).to eq(1)
-      expect(instances[0].name).to eq('My Root CA@fw01')
+      expect(instances[0].name).to eq('My Root CA@opnsense01')
       expect(instances[0].instance_variable_get(:@property_hash)[:caref]).to eq('abc123')
       expect(instances[0].instance_variable_get(:@property_hash)[:config]).to include('descr' => 'CRL for My Root CA', 'lifetime' => '9999')
     end
@@ -50,15 +50,15 @@ describe Puppet::Type.type(:opn_trust_crl).provider(:opnsense_api) do
                                     .and_return({ 'rows' => [{ 'descr' => 'My Root CA', 'refid' => 'abc123', 'crl_descr' => 'CRL for My Root CA' }] })
       allow(client).to receive(:get).with('trust/crl/get/abc123')
                                     .and_return({ 'crl' => { 'descr' => 'CRL for My Root CA', 'lifetime' => '9999' } })
-      resource = type_class.new(name: 'My Root CA@fw01')
-      described_class.prefetch({ 'My Root CA@fw01' => resource })
-      expect(resource.provider.name).to eq('My Root CA@fw01')
+      resource = type_class.new(name: 'My Root CA@opnsense01')
+      described_class.prefetch({ 'My Root CA@opnsense01' => resource })
+      expect(resource.provider.name).to eq('My Root CA@opnsense01')
     end
   end
 
   describe '#create' do
     it 'resolves caref and calls the set endpoint' do
-      resource = type_class.new(name: 'My Root CA@fw01', config: { 'descr' => 'CRL for My Root CA', 'lifetime' => '9999' })
+      resource = type_class.new(name: 'My Root CA@opnsense01', config: { 'descr' => 'CRL for My Root CA', 'lifetime' => '9999' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:get).with('trust/ca/caList')
@@ -71,7 +71,7 @@ describe Puppet::Type.type(:opn_trust_crl).provider(:opnsense_api) do
     end
 
     it 'raises when CA is not found' do
-      resource = type_class.new(name: 'Unknown CA@fw01', config: { 'descr' => 'CRL' })
+      resource = type_class.new(name: 'Unknown CA@opnsense01', config: { 'descr' => 'CRL' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:get).with('trust/ca/caList')
@@ -80,7 +80,7 @@ describe Puppet::Type.type(:opn_trust_crl).provider(:opnsense_api) do
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'My Root CA@fw01', config: { 'descr' => 'CRL' })
+      resource = type_class.new(name: 'My Root CA@opnsense01', config: { 'descr' => 'CRL' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:get).with('trust/ca/caList')
@@ -92,11 +92,11 @@ describe Puppet::Type.type(:opn_trust_crl).provider(:opnsense_api) do
 
   describe '#destroy' do
     it 'calls the del endpoint with caref' do
-      resource = type_class.new(name: 'My Root CA@fw01')
+      resource = type_class.new(name: 'My Root CA@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'My Root CA@fw01', device: 'fw01', caref: 'abc123',
+                                       ensure: :present, name: 'My Root CA@opnsense01', device: 'opnsense01', caref: 'abc123',
                                      })
       expect(client).to receive(:post).with('trust/crl/del/abc123', {})
                                       .and_return({ 'status' => 'deleted' })
@@ -104,11 +104,11 @@ describe Puppet::Type.type(:opn_trust_crl).provider(:opnsense_api) do
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'My Root CA@fw01')
+      resource = type_class.new(name: 'My Root CA@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'My Root CA@fw01', device: 'fw01', caref: 'abc123',
+                                       ensure: :present, name: 'My Root CA@opnsense01', device: 'opnsense01', caref: 'abc123',
                                      })
       allow(client).to receive(:post).and_return({ 'status' => 'failed' })
       expect { provider.destroy }.to raise_error(Puppet::Error)
@@ -117,11 +117,11 @@ describe Puppet::Type.type(:opn_trust_crl).provider(:opnsense_api) do
 
   describe '#flush' do
     it 'calls the set endpoint with caref when config has changed' do
-      resource = type_class.new(name: 'My Root CA@fw01', config: { 'lifetime' => '3650' })
+      resource = type_class.new(name: 'My Root CA@opnsense01', config: { 'lifetime' => '3650' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'My Root CA@fw01', device: 'fw01', caref: 'abc123',
+                                       ensure: :present, name: 'My Root CA@opnsense01', device: 'opnsense01', caref: 'abc123',
         config: { 'descr' => 'CRL for My Root CA', 'lifetime' => '9999' },
                                      })
       provider.instance_variable_set(:@pending_config, { 'lifetime' => '3650' })
@@ -133,22 +133,22 @@ describe Puppet::Type.type(:opn_trust_crl).provider(:opnsense_api) do
     end
 
     it 'does nothing when no pending config' do
-      resource = type_class.new(name: 'My Root CA@fw01')
+      resource = type_class.new(name: 'My Root CA@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'My Root CA@fw01', device: 'fw01', caref: 'abc123',
+                                       ensure: :present, name: 'My Root CA@opnsense01', device: 'opnsense01', caref: 'abc123',
                                      })
       provider.flush
       # No API call expected
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'My Root CA@fw01', config: { 'lifetime' => '3650' })
+      resource = type_class.new(name: 'My Root CA@opnsense01', config: { 'lifetime' => '3650' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'My Root CA@fw01', device: 'fw01', caref: 'abc123',
+                                       ensure: :present, name: 'My Root CA@opnsense01', device: 'opnsense01', caref: 'abc123',
                                      })
       provider.instance_variable_set(:@pending_config, { 'lifetime' => '3650' })
       allow(client).to receive(:post).and_return({ 'status' => 'failed' })

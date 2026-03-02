@@ -9,8 +9,8 @@ describe Puppet::Type.type(:opn_firewall_group).provider(:opnsense_api) do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
     described_class.instance_variable_set(:@devices_to_reconfigure, {})
   end
 
@@ -26,7 +26,7 @@ describe Puppet::Type.type(:opn_firewall_group).provider(:opnsense_api) do
                                                  }] })
       instances = described_class.instances
       expect(instances.size).to eq(1)
-      expect(instances[0].name).to eq('mygroup@fw01')
+      expect(instances[0].name).to eq('mygroup@opnsense01')
       expect(instances[0].instance_variable_get(:@property_hash)[:config]).to include('ifname' => 'mygroup', 'members' => 'lan,wan')
       expect(instances[0].instance_variable_get(:@property_hash)[:config]).not_to have_key('uuid')
     end
@@ -63,15 +63,15 @@ describe Puppet::Type.type(:opn_firewall_group).provider(:opnsense_api) do
                                                    'uuid' => 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
           'ifname' => 'mygroup', 'members' => 'lan,wan',
                                                  }] })
-      resource = type_class.new(name: 'mygroup@fw01')
-      described_class.prefetch({ 'mygroup@fw01' => resource })
-      expect(resource.provider.name).to eq('mygroup@fw01')
+      resource = type_class.new(name: 'mygroup@opnsense01')
+      described_class.prefetch({ 'mygroup@opnsense01' => resource })
+      expect(resource.provider.name).to eq('mygroup@opnsense01')
     end
   end
 
   describe '#create' do
     it 'calls the add_item endpoint' do
-      resource = type_class.new(name: 'mygroup@fw01', config: { 'members' => 'lan,wan' })
+      resource = type_class.new(name: 'mygroup@opnsense01', config: { 'members' => 'lan,wan' })
       provider = described_class.new
       resource.provider = provider
       expect(client).to receive(:post).with(
@@ -82,7 +82,7 @@ describe Puppet::Type.type(:opn_firewall_group).provider(:opnsense_api) do
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'mygroup@fw01', config: { 'members' => 'lan' })
+      resource = type_class.new(name: 'mygroup@opnsense01', config: { 'members' => 'lan' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
@@ -90,23 +90,23 @@ describe Puppet::Type.type(:opn_firewall_group).provider(:opnsense_api) do
     end
 
     it 'marks device for reconfigure' do
-      resource = type_class.new(name: 'mygroup@fw01', config: { 'members' => 'lan,wan' })
+      resource = type_class.new(name: 'mygroup@opnsense01', config: { 'members' => 'lan,wan' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:post).with('firewall/group/add_item', anything)
                                      .and_return({ 'result' => 'saved' })
       provider.create
-      expect(described_class.devices_to_reconfigure).to have_key('fw01')
+      expect(described_class.devices_to_reconfigure).to have_key('opnsense01')
     end
   end
 
   describe '#destroy' do
     it 'calls the del_item endpoint' do
-      resource = type_class.new(name: 'mygroup@fw01')
+      resource = type_class.new(name: 'mygroup@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'mygroup@fw01', device: 'fw01', uuid: 'aaa-bbb',
+                                       ensure: :present, name: 'mygroup@opnsense01', device: 'opnsense01', uuid: 'aaa-bbb',
                                      })
       expect(client).to receive(:post).with('firewall/group/del_item/aaa-bbb', {})
                                       .and_return({ 'result' => 'deleted' })
@@ -114,37 +114,37 @@ describe Puppet::Type.type(:opn_firewall_group).provider(:opnsense_api) do
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'mygroup@fw01')
+      resource = type_class.new(name: 'mygroup@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'mygroup@fw01', device: 'fw01', uuid: 'aaa-bbb',
+                                       ensure: :present, name: 'mygroup@opnsense01', device: 'opnsense01', uuid: 'aaa-bbb',
                                      })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
       expect { provider.destroy }.to raise_error(Puppet::Error)
     end
 
     it 'marks device for reconfigure' do
-      resource = type_class.new(name: 'mygroup@fw01')
+      resource = type_class.new(name: 'mygroup@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'mygroup@fw01', device: 'fw01', uuid: 'aaa-bbb',
+                                       ensure: :present, name: 'mygroup@opnsense01', device: 'opnsense01', uuid: 'aaa-bbb',
                                      })
       allow(client).to receive(:post).with('firewall/group/del_item/aaa-bbb', {})
                                      .and_return({ 'result' => 'deleted' })
       provider.destroy
-      expect(described_class.devices_to_reconfigure).to have_key('fw01')
+      expect(described_class.devices_to_reconfigure).to have_key('opnsense01')
     end
   end
 
   describe '#flush' do
     it 'calls the set_item endpoint when config has changed' do
-      resource = type_class.new(name: 'mygroup@fw01', config: { 'members' => 'lan' })
+      resource = type_class.new(name: 'mygroup@opnsense01', config: { 'members' => 'lan' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'mygroup@fw01', device: 'fw01', uuid: 'aaa-bbb',
+                                       ensure: :present, name: 'mygroup@opnsense01', device: 'opnsense01', uuid: 'aaa-bbb',
         config: { 'ifname' => 'mygroup', 'members' => 'lan,wan' },
                                      })
       provider.instance_variable_set(:@pending_config, { 'members' => 'lan' })
@@ -156,22 +156,22 @@ describe Puppet::Type.type(:opn_firewall_group).provider(:opnsense_api) do
     end
 
     it 'does nothing when no pending config' do
-      resource = type_class.new(name: 'mygroup@fw01')
+      resource = type_class.new(name: 'mygroup@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'mygroup@fw01', device: 'fw01', uuid: 'aaa-bbb',
+                                       ensure: :present, name: 'mygroup@opnsense01', device: 'opnsense01', uuid: 'aaa-bbb',
                                      })
       provider.flush
       # No API call expected
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'mygroup@fw01', config: { 'members' => 'lan' })
+      resource = type_class.new(name: 'mygroup@opnsense01', config: { 'members' => 'lan' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'mygroup@fw01', device: 'fw01', uuid: 'aaa-bbb',
+                                       ensure: :present, name: 'mygroup@opnsense01', device: 'opnsense01', uuid: 'aaa-bbb',
                                      })
       provider.instance_variable_set(:@pending_config, { 'members' => 'lan' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
@@ -179,30 +179,30 @@ describe Puppet::Type.type(:opn_firewall_group).provider(:opnsense_api) do
     end
 
     it 'marks device for reconfigure' do
-      resource = type_class.new(name: 'mygroup@fw01', config: { 'members' => 'lan' })
+      resource = type_class.new(name: 'mygroup@opnsense01', config: { 'members' => 'lan' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'mygroup@fw01', device: 'fw01', uuid: 'aaa-bbb',
+                                       ensure: :present, name: 'mygroup@opnsense01', device: 'opnsense01', uuid: 'aaa-bbb',
                                      })
       provider.instance_variable_set(:@pending_config, { 'members' => 'lan' })
       allow(client).to receive(:post).with('firewall/group/set_item/aaa-bbb', anything)
                                      .and_return({ 'result' => 'saved' })
       provider.flush
-      expect(described_class.devices_to_reconfigure).to have_key('fw01')
+      expect(described_class.devices_to_reconfigure).to have_key('opnsense01')
     end
   end
 
   describe '.post_resource_eval' do
     it 'calls reconfigure for each device that had changes' do
-      described_class.devices_to_reconfigure['fw01'] = client
+      described_class.devices_to_reconfigure['opnsense01'] = client
       expect(client).to receive(:post).with('firewall/group/reconfigure', {})
                                       .and_return({ 'status' => 'ok' })
       described_class.post_resource_eval
     end
 
     it 'clears devices_to_reconfigure after reconfigure' do
-      described_class.devices_to_reconfigure['fw01'] = client
+      described_class.devices_to_reconfigure['opnsense01'] = client
       allow(client).to receive(:post).with('firewall/group/reconfigure', {})
                                      .and_return({ 'status' => 'ok' })
       described_class.post_resource_eval

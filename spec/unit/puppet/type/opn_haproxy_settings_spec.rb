@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_haproxy_settings) do
   let(:type_name) { :opn_haproxy_settings }
-  let(:title) { 'fw01' }
+  let(:title) { 'opnsense01' }
 
   include_examples 'opn singleton type'
   include_examples 'opn type with config property'

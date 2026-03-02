@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_acmeclient_validation) do
   let(:type_name) { :opn_acmeclient_validation }
-  let(:title) { 'http-01@fw01' }
+  let(:title) { 'http-01@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'
@@ -33,16 +33,16 @@ describe Puppet::Type.type(:opn_acmeclient_validation) do
     it 'autorequires HAProxy frontends' do
       catalog = Puppet::Resource::Catalog.new
       validation = Puppet::Type.type(:opn_acmeclient_validation).new(
-        name: 'http-01@fw01',
+        name: 'http-01@opnsense01',
         config: { 'http_haproxyFrontends' => 'https_in,http_in' },
       )
-      fe1 = Puppet::Type.type(:opn_haproxy_frontend).new(name: 'https_in@fw01')
-      fe2 = Puppet::Type.type(:opn_haproxy_frontend).new(name: 'http_in@fw01')
+      fe1 = Puppet::Type.type(:opn_haproxy_frontend).new(name: 'https_in@opnsense01')
+      fe2 = Puppet::Type.type(:opn_haproxy_frontend).new(name: 'http_in@opnsense01')
       catalog.add_resource(validation, fe1, fe2)
       reqs = validation.autorequire
       req_sources = reqs.map { |r| r.source.to_s }
-      expect(req_sources).to include('Opn_haproxy_frontend[https_in@fw01]')
-      expect(req_sources).to include('Opn_haproxy_frontend[http_in@fw01]')
+      expect(req_sources).to include('Opn_haproxy_frontend[https_in@opnsense01]')
+      expect(req_sources).to include('Opn_haproxy_frontend[http_in@opnsense01]')
     end
   end
 end

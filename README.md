@@ -173,7 +173,7 @@ opn_haproxy_server { 'web01@opnsense01.example.com':
   ensure => absent,
 }
 # Step 2: add the new entry with the renamed identifier
-opn_haproxy_server { 'web-primary@opnsense01.example.com':
+opn_haproxy_server { 'new-web01@opnsense01.example.com':
   ensure => present,
   config => {
     'address' => '10.0.0.1',
@@ -765,9 +765,20 @@ class { 'opn':
 
 ### Using types directly
 
-All types can also be used directly without the `opn` wrapper class, provided the credential file already exists at `$config_dir/<device_name>.yaml`.
+All types can also be used directly without the `opn` wrapper class.
 
 ```puppet
+# Setup device configs.
+class { 'opn::config':
+  devices => {
+    'opnsense01.example.com' => {
+      'url'        => 'https://opnsense01.example.com/api',
+      'api_key'    => 'key',
+      'api_secret' => 'secret',
+    },
+  },
+}
+
 opn_cron { 'Daily haproxy reload@opnsense01.example.com':
   ensure => present,
   config => {
@@ -823,7 +834,7 @@ opn_firewall_rule { 'Allow SSH from mgmt@opnsense01.example.com':
 opn_user { 'jdoe@opnsense01.example.com':
   ensure => present,
   config => {
-    'password'    => '$2y$11$...',
+    'password'    => 'plaintextpassword',
     'description' => 'John Doe',
   },
 }

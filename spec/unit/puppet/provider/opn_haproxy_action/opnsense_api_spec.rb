@@ -12,8 +12,8 @@ RSpec.describe provider_class do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_with_errors, {})
     PuppetX::Opn::HaproxyUuidResolver.instance_variable_set(:@cache, {})
@@ -47,7 +47,7 @@ RSpec.describe provider_class do
 
       instances = described_class.instances
       expect(instances.size).to eq(1)
-      expect(instances.first.get(:name)).to eq('redirect_https@fw01')
+      expect(instances.first.get(:name)).to eq('redirect_https@opnsense01')
       expect(instances.first.get(:config)).to eq({ 'name' => 'redirect_https', 'use_backend' => 'web_backend' })
     end
 
@@ -65,8 +65,8 @@ RSpec.describe provider_class do
       allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_names)
         .and_return({ 'name' => 'redirect_https', 'type' => 'redirect' })
 
-      resource = type_class.new(name: 'redirect_https@fw01', config: { 'type' => 'redirect' })
-      resources = { 'redirect_https@fw01' => resource }
+      resource = type_class.new(name: 'redirect_https@opnsense01', config: { 'type' => 'redirect' })
+      resources = { 'redirect_https@opnsense01' => resource }
       described_class.prefetch(resources)
       expect(resource.provider).not_to be_nil
       expect(resource.provider.get(:uuid)).to eq('aaa')
@@ -82,23 +82,23 @@ RSpec.describe provider_class do
 
   describe '#exists?' do
     it 'returns true when ensure is present' do
-      provider = described_class.new(ensure: :present, name: 'redirect_https@fw01')
+      provider = described_class.new(ensure: :present, name: 'redirect_https@opnsense01')
       expect(provider.exists?).to be true
     end
 
     it 'returns false when ensure is absent' do
-      provider = described_class.new(ensure: :absent, name: 'redirect_https@fw01')
+      provider = described_class.new(ensure: :absent, name: 'redirect_https@opnsense01')
       expect(provider.exists?).to be false
     end
   end
 
   describe '#create' do
     it 'translates names to UUIDs before API call' do
-      resource = type_class.new(name: 'redirect_https@fw01', config: { 'type' => 'redirect' })
+      resource = type_class.new(name: 'redirect_https@opnsense01', config: { 'type' => 'redirect' })
       provider = described_class.new(resource)
       expect(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'redirect_https', 'type' => 'redirect' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('fw01', client)
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
       allow(client).to receive(:post).with('haproxy/settings/add_action', { 'action' => { 'name' => 'redirect_https', 'type' => 'redirect' } })
                                      .and_return({ 'result' => 'saved' })
 
@@ -106,12 +106,12 @@ RSpec.describe provider_class do
     end
 
     it 'marks error on failure' do
-      resource = type_class.new(name: 'redirect_https@fw01', config: { 'type' => 'redirect' })
+      resource = type_class.new(name: 'redirect_https@opnsense01', config: { 'type' => 'redirect' })
       provider = described_class.new(resource)
       allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'redirect_https', 'type' => 'redirect' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('fw01')
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')
 
       expect { provider.create }.to raise_error(Puppet::Error)
     end
@@ -119,15 +119,15 @@ RSpec.describe provider_class do
 
   describe '#destroy' do
     it 'deletes the action and marks reconfigure' do
-      resource = type_class.new(name: 'redirect_https@fw01')
+      resource = type_class.new(name: 'redirect_https@opnsense01')
       provider = described_class.new(
         ensure: :present,
-        name: 'redirect_https@fw01',
-        device: 'fw01',
+        name: 'redirect_https@opnsense01',
+        device: 'opnsense01',
         uuid: 'aaa-bbb',
       )
       provider.resource = resource
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('fw01', client)
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
       expect(client).to receive(:post).with('haproxy/settings/del_action/aaa-bbb', {})
                                       .and_return({ 'result' => 'deleted' })
 
@@ -135,16 +135,16 @@ RSpec.describe provider_class do
     end
 
     it 'marks error on failure' do
-      resource = type_class.new(name: 'redirect_https@fw01')
+      resource = type_class.new(name: 'redirect_https@opnsense01')
       provider = described_class.new(
         ensure: :present,
-        name: 'redirect_https@fw01',
-        device: 'fw01',
+        name: 'redirect_https@opnsense01',
+        device: 'opnsense01',
         uuid: 'aaa-bbb',
       )
       provider.resource = resource
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('fw01')
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')
 
       expect { provider.destroy }.to raise_error(Puppet::Error)
     end
@@ -152,11 +152,11 @@ RSpec.describe provider_class do
 
   describe '#flush' do
     it 'translates names to UUIDs and updates the action' do
-      resource = type_class.new(name: 'redirect_https@fw01', config: { 'type' => 'use_backend' })
+      resource = type_class.new(name: 'redirect_https@opnsense01', config: { 'type' => 'use_backend' })
       provider = described_class.new(
         ensure: :present,
-        name: 'redirect_https@fw01',
-        device: 'fw01',
+        name: 'redirect_https@opnsense01',
+        device: 'opnsense01',
         uuid: 'aaa-bbb',
         config: { 'name' => 'redirect_https', 'type' => 'redirect' },
       )
@@ -165,7 +165,7 @@ RSpec.describe provider_class do
 
       expect(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'redirect_https', 'type' => 'use_backend' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('fw01', client)
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
       allow(client).to receive(:post)
         .with('haproxy/settings/set_action/aaa-bbb', { 'action' => { 'name' => 'redirect_https', 'type' => 'use_backend' } })
         .and_return({ 'result' => 'saved' })
@@ -174,11 +174,11 @@ RSpec.describe provider_class do
     end
 
     it 'does nothing when no pending config' do
-      resource = type_class.new(name: 'redirect_https@fw01', config: { 'type' => 'redirect' })
+      resource = type_class.new(name: 'redirect_https@opnsense01', config: { 'type' => 'redirect' })
       provider = described_class.new(
         ensure: :present,
-        name: 'redirect_https@fw01',
-        device: 'fw01',
+        name: 'redirect_https@opnsense01',
+        device: 'opnsense01',
         uuid: 'aaa-bbb',
       )
       provider.resource = resource
@@ -188,11 +188,11 @@ RSpec.describe provider_class do
     end
 
     it 'marks error on failure' do
-      resource = type_class.new(name: 'redirect_https@fw01', config: { 'type' => 'use_backend' })
+      resource = type_class.new(name: 'redirect_https@opnsense01', config: { 'type' => 'use_backend' })
       provider = described_class.new(
         ensure: :present,
-        name: 'redirect_https@fw01',
-        device: 'fw01',
+        name: 'redirect_https@opnsense01',
+        device: 'opnsense01',
         uuid: 'aaa-bbb',
         config: { 'name' => 'redirect_https', 'type' => 'redirect' },
       )
@@ -202,7 +202,7 @@ RSpec.describe provider_class do
       allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'redirect_https', 'type' => 'use_backend' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('fw01')
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')
 
       expect { provider.flush }.to raise_error(Puppet::Error)
     end

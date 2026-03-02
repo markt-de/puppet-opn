@@ -13,8 +13,8 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_healthcheck).provider(:opnsense_ap
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_with_errors, {})
   end
@@ -32,7 +32,7 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_healthcheck).provider(:opnsense_ap
 
       instances = described_class.instances
       expect(instances.length).to eq(1)
-      expect(instances[0].name).to eq('tcp-check@fw01')
+      expect(instances[0].name).to eq('tcp-check@opnsense01')
       expect(instances[0].get(:config)).to eq('name' => 'tcp-check', 'type' => 'tcp')
       expect(instances[0].get(:uuid)).to eq('aaa-bbb')
     end
@@ -65,13 +65,13 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_healthcheck).provider(:opnsense_ap
       )
 
       resource = Puppet::Type.type(:opn_haproxy_healthcheck).new(
-        name: 'tcp-check@fw01',
+        name: 'tcp-check@opnsense01',
         ensure: :present,
       )
-      resources = { 'tcp-check@fw01' => resource }
+      resources = { 'tcp-check@opnsense01' => resource }
 
       described_class.prefetch(resources)
-      expect(resource.provider.name).to eq('tcp-check@fw01')
+      expect(resource.provider.name).to eq('tcp-check@opnsense01')
     end
   end
 
@@ -85,7 +85,7 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_healthcheck).provider(:opnsense_ap
   describe '#create' do
     let(:resource) do
       Puppet::Type.type(:opn_haproxy_healthcheck).new(
-        name: 'tcp-check@fw01',
+        name: 'tcp-check@opnsense01',
         ensure: :present,
         config: { 'type' => 'tcp' },
       )
@@ -108,7 +108,7 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_healthcheck).provider(:opnsense_ap
 
     it 'marks device for reconfigure' do
       allow(client).to receive(:post).and_return({ 'result' => 'saved' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('fw01', client)
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
 
       provider.create
     end
@@ -124,15 +124,15 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_healthcheck).provider(:opnsense_ap
   describe '#destroy' do
     let(:resource) do
       Puppet::Type.type(:opn_haproxy_healthcheck).new(
-        name: 'tcp-check@fw01',
+        name: 'tcp-check@opnsense01',
         ensure: :absent,
       )
     end
     let(:provider) do
       described_class.new(
         ensure: :present,
-        name: 'tcp-check@fw01',
-        device: 'fw01',
+        name: 'tcp-check@opnsense01',
+        device: 'opnsense01',
         uuid: 'aaa-bbb',
         config: { 'name' => 'tcp-check' },
       )
@@ -153,7 +153,7 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_healthcheck).provider(:opnsense_ap
 
     it 'marks device for reconfigure' do
       allow(client).to receive(:post).and_return({ 'result' => 'deleted' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('fw01', client)
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
 
       provider.destroy
     end
@@ -169,7 +169,7 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_healthcheck).provider(:opnsense_ap
   describe '#flush' do
     let(:resource) do
       Puppet::Type.type(:opn_haproxy_healthcheck).new(
-        name: 'tcp-check@fw01',
+        name: 'tcp-check@opnsense01',
         ensure: :present,
         config: { 'type' => 'http' },
       )
@@ -177,8 +177,8 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_healthcheck).provider(:opnsense_ap
     let(:provider) do
       described_class.new(
         ensure: :present,
-        name: 'tcp-check@fw01',
-        device: 'fw01',
+        name: 'tcp-check@opnsense01',
+        device: 'opnsense01',
         uuid: 'aaa-bbb',
         config: { 'name' => 'tcp-check', 'type' => 'tcp' },
       )
@@ -208,7 +208,7 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_healthcheck).provider(:opnsense_ap
       provider.config = { 'type' => 'http' }
 
       allow(client).to receive(:post).and_return({ 'result' => 'saved' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('fw01', client)
+      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
 
       provider.flush
     end

@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_haproxy_healthcheck) do
   let(:type_name) { :opn_haproxy_healthcheck }
-  let(:title) { 'http_check@fw01' }
+  let(:title) { 'http_check@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

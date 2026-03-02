@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_haproxy_mailer) do
   let(:type_name) { :opn_haproxy_mailer }
-  let(:title) { 'alert_mailer@fw01' }
+  let(:title) { 'alert_mailer@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

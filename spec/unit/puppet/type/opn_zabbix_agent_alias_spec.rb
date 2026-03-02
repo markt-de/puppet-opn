@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_zabbix_agent_alias) do
   let(:type_name) { :opn_zabbix_agent_alias }
-  let(:title) { 'ping@fw01' }
+  let(:title) { 'ping@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_haproxy_errorfile) do
   let(:type_name) { :opn_haproxy_errorfile }
-  let(:title) { 'err503@fw01' }
+  let(:title) { 'err503@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

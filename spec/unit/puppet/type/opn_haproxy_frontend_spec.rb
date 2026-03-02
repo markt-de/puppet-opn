@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_haproxy_frontend) do
   let(:type_name) { :opn_haproxy_frontend }
-  let(:title) { 'web_frontend@fw01' }
+  let(:title) { 'web_frontend@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

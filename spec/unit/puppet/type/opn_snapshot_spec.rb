@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_snapshot) do
   let(:type_name) { :opn_snapshot }
-  let(:title) { 'pre-upgrade@fw01' }
+  let(:title) { 'pre-upgrade@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

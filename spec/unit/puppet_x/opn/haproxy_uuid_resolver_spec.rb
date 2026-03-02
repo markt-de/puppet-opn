@@ -5,7 +5,7 @@ require 'puppet_x/opn/haproxy_uuid_resolver'
 
 describe PuppetX::Opn::HaproxyUuidResolver do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
-  let(:device) { 'fw01' }
+  let(:device) { 'opnsense01' }
 
   before(:each) do
     described_class.instance_variable_set(:@cache, {})
@@ -19,7 +19,7 @@ describe PuppetX::Opn::HaproxyUuidResolver do
       described_class.populate(client, device, 'haproxy/settings/search_servers')
 
       cache = described_class.instance_variable_get(:@cache)
-      key = 'fw01:haproxy/settings/search_servers:uuid:name'
+      key = 'opnsense01:haproxy/settings/search_servers:uuid:name'
       expect(cache[key][:id_to_name]).to eq('aaa' => 'web01')
       expect(cache[key][:name_to_id]).to eq('web01' => 'aaa')
     end
@@ -32,7 +32,7 @@ describe PuppetX::Opn::HaproxyUuidResolver do
                                id_field: 'refid', name_field: 'descr')
 
       cache = described_class.instance_variable_get(:@cache)
-      key = 'fw01:trust/ca/search:refid:descr'
+      key = 'opnsense01:trust/ca/search:refid:descr'
       expect(cache[key][:id_to_name]).to eq('ref1' => 'My CA')
     end
 

@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_acmeclient_certificate) do
   let(:type_name) { :opn_acmeclient_certificate }
-  let(:title) { 'web.example.com@fw01' }
+  let(:title) { 'web.example.com@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'
@@ -43,42 +43,42 @@ describe Puppet::Type.type(:opn_acmeclient_certificate) do
     it 'autorequires the ACME account' do
       catalog = Puppet::Resource::Catalog.new
       cert = Puppet::Type.type(:opn_acmeclient_certificate).new(
-        name: 'web.example.com@fw01',
+        name: 'web.example.com@opnsense01',
         config: { 'account' => 'le-account' },
       )
-      account = Puppet::Type.type(:opn_acmeclient_account).new(name: 'le-account@fw01')
+      account = Puppet::Type.type(:opn_acmeclient_account).new(name: 'le-account@opnsense01')
       catalog.add_resource(cert, account)
       reqs = cert.autorequire
       req_sources = reqs.map { |r| r.source.to_s }
-      expect(req_sources).to include('Opn_acmeclient_account[le-account@fw01]')
+      expect(req_sources).to include('Opn_acmeclient_account[le-account@opnsense01]')
     end
 
     it 'autorequires the validation method' do
       catalog = Puppet::Resource::Catalog.new
       cert = Puppet::Type.type(:opn_acmeclient_certificate).new(
-        name: 'web.example.com@fw01',
+        name: 'web.example.com@opnsense01',
         config: { 'validationMethod' => 'http-01' },
       )
-      validation = Puppet::Type.type(:opn_acmeclient_validation).new(name: 'http-01@fw01')
+      validation = Puppet::Type.type(:opn_acmeclient_validation).new(name: 'http-01@opnsense01')
       catalog.add_resource(cert, validation)
       reqs = cert.autorequire
       req_sources = reqs.map { |r| r.source.to_s }
-      expect(req_sources).to include('Opn_acmeclient_validation[http-01@fw01]')
+      expect(req_sources).to include('Opn_acmeclient_validation[http-01@opnsense01]')
     end
 
     it 'autorequires restart actions' do
       catalog = Puppet::Resource::Catalog.new
       cert = Puppet::Type.type(:opn_acmeclient_certificate).new(
-        name: 'web.example.com@fw01',
+        name: 'web.example.com@opnsense01',
         config: { 'restartActions' => 'restart_haproxy,reload_nginx' },
       )
-      action1 = Puppet::Type.type(:opn_acmeclient_action).new(name: 'restart_haproxy@fw01')
-      action2 = Puppet::Type.type(:opn_acmeclient_action).new(name: 'reload_nginx@fw01')
+      action1 = Puppet::Type.type(:opn_acmeclient_action).new(name: 'restart_haproxy@opnsense01')
+      action2 = Puppet::Type.type(:opn_acmeclient_action).new(name: 'reload_nginx@opnsense01')
       catalog.add_resource(cert, action1, action2)
       reqs = cert.autorequire
       req_sources = reqs.map { |r| r.source.to_s }
-      expect(req_sources).to include('Opn_acmeclient_action[restart_haproxy@fw01]')
-      expect(req_sources).to include('Opn_acmeclient_action[reload_nginx@fw01]')
+      expect(req_sources).to include('Opn_acmeclient_action[restart_haproxy@opnsense01]')
+      expect(req_sources).to include('Opn_acmeclient_action[reload_nginx@opnsense01]')
     end
   end
 end

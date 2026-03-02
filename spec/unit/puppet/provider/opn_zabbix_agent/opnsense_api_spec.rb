@@ -10,8 +10,8 @@ describe Puppet::Type.type(:opn_zabbix_agent).provider(:opnsense_api) do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
     PuppetX::Opn::ZabbixAgentReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
   end
 
@@ -35,7 +35,7 @@ describe Puppet::Type.type(:opn_zabbix_agent).provider(:opnsense_api) do
                                     .and_return(api_response)
       instances = described_class.instances
       expect(instances.size).to eq(1)
-      expect(instances[0].name).to eq('fw01')
+      expect(instances[0].name).to eq('opnsense01')
     end
 
     it 'excludes userparameters and aliases from config' do
@@ -53,7 +53,7 @@ describe Puppet::Type.type(:opn_zabbix_agent).provider(:opnsense_api) do
   describe '#create' do
     it 'saves settings via POST' do
       config = { 'settings' => { 'main' => { 'enabled' => '1' } } }
-      resource = type_class.new(name: 'fw01', config: config)
+      resource = type_class.new(name: 'opnsense01', config: config)
       provider = described_class.new
       resource.provider = provider
       allow(PuppetX::Opn::ZabbixAgentReconfigure).to receive(:mark)
@@ -66,17 +66,17 @@ describe Puppet::Type.type(:opn_zabbix_agent).provider(:opnsense_api) do
 
     it 'marks device for reconfigure' do
       config = { 'settings' => { 'main' => { 'enabled' => '1' } } }
-      resource = type_class.new(name: 'fw01', config: config)
+      resource = type_class.new(name: 'opnsense01', config: config)
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:post).with('zabbixagent/settings/set', anything)
                                      .and_return({ 'result' => 'saved' })
       provider.create
-      expect(PuppetX::Opn::ZabbixAgentReconfigure.instance_variable_get(:@devices_to_reconfigure)).to have_key('fw01')
+      expect(PuppetX::Opn::ZabbixAgentReconfigure.instance_variable_get(:@devices_to_reconfigure)).to have_key('opnsense01')
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'fw01', config: { 'settings' => {} })
+      resource = type_class.new(name: 'opnsense01', config: { 'settings' => {} })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
@@ -87,11 +87,11 @@ describe Puppet::Type.type(:opn_zabbix_agent).provider(:opnsense_api) do
   describe '#flush' do
     it 'saves pending config via POST' do
       new_config = { 'settings' => { 'main' => { 'enabled' => '0' } } }
-      resource = type_class.new(name: 'fw01', config: new_config)
+      resource = type_class.new(name: 'opnsense01', config: new_config)
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'fw01',
+                                       ensure: :present, name: 'opnsense01',
         config: { 'settings' => { 'main' => { 'enabled' => '1' } } },
                                      })
       provider.instance_variable_set(:@pending_config, new_config)
@@ -103,11 +103,11 @@ describe Puppet::Type.type(:opn_zabbix_agent).provider(:opnsense_api) do
     end
 
     it 'does nothing when no pending config' do
-      resource = type_class.new(name: 'fw01')
+      resource = type_class.new(name: 'opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'fw01',
+                                       ensure: :present, name: 'opnsense01',
                                      })
       provider.flush
       # No API call expected

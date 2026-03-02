@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_haproxy_fcgi) do
   let(:type_name) { :opn_haproxy_fcgi }
-  let(:title) { 'php_fcgi@fw01' }
+  let(:title) { 'php_fcgi@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

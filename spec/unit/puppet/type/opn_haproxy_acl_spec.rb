@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_haproxy_acl) do
   let(:type_name) { :opn_haproxy_acl }
-  let(:title) { 'is_https@fw01' }
+  let(:title) { 'is_https@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

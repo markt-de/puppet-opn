@@ -11,8 +11,8 @@ describe Puppet::Type.type(:opn_haproxy_settings).provider(:opnsense_api) do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_with_errors, {})
     PuppetX::Opn::HaproxyUuidResolver.instance_variable_set(:@cache, {})
@@ -29,13 +29,13 @@ describe Puppet::Type.type(:opn_haproxy_settings).provider(:opnsense_api) do
         .and_return({ 'general' => { 'enabled' => '1' }, 'maintenance' => {} })
       instances = described_class.instances
       expect(instances.size).to eq(1)
-      expect(instances[0].name).to eq('fw01')
+      expect(instances[0].name).to eq('opnsense01')
     end
   end
 
   describe '#create' do
     it 'saves settings and marks reconfigure' do
-      resource = type_class.new(name: 'fw01', config: { 'general' => { 'enabled' => '1' } })
+      resource = type_class.new(name: 'opnsense01', config: { 'general' => { 'enabled' => '1' } })
       provider = described_class.new
       resource.provider = provider
       allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)

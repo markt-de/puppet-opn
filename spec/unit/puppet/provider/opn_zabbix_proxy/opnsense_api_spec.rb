@@ -9,8 +9,8 @@ describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
   end
 
   it_behaves_like 'opn provider basics'
@@ -22,14 +22,14 @@ describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
                                     .and_return({ 'general' => { 'enabled' => '1' } })
       instances = described_class.instances
       expect(instances.size).to eq(1)
-      expect(instances[0].name).to eq('fw01')
+      expect(instances[0].name).to eq('opnsense01')
       expect(instances[0].instance_variable_get(:@property_hash)[:config]).to include('enabled' => '1')
     end
   end
 
   describe '#create' do
     it 'saves settings and triggers reconfigure' do
-      resource = type_class.new(name: 'fw01', config: { 'enabled' => '1' })
+      resource = type_class.new(name: 'opnsense01', config: { 'enabled' => '1' })
       provider = described_class.new
       resource.provider = provider
       expect(client).to receive(:post).with(
@@ -42,7 +42,7 @@ describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'fw01', config: { 'enabled' => '1' })
+      resource = type_class.new(name: 'opnsense01', config: { 'enabled' => '1' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:post).with('zabbixproxy/general/set', anything)
@@ -53,11 +53,11 @@ describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
 
   describe '#destroy' do
     it 'disables and reconfigures' do
-      resource = type_class.new(name: 'fw01')
+      resource = type_class.new(name: 'opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'fw01', config: { 'enabled' => '1' },
+                                       ensure: :present, name: 'opnsense01', config: { 'enabled' => '1' },
                                      })
       expect(client).to receive(:post).with(
         'zabbixproxy/general/set',
@@ -71,11 +71,11 @@ describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
 
   describe '#flush' do
     it 'saves pending config and triggers reconfigure' do
-      resource = type_class.new(name: 'fw01', config: { 'enabled' => '0' })
+      resource = type_class.new(name: 'opnsense01', config: { 'enabled' => '0' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'fw01', config: { 'enabled' => '1' },
+                                       ensure: :present, name: 'opnsense01', config: { 'enabled' => '1' },
                                      })
       provider.instance_variable_set(:@pending_config, { 'enabled' => '0' })
       expect(client).to receive(:post).with(
@@ -88,11 +88,11 @@ describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
     end
 
     it 'does nothing when no pending config' do
-      resource = type_class.new(name: 'fw01')
+      resource = type_class.new(name: 'opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'fw01',
+                                       ensure: :present, name: 'opnsense01',
                                      })
       provider.flush
       # No API call expected

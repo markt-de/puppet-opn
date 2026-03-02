@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_acmeclient_account) do
   let(:type_name) { :opn_acmeclient_account }
-  let(:title) { 'le-account@fw01' }
+  let(:title) { 'le-account@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

@@ -9,8 +9,8 @@ describe Puppet::Type.type(:opn_plugin).provider(:opnsense_api) do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
   end
 
   it_behaves_like 'opn provider basics'
@@ -25,7 +25,7 @@ describe Puppet::Type.type(:opn_plugin).provider(:opnsense_api) do
                                                 ] })
       instances = described_class.instances
       expect(instances.size).to eq(2)
-      expect(instances.map(&:name)).to contain_exactly('os-haproxy@fw01', 'os-wireguard@fw01')
+      expect(instances.map(&:name)).to contain_exactly('os-haproxy@opnsense01', 'os-wireguard@opnsense01')
     end
 
     it 'returns empty array when package key is missing' do
@@ -47,15 +47,15 @@ describe Puppet::Type.type(:opn_plugin).provider(:opnsense_api) do
     it 'matches instances to resources' do
       allow(client).to receive(:get).with('core/firmware/info')
                                     .and_return({ 'package' => [{ 'name' => 'os-haproxy', 'installed' => '1' }] })
-      resource = type_class.new(name: 'os-haproxy@fw01')
-      described_class.prefetch({ 'os-haproxy@fw01' => resource })
-      expect(resource.provider.name).to eq('os-haproxy@fw01')
+      resource = type_class.new(name: 'os-haproxy@opnsense01')
+      described_class.prefetch({ 'os-haproxy@opnsense01' => resource })
+      expect(resource.provider.name).to eq('os-haproxy@opnsense01')
     end
   end
 
   describe '#create' do
     it 'calls the install endpoint' do
-      resource = type_class.new(name: 'os-haproxy@fw01')
+      resource = type_class.new(name: 'os-haproxy@opnsense01')
       provider = described_class.new
       resource.provider = provider
       expect(client).to receive(:post).with('core/firmware/install/os-haproxy', {})
@@ -66,11 +66,11 @@ describe Puppet::Type.type(:opn_plugin).provider(:opnsense_api) do
 
   describe '#destroy' do
     it 'calls the remove endpoint' do
-      resource = type_class.new(name: 'os-haproxy@fw01')
+      resource = type_class.new(name: 'os-haproxy@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'os-haproxy@fw01', device: 'fw01',
+                                       ensure: :present, name: 'os-haproxy@opnsense01', device: 'opnsense01',
                                      })
       expect(client).to receive(:post).with('core/firmware/remove/os-haproxy', {})
                                       .and_return({})

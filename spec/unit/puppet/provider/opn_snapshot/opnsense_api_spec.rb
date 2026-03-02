@@ -9,8 +9,8 @@ describe Puppet::Type.type(:opn_snapshot).provider(:opnsense_api) do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
   end
 
   it_behaves_like 'opn provider basics'
@@ -24,7 +24,7 @@ describe Puppet::Type.type(:opn_snapshot).provider(:opnsense_api) do
                                     .and_return({ 'note' => 'test' })
       instances = described_class.instances
       expect(instances.size).to eq(1)
-      expect(instances[0].name).to eq('pre-upgrade@fw01')
+      expect(instances[0].name).to eq('pre-upgrade@opnsense01')
       expect(instances[0].instance_variable_get(:@property_hash)[:active]).to eq(:false)
       expect(instances[0].instance_variable_get(:@property_hash)[:config]).to include('note' => 'test')
       expect(instances[0].instance_variable_get(:@property_hash)[:config]).not_to have_key('uuid')
@@ -60,15 +60,15 @@ describe Puppet::Type.type(:opn_snapshot).provider(:opnsense_api) do
                                     .and_return({ 'rows' => [{ 'uuid' => 'aaa', 'name' => 'pre-upgrade', 'active' => '-' }] })
       allow(client).to receive(:get).with('core/snapshots/get/aaa')
                                     .and_return({ 'note' => 'test' })
-      resource = type_class.new(name: 'pre-upgrade@fw01')
-      described_class.prefetch({ 'pre-upgrade@fw01' => resource })
-      expect(resource.provider.name).to eq('pre-upgrade@fw01')
+      resource = type_class.new(name: 'pre-upgrade@opnsense01')
+      described_class.prefetch({ 'pre-upgrade@opnsense01' => resource })
+      expect(resource.provider.name).to eq('pre-upgrade@opnsense01')
     end
   end
 
   describe '#create' do
     it 'calls the add endpoint with flat params' do
-      resource = type_class.new(name: 'pre-upgrade@fw01', config: { 'note' => 'test' })
+      resource = type_class.new(name: 'pre-upgrade@opnsense01', config: { 'note' => 'test' })
       provider = described_class.new
       resource.provider = provider
       expect(client).to receive(:post).with(
@@ -79,7 +79,7 @@ describe Puppet::Type.type(:opn_snapshot).provider(:opnsense_api) do
     end
 
     it 'activates the snapshot when active is true' do
-      resource = type_class.new(name: 'pre-upgrade@fw01', active: :true, config: { 'note' => 'test' })
+      resource = type_class.new(name: 'pre-upgrade@opnsense01', active: :true, config: { 'note' => 'test' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:post).with('core/snapshots/add', anything)
@@ -92,7 +92,7 @@ describe Puppet::Type.type(:opn_snapshot).provider(:opnsense_api) do
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'pre-upgrade@fw01', config: { 'note' => 'test' })
+      resource = type_class.new(name: 'pre-upgrade@opnsense01', config: { 'note' => 'test' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:post).and_return({ 'status' => 'failed' })
@@ -102,11 +102,11 @@ describe Puppet::Type.type(:opn_snapshot).provider(:opnsense_api) do
 
   describe '#destroy' do
     it 'calls the del endpoint' do
-      resource = type_class.new(name: 'pre-upgrade@fw01')
+      resource = type_class.new(name: 'pre-upgrade@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'pre-upgrade@fw01', device: 'fw01', uuid: 'aaa',
+                                       ensure: :present, name: 'pre-upgrade@opnsense01', device: 'opnsense01', uuid: 'aaa',
         active: :false,
                                      })
       expect(client).to receive(:post).with('core/snapshots/del/aaa', {})
@@ -115,11 +115,11 @@ describe Puppet::Type.type(:opn_snapshot).provider(:opnsense_api) do
     end
 
     it 'raises when snapshot is active' do
-      resource = type_class.new(name: 'pre-upgrade@fw01')
+      resource = type_class.new(name: 'pre-upgrade@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'pre-upgrade@fw01', device: 'fw01', uuid: 'aaa',
+                                       ensure: :present, name: 'pre-upgrade@opnsense01', device: 'opnsense01', uuid: 'aaa',
         active: :true,
                                      })
       expect { provider.destroy }.to raise_error(Puppet::Error, %r{cannot delete active snapshot})
@@ -128,11 +128,11 @@ describe Puppet::Type.type(:opn_snapshot).provider(:opnsense_api) do
 
   describe '#flush' do
     it 'calls the set endpoint with flat params when config has changed' do
-      resource = type_class.new(name: 'pre-upgrade@fw01', config: { 'note' => 'updated' })
+      resource = type_class.new(name: 'pre-upgrade@opnsense01', config: { 'note' => 'updated' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'pre-upgrade@fw01', device: 'fw01', uuid: 'aaa',
+                                       ensure: :present, name: 'pre-upgrade@opnsense01', device: 'opnsense01', uuid: 'aaa',
         config: { 'name' => 'pre-upgrade', 'note' => 'test' },
                                      })
       provider.instance_variable_set(:@pending_config, { 'note' => 'updated' })
@@ -144,22 +144,22 @@ describe Puppet::Type.type(:opn_snapshot).provider(:opnsense_api) do
     end
 
     it 'does nothing when no pending config' do
-      resource = type_class.new(name: 'pre-upgrade@fw01')
+      resource = type_class.new(name: 'pre-upgrade@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'pre-upgrade@fw01', device: 'fw01', uuid: 'aaa',
+                                       ensure: :present, name: 'pre-upgrade@opnsense01', device: 'opnsense01', uuid: 'aaa',
                                      })
       provider.flush
       # No API call expected
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'pre-upgrade@fw01', config: { 'note' => 'updated' })
+      resource = type_class.new(name: 'pre-upgrade@opnsense01', config: { 'note' => 'updated' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'pre-upgrade@fw01', device: 'fw01', uuid: 'aaa',
+                                       ensure: :present, name: 'pre-upgrade@opnsense01', device: 'opnsense01', uuid: 'aaa',
                                      })
       provider.instance_variable_set(:@pending_config, { 'note' => 'updated' })
       allow(client).to receive(:post).and_return({ 'status' => 'failed' })
@@ -169,11 +169,11 @@ describe Puppet::Type.type(:opn_snapshot).provider(:opnsense_api) do
 
   describe '#active=' do
     it 'calls the activate endpoint when set to true' do
-      resource = type_class.new(name: 'pre-upgrade@fw01')
+      resource = type_class.new(name: 'pre-upgrade@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'pre-upgrade@fw01', device: 'fw01', uuid: 'aaa',
+                                       ensure: :present, name: 'pre-upgrade@opnsense01', device: 'opnsense01', uuid: 'aaa',
         active: :false,
                                      })
       expect(client).to receive(:post).with('core/snapshots/activate/aaa', {})
@@ -182,11 +182,11 @@ describe Puppet::Type.type(:opn_snapshot).provider(:opnsense_api) do
     end
 
     it 'warns when trying to deactivate' do
-      resource = type_class.new(name: 'pre-upgrade@fw01')
+      resource = type_class.new(name: 'pre-upgrade@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'pre-upgrade@fw01', device: 'fw01', uuid: 'aaa',
+                                       ensure: :present, name: 'pre-upgrade@opnsense01', device: 'opnsense01', uuid: 'aaa',
         active: :true,
                                      })
       expect(Puppet).to receive(:warning).with(%r{cannot deactivate})

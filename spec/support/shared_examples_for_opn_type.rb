@@ -4,7 +4,7 @@
 #
 # Required let:
 #   :type_name  - Symbol, e.g. :opn_firewall_rule
-#   :title      - String, e.g. 'myrule@fw01'
+#   :title      - String, e.g. 'myrule@opnsense01'
 RSpec.shared_examples 'opn type with device parameter' do
   let(:type_class) { Puppet::Type.type(type_name) }
 
@@ -58,7 +58,7 @@ end
 #
 # Required let:
 #   :type_name  - Symbol, e.g. :opn_haproxy_settings
-#   :title      - String, e.g. 'fw01'
+#   :title      - String, e.g. 'opnsense01'
 RSpec.shared_examples 'opn singleton type' do
   let(:type_class) { Puppet::Type.type(type_name) }
 

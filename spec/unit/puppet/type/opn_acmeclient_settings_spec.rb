@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_acmeclient_settings) do
   let(:type_name) { :opn_acmeclient_settings }
-  let(:title) { 'fw01' }
+  let(:title) { 'opnsense01' }
 
   include_examples 'opn singleton type'
   include_examples 'opn type with config property'
@@ -33,14 +33,14 @@ describe Puppet::Type.type(:opn_acmeclient_settings) do
     it 'autorequires the UpdateCron cron job' do
       catalog = Puppet::Resource::Catalog.new
       settings = Puppet::Type.type(:opn_acmeclient_settings).new(
-        name: 'fw01',
+        name: 'opnsense01',
         config: { 'UpdateCron' => 'ACME renew' },
       )
-      cron = Puppet::Type.type(:opn_cron).new(name: 'ACME renew@fw01')
+      cron = Puppet::Type.type(:opn_cron).new(name: 'ACME renew@opnsense01')
       catalog.add_resource(settings, cron)
       reqs = settings.autorequire
       req_sources = reqs.map { |r| r.source.to_s }
-      expect(req_sources).to include('Opn_cron[ACME renew@fw01]')
+      expect(req_sources).to include('Opn_cron[ACME renew@opnsense01]')
     end
   end
 end

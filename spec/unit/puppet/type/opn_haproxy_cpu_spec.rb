@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_haproxy_cpu) do
   let(:type_name) { :opn_haproxy_cpu }
-  let(:title) { 'cpu_rule@fw01' }
+  let(:title) { 'cpu_rule@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

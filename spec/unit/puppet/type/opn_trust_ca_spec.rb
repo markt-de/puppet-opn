@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:opn_trust_ca) do
   let(:type_name) { :opn_trust_ca }
-  let(:title) { 'My CA@fw01' }
+  let(:title) { 'My CA@opnsense01' }
 
   include_examples 'opn type with device parameter'
   include_examples 'opn type with config property'

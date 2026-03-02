@@ -10,8 +10,8 @@ describe Puppet::Type.type(:opn_zabbix_agent_userparameter).provider(:opnsense_a
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
 
   before(:each) do
-    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['fw01'])
-    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('fw01').and_return(client)
+    allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
+    allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
     PuppetX::Opn::ZabbixAgentReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
   end
 
@@ -38,7 +38,7 @@ describe Puppet::Type.type(:opn_zabbix_agent_userparameter).provider(:opnsense_a
                                     .and_return(api_response)
       instances = described_class.instances
       expect(instances.size).to eq(1)
-      expect(instances[0].name).to eq('custom.uptime@fw01')
+      expect(instances[0].name).to eq('custom.uptime@opnsense01')
     end
 
     it 'stores uuid and device in property_hash' do
@@ -47,7 +47,7 @@ describe Puppet::Type.type(:opn_zabbix_agent_userparameter).provider(:opnsense_a
       instances = described_class.instances
       hash = instances[0].instance_variable_get(:@property_hash)
       expect(hash[:uuid]).to eq('uuid1')
-      expect(hash[:device]).to eq('fw01')
+      expect(hash[:device]).to eq('opnsense01')
     end
 
     it 'stores config without id key' do
@@ -87,7 +87,7 @@ describe Puppet::Type.type(:opn_zabbix_agent_userparameter).provider(:opnsense_a
 
   describe '#create' do
     it 'calls addUserparameter endpoint with key from name' do
-      resource = type_class.new(name: 'custom.uptime@fw01', config: { 'command' => '/usr/bin/uptime' })
+      resource = type_class.new(name: 'custom.uptime@opnsense01', config: { 'command' => '/usr/bin/uptime' })
       provider = described_class.new
       resource.provider = provider
       expect(client).to receive(:post).with(
@@ -98,7 +98,7 @@ describe Puppet::Type.type(:opn_zabbix_agent_userparameter).provider(:opnsense_a
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'custom.uptime@fw01', config: { 'command' => '/usr/bin/uptime' })
+      resource = type_class.new(name: 'custom.uptime@opnsense01', config: { 'command' => '/usr/bin/uptime' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
@@ -108,11 +108,11 @@ describe Puppet::Type.type(:opn_zabbix_agent_userparameter).provider(:opnsense_a
 
   describe '#destroy' do
     it 'calls delUserparameter endpoint with uuid' do
-      resource = type_class.new(name: 'custom.uptime@fw01')
+      resource = type_class.new(name: 'custom.uptime@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'custom.uptime@fw01', device: 'fw01', uuid: 'uuid1',
+                                       ensure: :present, name: 'custom.uptime@opnsense01', device: 'opnsense01', uuid: 'uuid1',
                                      })
       expect(client).to receive(:post).with('zabbixagent/settings/delUserparameter/uuid1', {})
                                       .and_return({ 'result' => 'deleted' })
@@ -120,11 +120,11 @@ describe Puppet::Type.type(:opn_zabbix_agent_userparameter).provider(:opnsense_a
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'custom.uptime@fw01')
+      resource = type_class.new(name: 'custom.uptime@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'custom.uptime@fw01', device: 'fw01', uuid: 'uuid1',
+                                       ensure: :present, name: 'custom.uptime@opnsense01', device: 'opnsense01', uuid: 'uuid1',
                                      })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
       expect { provider.destroy }.to raise_error(Puppet::Error)
@@ -133,11 +133,11 @@ describe Puppet::Type.type(:opn_zabbix_agent_userparameter).provider(:opnsense_a
 
   describe '#flush' do
     it 'calls setUserparameter endpoint with uuid and pending config' do
-      resource = type_class.new(name: 'custom.uptime@fw01', config: { 'command' => '/usr/local/bin/uptime' })
+      resource = type_class.new(name: 'custom.uptime@opnsense01', config: { 'command' => '/usr/local/bin/uptime' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'custom.uptime@fw01', device: 'fw01', uuid: 'uuid1',
+                                       ensure: :present, name: 'custom.uptime@opnsense01', device: 'opnsense01', uuid: 'uuid1',
         config: { 'key' => 'custom.uptime', 'command' => '/usr/bin/uptime' },
                                      })
       provider.instance_variable_set(:@pending_config, { 'command' => '/usr/local/bin/uptime' })
@@ -149,22 +149,22 @@ describe Puppet::Type.type(:opn_zabbix_agent_userparameter).provider(:opnsense_a
     end
 
     it 'does nothing when no pending config' do
-      resource = type_class.new(name: 'custom.uptime@fw01')
+      resource = type_class.new(name: 'custom.uptime@opnsense01')
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'custom.uptime@fw01', device: 'fw01', uuid: 'uuid1',
+                                       ensure: :present, name: 'custom.uptime@opnsense01', device: 'opnsense01', uuid: 'uuid1',
                                      })
       provider.flush
       # No API call expected
     end
 
     it 'raises on failure' do
-      resource = type_class.new(name: 'custom.uptime@fw01', config: { 'command' => 'test' })
+      resource = type_class.new(name: 'custom.uptime@opnsense01', config: { 'command' => 'test' })
       provider = described_class.new
       resource.provider = provider
       provider.instance_variable_set(:@property_hash, {
-                                       ensure: :present, name: 'custom.uptime@fw01', device: 'fw01', uuid: 'uuid1',
+                                       ensure: :present, name: 'custom.uptime@opnsense01', device: 'opnsense01', uuid: 'uuid1',
                                      })
       provider.instance_variable_set(:@pending_config, { 'command' => 'test' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
