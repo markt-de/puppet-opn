@@ -235,6 +235,11 @@
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #     - All other keys are passed as the 'config' hash to opn_hasync.
 #
+# @param manage_resources
+#   Boolean to enable collection of exported opn_* resources from client nodes
+#   via PuppetDB. When true, the class collects all exported opn_* resources
+#   tagged with the device name. Default: false.
+#
 # @param plugins
 #   Hash of plugins to manage across devices.
 #   Each key is the plugin package name (e.g. 'os-haproxy').
@@ -388,6 +393,7 @@ class opn (
   Hash                 $haproxy_settings,
   Hash                 $haproxy_users,
   Hash                 $hasyncs,
+  Boolean              $manage_resources,
   Hash                 $plugins,
   Hash                 $snapshots,
   Hash                 $syslog_destinations,
@@ -422,7 +428,7 @@ class opn (
       opn_acmeclient_account { "${item_name}@${device_name}":
         ensure  => $acme_account_ensure,
         config  => $acme_account_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -443,7 +449,7 @@ class opn (
       opn_acmeclient_action { "${item_name}@${device_name}":
         ensure  => $acme_action_ensure,
         config  => $acme_action_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -464,7 +470,7 @@ class opn (
       opn_acmeclient_certificate { "${item_name}@${device_name}":
         ensure  => $acme_cert_ensure,
         config  => $acme_cert_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -480,7 +486,7 @@ class opn (
     opn_acmeclient_settings { $device_name:
       ensure  => $acme_settings_ensure,
       config  => $acme_settings_config,
-      require => File["${opn::config::config_dir}/${device_name}.yaml"],
+      require => Class['opn::config'],
     }
   }
 
@@ -500,7 +506,7 @@ class opn (
       opn_acmeclient_validation { "${item_name}@${device_name}":
         ensure  => $acme_validation_ensure,
         config  => $acme_validation_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -521,7 +527,7 @@ class opn (
       opn_cron { "${job_desc}@${device_name}":
         ensure  => $job_ensure,
         config  => $job_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -542,7 +548,7 @@ class opn (
       opn_firewall_alias { "${alias_name}@${device_name}":
         ensure  => $alias_ensure,
         config  => $alias_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -563,7 +569,7 @@ class opn (
       opn_firewall_category { "${cat_name}@${device_name}":
         ensure  => $cat_ensure,
         config  => $cat_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -584,7 +590,7 @@ class opn (
       opn_firewall_group { "${fwgroup_name}@${device_name}":
         ensure  => $fwgroup_ensure,
         config  => $fwgroup_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -605,7 +611,7 @@ class opn (
       opn_firewall_rule { "${rule_desc}@${device_name}":
         ensure  => $rule_ensure,
         config  => $rule_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -626,7 +632,7 @@ class opn (
       opn_group { "${group_name}@${device_name}":
         ensure  => $group_ensure,
         config  => $group_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -647,7 +653,7 @@ class opn (
       opn_haproxy_acl { "${item_name}@${device_name}":
         ensure  => $haproxy_acl_ensure,
         config  => $haproxy_acl_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -668,7 +674,7 @@ class opn (
       opn_haproxy_action { "${item_name}@${device_name}":
         ensure  => $haproxy_action_ensure,
         config  => $haproxy_action_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -689,7 +695,7 @@ class opn (
       opn_haproxy_backend { "${item_name}@${device_name}":
         ensure  => $haproxy_backend_ensure,
         config  => $haproxy_backend_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -710,7 +716,7 @@ class opn (
       opn_haproxy_cpu { "${item_name}@${device_name}":
         ensure  => $haproxy_cpu_ensure,
         config  => $haproxy_cpu_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -731,7 +737,7 @@ class opn (
       opn_haproxy_errorfile { "${item_name}@${device_name}":
         ensure  => $haproxy_errorfile_ensure,
         config  => $haproxy_errorfile_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -752,7 +758,7 @@ class opn (
       opn_haproxy_fcgi { "${item_name}@${device_name}":
         ensure  => $haproxy_fcgi_ensure,
         config  => $haproxy_fcgi_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -773,7 +779,7 @@ class opn (
       opn_haproxy_frontend { "${item_name}@${device_name}":
         ensure  => $haproxy_frontend_ensure,
         config  => $haproxy_frontend_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -794,7 +800,7 @@ class opn (
       opn_haproxy_group { "${item_name}@${device_name}":
         ensure  => $haproxy_group_ensure,
         config  => $haproxy_group_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -815,7 +821,7 @@ class opn (
       opn_haproxy_healthcheck { "${item_name}@${device_name}":
         ensure  => $haproxy_healthcheck_ensure,
         config  => $haproxy_healthcheck_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -836,7 +842,7 @@ class opn (
       opn_haproxy_lua { "${item_name}@${device_name}":
         ensure  => $haproxy_lua_ensure,
         config  => $haproxy_lua_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -857,7 +863,7 @@ class opn (
       opn_haproxy_mailer { "${item_name}@${device_name}":
         ensure  => $haproxy_mailer_ensure,
         config  => $haproxy_mailer_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -878,7 +884,7 @@ class opn (
       opn_haproxy_mapfile { "${item_name}@${device_name}":
         ensure  => $haproxy_mapfile_ensure,
         config  => $haproxy_mapfile_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -899,7 +905,7 @@ class opn (
       opn_haproxy_resolver { "${item_name}@${device_name}":
         ensure  => $haproxy_resolver_ensure,
         config  => $haproxy_resolver_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -920,7 +926,7 @@ class opn (
       opn_haproxy_server { "${item_name}@${device_name}":
         ensure  => $haproxy_server_ensure,
         config  => $haproxy_server_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -936,7 +942,7 @@ class opn (
     opn_haproxy_settings { $device_name:
       ensure  => $haproxy_settings_ensure,
       config  => $haproxy_settings_config,
-      require => File["${opn::config::config_dir}/${device_name}.yaml"],
+      require => Class['opn::config'],
     }
   }
 
@@ -956,7 +962,7 @@ class opn (
       opn_haproxy_user { "${item_name}@${device_name}":
         ensure  => $haproxy_user_ensure,
         config  => $haproxy_user_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -972,7 +978,7 @@ class opn (
     opn_hasync { $device_name:
       ensure  => $hasync_ensure,
       config  => $hasync_config,
-      require => File["${opn::config::config_dir}/${device_name}.yaml"],
+      require => Class['opn::config'],
     }
   }
 
@@ -990,7 +996,7 @@ class opn (
     $plugin_devices.each |String $device_name| {
       opn_plugin { "${plugin_name}@${device_name}":
         ensure  => $plugin_ensure,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -1016,7 +1022,7 @@ class opn (
         ensure  => $snap_ensure,
         active  => $snap_active,
         config  => $snap_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -1037,7 +1043,7 @@ class opn (
       opn_syslog { "${dest_desc}@${device_name}":
         ensure  => $dest_ensure,
         config  => $dest_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -1058,7 +1064,7 @@ class opn (
       opn_trust_ca { "${ca_descr}@${device_name}":
         ensure  => $ca_ensure,
         config  => $ca_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -1079,7 +1085,7 @@ class opn (
       opn_trust_cert { "${cert_descr}@${device_name}":
         ensure  => $cert_ensure,
         config  => $cert_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -1100,7 +1106,7 @@ class opn (
       opn_trust_crl { "${crl_ca_descr}@${device_name}":
         ensure  => $crl_ensure,
         config  => $crl_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -1121,7 +1127,7 @@ class opn (
       opn_tunable { "${tunable_key}@${device_name}":
         ensure  => $tunable_ensure,
         config  => $tunable_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -1142,7 +1148,7 @@ class opn (
       opn_user { "${user_name}@${device_name}":
         ensure  => $user_ensure,
         config  => $user_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -1163,7 +1169,7 @@ class opn (
       opn_zabbix_agent_alias { "${item_name}@${device_name}":
         ensure  => $zabbix_alias_ensure,
         config  => $zabbix_alias_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -1184,7 +1190,7 @@ class opn (
       opn_zabbix_agent_userparameter { "${item_name}@${device_name}":
         ensure  => $zabbix_up_ensure,
         config  => $zabbix_up_config,
-        require => File["${opn::config::config_dir}/${device_name}.yaml"],
+        require => Class['opn::config'],
       }
     }
   }
@@ -1200,7 +1206,7 @@ class opn (
     opn_zabbix_agent { $device_name:
       ensure  => $zabbix_agent_ensure,
       config  => $zabbix_agent_config,
-      require => File["${opn::config::config_dir}/${device_name}.yaml"],
+      require => Class['opn::config'],
     }
   }
 
@@ -1215,7 +1221,118 @@ class opn (
     opn_zabbix_proxy { $device_name:
       ensure  => $zabbix_proxy_ensure,
       config  => $zabbix_proxy_config,
-      require => File["${opn::config::config_dir}/${device_name}.yaml"],
+      require => Class['opn::config'],
+    }
+  }
+
+  # Collect exported opn_* resources from client nodes
+  if $manage_resources {
+    $devices.each |String $device_name, Hash $_device_config| {
+      Opn_acmeclient_account <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_acmeclient_action <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_acmeclient_certificate <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_acmeclient_validation <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_cron <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_firewall_alias <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_firewall_category <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_firewall_group <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_firewall_rule <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_group <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_acl <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_action <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_backend <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_cpu <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_errorfile <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_fcgi <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_frontend <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_group <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_healthcheck <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_lua <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_mailer <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_mapfile <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_resolver <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_server <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_haproxy_user <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_plugin <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_snapshot <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_syslog <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_trust_ca <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_trust_cert <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_trust_crl <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_tunable <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_user <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_zabbix_agent_alias <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_zabbix_agent_userparameter <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
     }
   }
 }

@@ -125,6 +125,23 @@ describe 'opn' do
         end
       end
 
+      context 'with manage_resources enabled' do
+        let(:params) do
+          {
+            'devices' => {
+              'opnsense01' => {
+                'url'        => 'https://opnsense01/api',
+                'api_key'    => 'k',
+                'api_secret' => 's',
+              },
+            },
+            'manage_resources' => true,
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+      end
+
       context 'with snapshot and active' do
         let(:params) do
           {
