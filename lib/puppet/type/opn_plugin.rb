@@ -58,9 +58,4 @@ Puppet::Type.newtype(:opn_plugin) do
       title.include?('@') ? title.split('@', 2).last : 'default'
     end
   end
-
-  autorequire(:file) do
-    device = self[:device]
-    ["/etc/puppet/opn/#{device}.yaml"]
-  end
 end

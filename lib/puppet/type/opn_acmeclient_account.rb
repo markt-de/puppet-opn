@@ -94,9 +94,4 @@ Puppet::Type.newtype(:opn_acmeclient_account) do
       new_value.inspect
     end
   end
-
-  autorequire(:file) do
-    device = self[:device]
-    ["/etc/puppet/opn/#{device}.yaml"]
-  end
 end

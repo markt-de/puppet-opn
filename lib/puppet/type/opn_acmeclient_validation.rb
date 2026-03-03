@@ -96,11 +96,6 @@ Puppet::Type.newtype(:opn_acmeclient_validation) do
     end
   end
 
-  autorequire(:file) do
-    device = self[:device]
-    ["/etc/puppet/opn/#{device}.yaml"]
-  end
-
   autorequire(:opn_haproxy_frontend) do
     device = self[:device]
     config = self[:config] || {}

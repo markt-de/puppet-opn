@@ -114,9 +114,4 @@ Puppet::Type.newtype(:opn_trust_ca) do
       new_value.inspect
     end
   end
-
-  autorequire(:file) do
-    device = self[:device]
-    ["/etc/puppet/opn/#{device}.yaml"]
-  end
 end

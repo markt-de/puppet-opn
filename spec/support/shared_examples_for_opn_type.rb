@@ -39,19 +39,6 @@ RSpec.shared_examples 'opn type with device parameter' do
   it 'rejects empty name' do
     expect { type_class.new(name: '') }.to raise_error(Puppet::Error)
   end
-
-  it 'autorequires the device YAML file' do
-    catalog = Puppet::Resource::Catalog.new
-    device = title.include?('@') ? title.split('@', 2).last : 'default'
-    file_path = "/etc/puppet/opn/#{device}.yaml"
-    file_res = Puppet::Type.type(:file).new(name: file_path)
-    opn_res = type_class.new(name: title)
-    catalog.add_resource(file_res)
-    catalog.add_resource(opn_res)
-    reqs = opn_res.autorequire
-    expect(reqs.size).to eq(1)
-    expect(reqs[0].source.to_s).to eq("File[#{file_path}]")
-  end
 end
 
 # Shared examples for singleton types where namevar = device name (no '@').
@@ -80,18 +67,6 @@ RSpec.shared_examples 'opn singleton type' do
 
   it 'rejects empty name' do
     expect { type_class.new(name: '') }.to raise_error(Puppet::Error)
-  end
-
-  it 'autorequires the device YAML file' do
-    catalog = Puppet::Resource::Catalog.new
-    file_path = "/etc/puppet/opn/#{title}.yaml"
-    file_res = Puppet::Type.type(:file).new(name: file_path)
-    opn_res = type_class.new(name: title)
-    catalog.add_resource(file_res)
-    catalog.add_resource(opn_res)
-    reqs = opn_res.autorequire
-    expect(reqs.size).to eq(1)
-    expect(reqs[0].source.to_s).to eq("File[#{file_path}]")
   end
 end
 

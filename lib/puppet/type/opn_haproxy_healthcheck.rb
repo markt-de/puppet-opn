@@ -100,9 +100,4 @@ Puppet::Type.newtype(:opn_haproxy_healthcheck) do
       new_value.inspect
     end
   end
-
-  autorequire(:file) do
-    device = self[:device]
-    ["/etc/puppet/opn/#{device}.yaml"]
-  end
 end

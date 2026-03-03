@@ -99,8 +99,4 @@ Puppet::Type.newtype(:opn_zabbix_agent) do
       new_value.inspect
     end
   end
-
-  autorequire(:file) do
-    ["/etc/puppet/opn/#{self[:name]}.yaml"]
-  end
 end

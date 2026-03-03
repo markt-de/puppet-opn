@@ -84,10 +84,6 @@ Puppet::Type.newtype(:opn_acmeclient_settings) do
     end
   end
 
-  autorequire(:file) do
-    ["/etc/puppet/opn/#{self[:name]}.yaml"]
-  end
-
   autorequire(:opn_cron) do
     config = self[:config] || {}
     cron = config['UpdateCron'].to_s.strip
