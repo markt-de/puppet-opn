@@ -13,7 +13,7 @@ Puppet::Type.newtype(:opn_ipsec_child) do
     /etc/puppet/opn/<device_name>.yaml.
 
     The connection relation field accepts a connection description which is
-    automatically resolved to a UUID via the HaproxyUuidResolver.
+    automatically resolved to a UUID via the IdResolver.
 
     @example Create an IPsec child SA
       opn_ipsec_child { 'child-lan@opnsense.example.com':

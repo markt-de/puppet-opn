@@ -13,7 +13,7 @@ Puppet::Type.newtype(:opn_openvpn_cso) do
     /etc/puppet/opn/<device_name>.yaml.
 
     The servers relation field accepts instance descriptions which are
-    automatically resolved to UUIDs via the HaproxyUuidResolver.
+    automatically resolved to UUIDs via the IdResolver.
 
     @example Create an OpenVPN client override
       opn_openvpn_cso { 'client1@opnsense.example.com':

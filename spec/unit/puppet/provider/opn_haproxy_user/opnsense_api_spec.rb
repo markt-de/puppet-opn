@@ -3,7 +3,7 @@
 require 'spec_helper'
 require 'puppet_x/opn/api_client'
 require 'puppet_x/opn/haproxy_reconfigure'
-require 'puppet_x/opn/haproxy_uuid_resolver'
+require 'puppet_x/opn/id_resolver'
 
 type_class = Puppet::Type.type(:opn_haproxy_user)
 provider_class = type_class.provider(:opnsense_api)
@@ -16,7 +16,7 @@ RSpec.describe provider_class do
     allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_with_errors, {})
-    PuppetX::Opn::HaproxyUuidResolver.instance_variable_set(:@cache, {})
+    PuppetX::Opn::IdResolver.instance_variable_set(:@cache, {})
   end
 
   describe '.relation_fields' do
@@ -37,7 +37,7 @@ RSpec.describe provider_class do
     it 'translates UUIDs to names' do
       allow(client).to receive(:post).with('haproxy/settings/search_users', {})
                                      .and_return({ 'rows' => [{ 'uuid' => 'aaa-bbb', 'name' => 'stats_user', 'linkedActions' => 'uuid1' }] })
-      expect(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_names)
+      expect(PuppetX::Opn::IdResolver).to receive(:translate_to_names)
         .and_return({ 'name' => 'stats_user', 'linkedActions' => 'redirect_https' })
 
       instances = described_class.instances
@@ -57,7 +57,7 @@ RSpec.describe provider_class do
     it 'matches resources to instances' do
       allow(client).to receive(:post).with('haproxy/settings/search_users', {})
                                      .and_return({ 'rows' => [{ 'uuid' => 'aaa', 'name' => 'stats_user', 'password' => '$2b$hash' }] })
-      allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_names)
+      allow(PuppetX::Opn::IdResolver).to receive(:translate_to_names)
         .and_return({ 'name' => 'stats_user', 'password' => '$2b$hash' })
 
       resource = type_class.new(name: 'stats_user@opnsense01', config: { 'password' => 'secret' })
@@ -91,7 +91,7 @@ RSpec.describe provider_class do
     it 'translates names to UUIDs before API call' do
       resource = type_class.new(name: 'stats_user@opnsense01', config: { 'password' => 'secret' })
       provider = described_class.new(resource)
-      expect(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
+      expect(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'stats_user', 'password' => 'secret' })
       expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
       allow(client).to receive(:post).with('haproxy/settings/add_user', { 'user' => { 'name' => 'stats_user', 'password' => 'secret' } })
@@ -103,7 +103,7 @@ RSpec.describe provider_class do
     it 'marks error on failure' do
       resource = type_class.new(name: 'stats_user@opnsense01', config: { 'password' => 'secret' })
       provider = described_class.new(resource)
-      allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
+      allow(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'stats_user', 'password' => 'secret' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
       expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')
@@ -158,7 +158,7 @@ RSpec.describe provider_class do
       provider.resource = resource
       provider.config = { 'description' => 'Updated' }
 
-      expect(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
+      expect(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'stats_user', 'description' => 'Updated' })
       expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
       allow(client).to receive(:post)
@@ -194,7 +194,7 @@ RSpec.describe provider_class do
       provider.resource = resource
       provider.config = { 'description' => 'Updated' }
 
-      allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
+      allow(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'stats_user', 'description' => 'Updated' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
       expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')

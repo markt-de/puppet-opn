@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
-require 'puppet_x/opn/haproxy_uuid_resolver'
+require 'puppet_x/opn/id_resolver'
 
 Puppet::Type.type(:opn_acmeclient_settings).provide(:opnsense_api) do
   desc 'Manages OPNsense ACME Client global settings via the REST API.'
@@ -52,7 +52,7 @@ Puppet::Type.type(:opn_acmeclient_settings).provide(:opnsense_api) do
       data     = response.dig('acmeclient', 'settings') || {}
 
       config = normalize_config(data)
-      config = PuppetX::Opn::HaproxyUuidResolver.translate_to_names(
+      config = PuppetX::Opn::IdResolver.translate_to_names(
         client, device_name, relation_fields, config
       )
 
@@ -129,7 +129,7 @@ Puppet::Type.type(:opn_acmeclient_settings).provide(:opnsense_api) do
   end
 
   def save_settings(client, config)
-    config = PuppetX::Opn::HaproxyUuidResolver.translate_to_uuids(
+    config = PuppetX::Opn::IdResolver.translate_to_uuids(
       client, resource[:name], self.class.relation_fields, config
     )
 

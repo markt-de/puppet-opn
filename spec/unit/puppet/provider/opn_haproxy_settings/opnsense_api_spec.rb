@@ -3,7 +3,7 @@
 require 'spec_helper'
 require 'puppet/provider/opn_haproxy_settings/opnsense_api'
 require 'puppet_x/opn/haproxy_reconfigure'
-require 'puppet_x/opn/haproxy_uuid_resolver'
+require 'puppet_x/opn/id_resolver'
 
 describe Puppet::Type.type(:opn_haproxy_settings).provider(:opnsense_api) do
   let(:provider_class) { described_class }
@@ -15,7 +15,7 @@ describe Puppet::Type.type(:opn_haproxy_settings).provider(:opnsense_api) do
     allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_with_errors, {})
-    PuppetX::Opn::HaproxyUuidResolver.instance_variable_set(:@cache, {})
+    PuppetX::Opn::IdResolver.instance_variable_set(:@cache, {})
   end
 
   it_behaves_like 'opn provider basics'
@@ -25,7 +25,7 @@ describe Puppet::Type.type(:opn_haproxy_settings).provider(:opnsense_api) do
     it 'fetches settings via GET' do
       allow(client).to receive(:get).with('haproxy/settings/get')
                                     .and_return({ 'haproxy' => { 'general' => { 'enabled' => '1' }, 'maintenance' => {} } })
-      allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_names)
+      allow(PuppetX::Opn::IdResolver).to receive(:translate_to_names)
         .and_return({ 'general' => { 'enabled' => '1' }, 'maintenance' => {} })
       instances = described_class.instances
       expect(instances.size).to eq(1)
@@ -38,7 +38,7 @@ describe Puppet::Type.type(:opn_haproxy_settings).provider(:opnsense_api) do
       resource = type_class.new(name: 'opnsense01', config: { 'general' => { 'enabled' => '1' } })
       provider = described_class.new
       resource.provider = provider
-      allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
+      allow(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'general' => { 'enabled' => '1' } })
       allow(PuppetX::Opn::HaproxyReconfigure).to receive(:mark)
       expect(client).to receive(:post).with('haproxy/settings/set', anything)

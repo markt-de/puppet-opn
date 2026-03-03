@@ -2,7 +2,7 @@
 
 require 'puppet_x/opn/api_client'
 require 'puppet_x/opn/dhcrelay_reconfigure'
-require 'puppet_x/opn/haproxy_uuid_resolver'
+require 'puppet_x/opn/id_resolver'
 
 Puppet::Type.type(:opn_dhcrelay).provide(:opnsense_api) do
   desc 'Manages OPNsense DHCP Relay instances via the REST API.'
@@ -29,7 +29,7 @@ Puppet::Type.type(:opn_dhcrelay).provide(:opnsense_api) do
         relay_interface = row['interface'].to_s
         next if relay_interface.empty?
 
-        config = PuppetX::Opn::HaproxyUuidResolver.translate_to_names(
+        config = PuppetX::Opn::IdResolver.translate_to_names(
           client, device_name, relation_fields,
           row.reject { |k, _| k == 'uuid' }
         )
@@ -79,7 +79,7 @@ Puppet::Type.type(:opn_dhcrelay).provide(:opnsense_api) do
     client = api_client
     device = @property_hash[:device] || resource[:device]
     config = (resource[:config] || {}).dup
-    config = PuppetX::Opn::HaproxyUuidResolver.translate_to_uuids(
+    config = PuppetX::Opn::IdResolver.translate_to_uuids(
       client, device, self.class.relation_fields, config
     )
 
@@ -120,7 +120,7 @@ Puppet::Type.type(:opn_dhcrelay).provide(:opnsense_api) do
     device = @property_hash[:device] || resource[:device]
     uuid   = @property_hash[:uuid]
     config = @pending_config.dup
-    config = PuppetX::Opn::HaproxyUuidResolver.translate_to_uuids(
+    config = PuppetX::Opn::IdResolver.translate_to_uuids(
       client, device, self.class.relation_fields, config
     )
 

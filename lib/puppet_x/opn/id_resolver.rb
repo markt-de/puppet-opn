@@ -2,7 +2,7 @@
 
 module PuppetX # rubocop:disable Style/ClassAndModuleChildren
   module Opn
-    # Resolves ModelRelationField UUIDs/IDs <-> names for HAProxy resources.
+    # Resolves ModelRelationField UUIDs/IDs <-> names for OPNsense resources.
     #
     # Maintains a per-run class-level cache keyed by
     # "device:endpoint:id_field:name_field" to avoid redundant API calls
@@ -13,7 +13,7 @@ module PuppetX # rubocop:disable Style/ClassAndModuleChildren
     # - Certificate fields (CertificateField) — id_field: 'refid', name_field: 'descr'
     # - Cron job fields — id_field: 'uuid', name_field: 'description'
     # - Dot-path fields for nested configs — e.g. 'general.stats.allowedUsers'
-    module HaproxyUuidResolver
+    module IdResolver
       UUID_RE = %r{\A[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}\z}
 
       @cache = {}
@@ -46,7 +46,7 @@ module PuppetX # rubocop:disable Style/ClassAndModuleChildren
           end
         rescue Puppet::Error => e
           Puppet.warning(
-            "HaproxyUuidResolver: failed to populate '#{endpoint}' " \
+            "IdResolver: failed to populate '#{endpoint}' " \
             "for '#{device}': #{e.message}",
           )
         end
@@ -201,7 +201,7 @@ module PuppetX # rubocop:disable Style/ClassAndModuleChildren
         end
         unless resolved
           raise Puppet::Error,
-                "HaproxyUuidResolver: cannot resolve '#{name}' to an ID " \
+                "IdResolver: cannot resolve '#{name}' to an ID " \
                 "via '#{endpoint}' on '#{device}'"
         end
         resolved

@@ -2,7 +2,7 @@
 
 require 'puppet_x/opn/api_client'
 require 'puppet_x/opn/ipsec_reconfigure'
-require 'puppet_x/opn/haproxy_uuid_resolver'
+require 'puppet_x/opn/id_resolver'
 
 Puppet::Type.type(:opn_ipsec_remote).provide(:opnsense_api) do
   desc 'Manages OPNsense IPsec remote authentication entries via the REST API.'
@@ -39,7 +39,7 @@ Puppet::Type.type(:opn_ipsec_remote).provide(:opnsense_api) do
           name:   "#{item_name}@#{device_name}",
           device: device_name,
           uuid:   row['uuid'],
-          config: PuppetX::Opn::HaproxyUuidResolver.translate_to_names(
+          config: PuppetX::Opn::IdResolver.translate_to_names(
             client, device_name, relation_fields,
             row.reject { |k, _| k == 'uuid' }
           ),
@@ -70,7 +70,7 @@ Puppet::Type.type(:opn_ipsec_remote).provide(:opnsense_api) do
     item_name = resource_item_name
     config    = (resource[:config] || {}).dup
     config['description'] = item_name
-    config = PuppetX::Opn::HaproxyUuidResolver.translate_to_uuids(
+    config = PuppetX::Opn::IdResolver.translate_to_uuids(
       client, device, self.class.relation_fields, config
     )
 
@@ -114,7 +114,7 @@ Puppet::Type.type(:opn_ipsec_remote).provide(:opnsense_api) do
     item_name = resource_item_name
     config    = @pending_config.dup
     config['description'] = item_name
-    config = PuppetX::Opn::HaproxyUuidResolver.translate_to_uuids(
+    config = PuppetX::Opn::IdResolver.translate_to_uuids(
       client, device, self.class.relation_fields, config
     )
 

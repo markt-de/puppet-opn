@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'puppet_x/opn/haproxy_uuid_resolver'
+require 'puppet_x/opn/id_resolver'
 
-describe PuppetX::Opn::HaproxyUuidResolver do
+describe PuppetX::Opn::IdResolver do
   let(:client) { instance_double('PuppetX::Opn::ApiClient') }
   let(:device) { 'opnsense01' }
 

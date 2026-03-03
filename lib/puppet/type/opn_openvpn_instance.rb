@@ -19,7 +19,7 @@ Puppet::Type.newtype(:opn_openvpn_instance) do
     idempotency checks.
 
     The tls_key relation field accepts a static key description which is
-    automatically resolved to a UUID via the HaproxyUuidResolver.
+    automatically resolved to a UUID via the IdResolver.
 
     @example Create an OpenVPN server instance
       opn_openvpn_instance { 'roadwarrior-server@opnsense.example.com':

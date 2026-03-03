@@ -3,7 +3,7 @@
 require 'spec_helper'
 require 'puppet_x/opn/api_client'
 require 'puppet_x/opn/haproxy_reconfigure'
-require 'puppet_x/opn/haproxy_uuid_resolver'
+require 'puppet_x/opn/id_resolver'
 
 type_class = Puppet::Type.type(:opn_haproxy_acl)
 provider_class = type_class.provider(:opnsense_api)
@@ -16,7 +16,7 @@ RSpec.describe provider_class do
     allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
     PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_with_errors, {})
-    PuppetX::Opn::HaproxyUuidResolver.instance_variable_set(:@cache, {})
+    PuppetX::Opn::IdResolver.instance_variable_set(:@cache, {})
   end
 
   describe '.relation_fields' do
@@ -44,7 +44,7 @@ RSpec.describe provider_class do
     it 'translates UUIDs to names' do
       allow(client).to receive(:post).with('haproxy/settings/search_acls', {})
                                      .and_return({ 'rows' => [{ 'uuid' => 'aaa-bbb', 'name' => 'is_https', 'use_backend' => 'uuid1' }] })
-      expect(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_names)
+      expect(PuppetX::Opn::IdResolver).to receive(:translate_to_names)
         .and_return({ 'name' => 'is_https', 'use_backend' => 'web_backend' })
 
       instances = described_class.instances
@@ -64,7 +64,7 @@ RSpec.describe provider_class do
     it 'matches resources to instances' do
       allow(client).to receive(:post).with('haproxy/settings/search_acls', {})
                                      .and_return({ 'rows' => [{ 'uuid' => 'aaa', 'name' => 'is_https', 'expression' => 'ssl_fc' }] })
-      allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_names)
+      allow(PuppetX::Opn::IdResolver).to receive(:translate_to_names)
         .and_return({ 'name' => 'is_https', 'expression' => 'ssl_fc' })
 
       resource = type_class.new(name: 'is_https@opnsense01', config: { 'expression' => 'ssl_fc' })
@@ -98,7 +98,7 @@ RSpec.describe provider_class do
     it 'translates names to UUIDs before API call' do
       resource = type_class.new(name: 'is_https@opnsense01', config: { 'expression' => 'ssl_fc' })
       provider = described_class.new(resource)
-      expect(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
+      expect(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'is_https', 'expression' => 'ssl_fc' })
       expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
       allow(client).to receive(:post).with('haproxy/settings/add_acl', { 'acl' => { 'name' => 'is_https', 'expression' => 'ssl_fc' } })
@@ -110,7 +110,7 @@ RSpec.describe provider_class do
     it 'marks error on failure' do
       resource = type_class.new(name: 'is_https@opnsense01', config: { 'expression' => 'ssl_fc' })
       provider = described_class.new(resource)
-      allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
+      allow(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'is_https', 'expression' => 'ssl_fc' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
       expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')
@@ -165,7 +165,7 @@ RSpec.describe provider_class do
       provider.resource = resource
       provider.config = { 'expression' => 'hdr(host)' }
 
-      expect(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
+      expect(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'is_https', 'expression' => 'hdr(host)' })
       expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
       allow(client).to receive(:post)
@@ -201,7 +201,7 @@ RSpec.describe provider_class do
       provider.resource = resource
       provider.config = { 'expression' => 'hdr(host)' }
 
-      allow(PuppetX::Opn::HaproxyUuidResolver).to receive(:translate_to_uuids)
+      allow(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'is_https', 'expression' => 'hdr(host)' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
       expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')

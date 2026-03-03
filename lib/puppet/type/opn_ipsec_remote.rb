@@ -13,7 +13,7 @@ Puppet::Type.newtype(:opn_ipsec_remote) do
     /etc/puppet/opn/<device_name>.yaml.
 
     Relation fields (connection, pubkeys) accept names which are automatically
-    resolved to UUIDs via the HaproxyUuidResolver.
+    resolved to UUIDs via the IdResolver.
 
     @example Create an IPsec remote authentication
       opn_ipsec_remote { 'remote-auth@opnsense.example.com':

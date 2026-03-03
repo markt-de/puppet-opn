@@ -13,7 +13,7 @@ Puppet::Type.newtype(:opn_acmeclient_certificate) do
     /etc/puppet/opn/<device_name>.yaml.
 
     Relation fields (account, validationMethod, restartActions) accept names
-    which are automatically resolved to UUIDs via the HaproxyUuidResolver.
+    which are automatically resolved to UUIDs via the IdResolver.
 
     Volatile fields (certRefId, lastUpdate, statusCode, statusLastUpdate)
     are excluded from idempotency checks.
