@@ -101,6 +101,14 @@
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #     - All other keys are passed as the 'config' hash to opn_firewall_rule.
 #
+# @param gateways
+#   Hash of gateways to export.
+#   Each key is the gateway name (e.g. 'WAN_GW').
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_gateway.
+#
 # @param groups
 #   Hash of local groups to export.
 #   Each key is the group name.
@@ -324,6 +332,14 @@
 #     - devices [Array] List of target device names (mandatory).
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #
+# @param routes
+#   Hash of static routes to export.
+#   Each key is the route description.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_route.
+#
 # @param snapshots
 #   Hash of ZFS snapshots to export.
 #   Each key is the snapshot name.
@@ -422,6 +438,7 @@ class opn::client (
   Hash $firewall_categories,
   Hash $firewall_groups,
   Hash $firewall_rules,
+  Hash $gateways,
   Hash $groups,
   Hash $haproxy_acls,
   Hash $haproxy_actions,
@@ -450,6 +467,7 @@ class opn::client (
   Hash $openvpn_instances,
   Hash $openvpn_statickeys,
   Hash $plugins,
+  Hash $routes,
   Hash $snapshots,
   Hash $syslog_destinations,
   Hash $trust_cas,
@@ -653,6 +671,24 @@ class opn::client (
       @@opn_firewall_rule { "${rule_desc}@${device_name}":
         ensure => $rule_ensure,
         config => $rule_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export gateways
+  $gateways.each |String $gw_name, Hash $gw_options| {
+    $gw_devices = $gw_options['devices']
+    $gw_ensure = 'ensure' in $gw_options ? {
+      true    => $gw_options['ensure'],
+      default => 'present',
+    }
+    $gw_config = $gw_options - ['devices', 'ensure']
+
+    $gw_devices.each |String $device_name| {
+      @@opn_gateway { "${gw_name}@${device_name}":
+        ensure => $gw_ensure,
+        config => $gw_config,
         tag    => $device_name,
       }
     }
@@ -1155,6 +1191,24 @@ class opn::client (
     $plugin_devices.each |String $device_name| {
       @@opn_plugin { "${plugin_name}@${device_name}":
         ensure => $plugin_ensure,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export static routes
+  $routes.each |String $route_desc, Hash $route_options| {
+    $route_devices = $route_options['devices']
+    $route_ensure = 'ensure' in $route_options ? {
+      true    => $route_options['ensure'],
+      default => 'present',
+    }
+    $route_config = $route_options - ['devices', 'ensure']
+
+    $route_devices.each |String $device_name| {
+      @@opn_route { "${route_desc}@${device_name}":
+        ensure => $route_ensure,
+        config => $route_config,
         tag    => $device_name,
       }
     }

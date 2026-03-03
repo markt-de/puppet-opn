@@ -16,6 +16,7 @@ opn::firewall_aliases: {}
 opn::firewall_categories: {}
 opn::firewall_groups: {}
 opn::firewall_rules: {}
+opn::gateways: {}
 opn::groups: {}
 opn::haproxy_acls: {}
 opn::haproxy_actions: {}
@@ -49,6 +50,7 @@ opn::openvpn_csos: {}
 opn::openvpn_instances: {}
 opn::openvpn_statickeys: {}
 opn::plugins: {}
+opn::routes: {}
 opn::snapshots: {}
 opn::syslog_destinations: {}
 opn::trust_cas: {}
@@ -71,6 +73,7 @@ opn::client::firewall_aliases: {}
 opn::client::firewall_categories: {}
 opn::client::firewall_groups: {}
 opn::client::firewall_rules: {}
+opn::client::gateways: {}
 opn::client::groups: {}
 opn::client::haproxy_acls: {}
 opn::client::haproxy_actions: {}
@@ -99,6 +102,7 @@ opn::client::openvpn_csos: {}
 opn::client::openvpn_instances: {}
 opn::client::openvpn_statickeys: {}
 opn::client::plugins: {}
+opn::client::routes: {}
 opn::client::snapshots: {}
 opn::client::syslog_destinations: {}
 opn::client::trust_cas: {}

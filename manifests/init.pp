@@ -109,6 +109,14 @@
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #     - All other keys are passed as the 'config' hash to opn_firewall_rule.
 #
+# @param gateways
+#   Hash of gateways to manage across devices.
+#   Each key is the gateway name (e.g. 'WAN_GW').
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_gateway.
+#
 # @param groups
 #   Hash of local groups to manage across devices.
 #   Each key is the group name.
@@ -366,6 +374,14 @@
 #                       Defaults to all devices in $devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #
+# @param routes
+#   Hash of static routes to manage across devices.
+#   Each key is the route description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_route.
+#
 # @param snapshots
 #   Hash of ZFS snapshots to manage across devices.
 #   Each key is the snapshot name.
@@ -495,6 +511,7 @@ class opn (
   Hash                 $firewall_categories,
   Hash                 $firewall_groups,
   Hash                 $firewall_rules,
+  Hash                 $gateways,
   Hash                 $groups,
   Hash                 $haproxy_acls,
   Hash                 $haproxy_actions,
@@ -528,6 +545,7 @@ class opn (
   Hash                 $openvpn_instances,
   Hash                 $openvpn_statickeys,
   Hash                 $plugins,
+  Hash                 $routes,
   Hash                 $snapshots,
   Hash                 $syslog_destinations,
   Hash                 $trust_cas,
@@ -786,6 +804,27 @@ class opn (
       opn_firewall_rule { "${rule_desc}@${device_name}":
         ensure  => $rule_ensure,
         config  => $rule_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage gateways across devices
+  $gateways.each |String $gw_name, Hash $gw_options| {
+    $gw_devices = 'devices' in $gw_options ? {
+      true    => $gw_options['devices'],
+      default => keys($devices),
+    }
+    $gw_ensure = 'ensure' in $gw_options ? {
+      true    => $gw_options['ensure'],
+      default => 'present',
+    }
+    $gw_config = $gw_options - ['devices', 'ensure']
+
+    $gw_devices.each |String $device_name| {
+      opn_gateway { "${gw_name}@${device_name}":
+        ensure  => $gw_ensure,
+        config  => $gw_config,
         require => Class['opn::config'],
       }
     }
@@ -1437,6 +1476,27 @@ class opn (
     }
   }
 
+  # Manage static routes across devices
+  $routes.each |String $route_desc, Hash $route_options| {
+    $route_devices = 'devices' in $route_options ? {
+      true    => $route_options['devices'],
+      default => keys($devices),
+    }
+    $route_ensure = 'ensure' in $route_options ? {
+      true    => $route_options['ensure'],
+      default => 'present',
+    }
+    $route_config = $route_options - ['devices', 'ensure']
+
+    $route_devices.each |String $device_name| {
+      opn_route { "${route_desc}@${device_name}":
+        ensure  => $route_ensure,
+        config  => $route_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
   # Manage ZFS snapshots across devices
   $snapshots.each |String $snap_name, Hash $snap_options| {
     $snap_devices = 'devices' in $snap_options ? {
@@ -1697,6 +1757,9 @@ class opn (
       Opn_firewall_rule <<| tag == $device_name |>> {
         require => Class['opn::config'],
       }
+      Opn_gateway <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
       Opn_group <<| tag == $device_name |>> {
         require => Class['opn::config'],
       }
@@ -1779,6 +1842,9 @@ class opn (
         require => Class['opn::config'],
       }
       Opn_plugin <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_route <<| tag == $device_name |>> {
         require => Class['opn::config'],
       }
       Opn_snapshot <<| tag == $device_name |>> {
