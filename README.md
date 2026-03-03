@@ -11,6 +11,7 @@
     - [Resource identifiers](#resource-identifiers)
     - [Managing ACME Client](#managing-acme-client)
     - [Managing cron jobs](#managing-cron-jobs)
+    - [Managing DHCP Relay](#managing-dhcp-relay)
     - [Managing plugins](#managing-plugins)
     - [Managing firewall aliases](#managing-firewall-aliases)
     - [Managing firewall categories](#managing-firewall-categories)
@@ -51,6 +52,8 @@ This module provides the following resource types for one or more OPNsense devic
 | `opn_acmeclient_settings` | ACME Client global settings (singleton per device) |
 | `opn_acmeclient_validation` | ACME Client validation methods |
 | `opn_cron` | Cron jobs |
+| `opn_dhcrelay_destination` | DHCP Relay destinations |
+| `opn_dhcrelay` | DHCP Relay instances |
 | `opn_firewall_alias` | Firewall aliases |
 | `opn_firewall_category` | Firewall categories |
 | `opn_firewall_group` | Firewall interface groups |
@@ -184,7 +187,7 @@ opn_haproxy_server { 'new-web01@opnsense01.example.com':
 }
 ```
 
-The same pattern applies to all list-based types: `opn_acmeclient_account`, `opn_acmeclient_action`, `opn_acmeclient_certificate`, `opn_acmeclient_validation`, `opn_cron`, `opn_firewall_alias`, `opn_firewall_category`, `opn_firewall_group`, `opn_firewall_rule`, `opn_user`, `opn_group`, all `opn_haproxy_*` types, `opn_snapshot`, `opn_syslog`, `opn_trust_ca`, `opn_trust_cert`, `opn_trust_crl`, `opn_tunable`, `opn_zabbix_agent_userparameter`, and `opn_zabbix_agent_alias`.
+The same pattern applies to all list-based types: `opn_acmeclient_account`, `opn_acmeclient_action`, `opn_acmeclient_certificate`, `opn_acmeclient_validation`, `opn_cron`, `opn_dhcrelay_destination`, `opn_dhcrelay`, `opn_firewall_alias`, `opn_firewall_category`, `opn_firewall_group`, `opn_firewall_rule`, `opn_user`, `opn_group`, all `opn_haproxy_*` types, `opn_snapshot`, `opn_syslog`, `opn_trust_ca`, `opn_trust_cert`, `opn_trust_crl`, `opn_tunable`, `opn_zabbix_agent_userparameter`, and `opn_zabbix_agent_alias`.
 
 **Singleton resources** (`opn_acmeclient_settings`, `opn_haproxy_settings`, `opn_hasync`, `opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
 
@@ -285,6 +288,38 @@ class { 'opn':
       'weekdays'=> '*',
       'enabled' => '1',
       'origin'  => 'HAProxy',
+    },
+  },
+}
+```
+
+### Managing DHCP Relay
+
+DHCP Relay resources (destinations and relays) are managed via the `dhcrelay_destinations` and `dhcrelays` parameters or directly via the corresponding `opn_dhcrelay_destination` and `opn_dhcrelay` types.
+
+Destinations are named groups of DHCP server IPs. Relays are per-interface relay instances referencing a destination. The `destination` config key on a relay accepts the destination name, which is automatically resolved to the corresponding UUID by the provider.
+
+Important: Relay instances have no name/description field in the OPNsense API. The resource title is a freeform label (e.g. `"LAN IPv4 Relay@opnsense01"`), and the provider matches existing API resources by the `interface` value from the config hash. Each interface can only have one relay per device.
+
+After any change, Puppet calls `dhcrelay/service/reconfigure` once per device.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  dhcrelay_destinations => {
+    'DHCP Servers' => {
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'server'  => '10.0.0.1,10.0.0.2',
+    },
+  },
+  dhcrelays => {
+    'LAN IPv4 Relay' => {
+      'devices'     => ['opnsense01.example.com'],
+      'ensure'      => 'present',
+      'interface'   => 'lan',
+      'destination' => 'DHCP Servers',
+      'enabled'     => '1',
     },
   },
 }
@@ -909,6 +944,22 @@ opn_syslog { 'Central syslog@opnsense01.example.com':
     'hostname'  => 'syslog.example.com',
     'port'      => '514',
     'enabled'   => '1',
+  },
+}
+
+opn_dhcrelay_destination { 'DHCP Servers@opnsense01.example.com':
+  ensure => present,
+  config => {
+    'server' => '10.0.0.1,10.0.0.2',
+  },
+}
+
+opn_dhcrelay { 'LAN IPv4 Relay@opnsense01.example.com':
+  ensure => present,
+  config => {
+    'interface'   => 'lan',
+    'destination' => 'DHCP Servers',
+    'enabled'     => '1',
   },
 }
 

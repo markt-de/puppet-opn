@@ -53,6 +53,22 @@
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #     - All other keys are passed as the 'config' hash to opn_cron.
 #
+# @param dhcrelay_destinations
+#   Hash of DHCP Relay destinations to export.
+#   Each key is the destination name.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_dhcrelay_destination.
+#
+# @param dhcrelays
+#   Hash of DHCP Relay instances to export.
+#   Each key is a freeform label (not sent to the API).
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_dhcrelay.
+#
 # @param firewall_aliases
 #   Hash of firewall aliases to export.
 #   Each key is the alias name.
@@ -312,6 +328,8 @@ class opn::client (
   Hash $acmeclient_certificates,
   Hash $acmeclient_validations,
   Hash $cron_jobs,
+  Hash $dhcrelay_destinations,
+  Hash $dhcrelays,
   Hash $firewall_aliases,
   Hash $firewall_categories,
   Hash $firewall_groups,
@@ -428,6 +446,42 @@ class opn::client (
       @@opn_cron { "${job_desc}@${device_name}":
         ensure => $job_ensure,
         config => $job_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export DHCP Relay destinations
+  $dhcrelay_destinations.each |String $item_name, Hash $item_options| {
+    $dhcrelay_dest_devices = $item_options['devices']
+    $dhcrelay_dest_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $dhcrelay_dest_config = $item_options - ['devices', 'ensure']
+
+    $dhcrelay_dest_devices.each |String $device_name| {
+      @@opn_dhcrelay_destination { "${item_name}@${device_name}":
+        ensure => $dhcrelay_dest_ensure,
+        config => $dhcrelay_dest_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export DHCP Relay instances
+  $dhcrelays.each |String $item_name, Hash $item_options| {
+    $dhcrelay_devices = $item_options['devices']
+    $dhcrelay_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $dhcrelay_config = $item_options - ['devices', 'ensure']
+
+    $dhcrelay_devices.each |String $device_name| {
+      @@opn_dhcrelay { "${item_name}@${device_name}":
+        ensure => $dhcrelay_ensure,
+        config => $dhcrelay_config,
         tag    => $device_name,
       }
     }

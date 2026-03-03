@@ -9,6 +9,8 @@ opn::acmeclient_certificates: {}
 opn::acmeclient_settings: {}
 opn::acmeclient_validations: {}
 opn::cron_jobs: {}
+opn::dhcrelay_destinations: {}
+opn::dhcrelays: {}
 opn::devices: {}
 opn::firewall_aliases: {}
 opn::firewall_categories: {}
@@ -50,6 +52,8 @@ opn::client::acmeclient_actions: {}
 opn::client::acmeclient_certificates: {}
 opn::client::acmeclient_validations: {}
 opn::client::cron_jobs: {}
+opn::client::dhcrelay_destinations: {}
+opn::client::dhcrelays: {}
 opn::client::firewall_aliases: {}
 opn::client::firewall_categories: {}
 opn::client::firewall_groups: {}

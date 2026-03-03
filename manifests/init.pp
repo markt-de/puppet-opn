@@ -51,6 +51,22 @@
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #     - All other keys are passed as the 'config' hash to opn_cron.
 #
+# @param dhcrelay_destinations
+#   Hash of DHCP Relay destinations to manage across devices.
+#   Each key is the destination name.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_dhcrelay_destination.
+#
+# @param dhcrelays
+#   Hash of DHCP Relay instances to manage across devices.
+#   Each key is a freeform label (not sent to the API).
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_dhcrelay.
+#
 # @param devices
 #   Hash of OPNsense devices to manage. Each key is the device name used as
 #   suffix in opn_* resource titles (format: "resource@device_name").
@@ -370,6 +386,8 @@ class opn (
   Hash                 $acmeclient_settings,
   Hash                 $acmeclient_validations,
   Hash                 $cron_jobs,
+  Hash                 $dhcrelay_destinations,
+  Hash                 $dhcrelays,
   Hash                 $devices,
   Hash                 $firewall_aliases,
   Hash                 $firewall_categories,
@@ -527,6 +545,48 @@ class opn (
       opn_cron { "${job_desc}@${device_name}":
         ensure  => $job_ensure,
         config  => $job_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage DHCP Relay destinations across devices
+  $dhcrelay_destinations.each |String $item_name, Hash $item_options| {
+    $dhcrelay_dest_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $dhcrelay_dest_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $dhcrelay_dest_config = $item_options - ['devices', 'ensure']
+
+    $dhcrelay_dest_devices.each |String $device_name| {
+      opn_dhcrelay_destination { "${item_name}@${device_name}":
+        ensure  => $dhcrelay_dest_ensure,
+        config  => $dhcrelay_dest_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage DHCP Relay instances across devices
+  $dhcrelays.each |String $item_name, Hash $item_options| {
+    $dhcrelay_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $dhcrelay_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $dhcrelay_config = $item_options - ['devices', 'ensure']
+
+    $dhcrelay_devices.each |String $device_name| {
+      opn_dhcrelay { "${item_name}@${device_name}":
+        ensure  => $dhcrelay_ensure,
+        config  => $dhcrelay_config,
         require => Class['opn::config'],
       }
     }
@@ -1241,6 +1301,12 @@ class opn (
         require => Class['opn::config'],
       }
       Opn_cron <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_dhcrelay_destination <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_dhcrelay <<| tag == $device_name |>> {
         require => Class['opn::config'],
       }
       Opn_firewall_alias <<| tag == $device_name |>> {
