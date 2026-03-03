@@ -251,6 +251,77 @@
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #     - All other keys are passed as the 'config' hash to opn_hasync.
 #
+# @param ipsec_children
+#   Hash of IPsec child SAs to manage across devices.
+#   Each key is the child SA description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_child.
+#
+# @param ipsec_connections
+#   Hash of IPsec connections to manage across devices.
+#   Each key is the connection description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_connection.
+#
+# @param ipsec_keypairs
+#   Hash of IPsec key pairs to manage across devices.
+#   Each key is the key pair name.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_keypair.
+#
+# @param ipsec_locals
+#   Hash of IPsec local authentication entries to manage across devices.
+#   Each key is the local auth description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_local.
+#
+# @param ipsec_pools
+#   Hash of IPsec address pools to manage across devices.
+#   Each key is the pool name.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_pool.
+#
+# @param ipsec_presharedkeys
+#   Hash of IPsec pre-shared keys to manage across devices.
+#   Each key is the PSK identifier.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_presharedkey.
+#
+# @param ipsec_remotes
+#   Hash of IPsec remote authentication entries to manage across devices.
+#   Each key is the remote auth description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_remote.
+#
+# @param ipsec_settings
+#   Hash of IPsec global settings, one per device.
+#   Each key is the device name (not a "name@device" title).
+#   Each value is a hash with:
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_settings.
+#
+# @param ipsec_vtis
+#   Hash of IPsec VTI entries to manage across devices.
+#   Each key is the VTI description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_vti.
+#
 # @param manage_resources
 #   Boolean to enable collection of exported opn_* resources from client nodes
 #   via PuppetDB. When true, the class collects all exported opn_* resources
@@ -262,6 +333,30 @@
 #   Each value is a hash with:
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #     - All other keys are passed as the 'config' hash to opn_node_exporter.
+#
+# @param openvpn_csos
+#   Hash of OpenVPN client-specific overrides to manage across devices.
+#   Each key is the client common name.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_openvpn_cso.
+#
+# @param openvpn_instances
+#   Hash of OpenVPN instances to manage across devices.
+#   Each key is the instance description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_openvpn_instance.
+#
+# @param openvpn_statickeys
+#   Hash of OpenVPN static keys to manage across devices.
+#   Each key is the static key description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_openvpn_statickey.
 #
 # @param plugins
 #   Hash of plugins to manage across devices.
@@ -418,8 +513,20 @@ class opn (
   Hash                 $haproxy_settings,
   Hash                 $haproxy_users,
   Hash                 $hasyncs,
+  Hash                 $ipsec_children,
+  Hash                 $ipsec_connections,
+  Hash                 $ipsec_keypairs,
+  Hash                 $ipsec_locals,
+  Hash                 $ipsec_pools,
+  Hash                 $ipsec_presharedkeys,
+  Hash                 $ipsec_remotes,
+  Hash                 $ipsec_settings,
+  Hash                 $ipsec_vtis,
   Boolean              $manage_resources,
   Hash                 $node_exporters,
+  Hash                 $openvpn_csos,
+  Hash                 $openvpn_instances,
+  Hash                 $openvpn_statickeys,
   Hash                 $plugins,
   Hash                 $snapshots,
   Hash                 $syslog_destinations,
@@ -1050,6 +1157,189 @@ class opn (
     }
   }
 
+  # Manage IPsec child SAs across devices
+  $ipsec_children.each |String $item_name, Hash $item_options| {
+    $ipsec_child_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $ipsec_child_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_child_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_child_devices.each |String $device_name| {
+      opn_ipsec_child { "${item_name}@${device_name}":
+        ensure  => $ipsec_child_ensure,
+        config  => $ipsec_child_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage IPsec connections across devices
+  $ipsec_connections.each |String $item_name, Hash $item_options| {
+    $ipsec_conn_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $ipsec_conn_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_conn_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_conn_devices.each |String $device_name| {
+      opn_ipsec_connection { "${item_name}@${device_name}":
+        ensure  => $ipsec_conn_ensure,
+        config  => $ipsec_conn_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage IPsec key pairs across devices
+  $ipsec_keypairs.each |String $item_name, Hash $item_options| {
+    $ipsec_kp_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $ipsec_kp_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_kp_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_kp_devices.each |String $device_name| {
+      opn_ipsec_keypair { "${item_name}@${device_name}":
+        ensure  => $ipsec_kp_ensure,
+        config  => $ipsec_kp_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage IPsec local authentication entries across devices
+  $ipsec_locals.each |String $item_name, Hash $item_options| {
+    $ipsec_local_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $ipsec_local_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_local_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_local_devices.each |String $device_name| {
+      opn_ipsec_local { "${item_name}@${device_name}":
+        ensure  => $ipsec_local_ensure,
+        config  => $ipsec_local_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage IPsec address pools across devices
+  $ipsec_pools.each |String $item_name, Hash $item_options| {
+    $ipsec_pool_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $ipsec_pool_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_pool_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_pool_devices.each |String $device_name| {
+      opn_ipsec_pool { "${item_name}@${device_name}":
+        ensure  => $ipsec_pool_ensure,
+        config  => $ipsec_pool_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage IPsec pre-shared keys across devices
+  $ipsec_presharedkeys.each |String $item_name, Hash $item_options| {
+    $ipsec_psk_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $ipsec_psk_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_psk_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_psk_devices.each |String $device_name| {
+      opn_ipsec_presharedkey { "${item_name}@${device_name}":
+        ensure  => $ipsec_psk_ensure,
+        config  => $ipsec_psk_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage IPsec remote authentication entries across devices
+  $ipsec_remotes.each |String $item_name, Hash $item_options| {
+    $ipsec_remote_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $ipsec_remote_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_remote_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_remote_devices.each |String $device_name| {
+      opn_ipsec_remote { "${item_name}@${device_name}":
+        ensure  => $ipsec_remote_ensure,
+        config  => $ipsec_remote_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage IPsec global settings per device (singleton per device)
+  $ipsec_settings.each |String $device_name, Hash $settings_options| {
+    $ipsec_settings_ensure = 'ensure' in $settings_options ? {
+      true    => $settings_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_settings_config = $settings_options - ['ensure']
+
+    opn_ipsec_settings { $device_name:
+      ensure  => $ipsec_settings_ensure,
+      config  => $ipsec_settings_config,
+      require => Class['opn::config'],
+    }
+  }
+
+  # Manage IPsec VTI entries across devices
+  $ipsec_vtis.each |String $item_name, Hash $item_options| {
+    $ipsec_vti_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $ipsec_vti_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_vti_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_vti_devices.each |String $device_name| {
+      opn_ipsec_vti { "${item_name}@${device_name}":
+        ensure  => $ipsec_vti_ensure,
+        config  => $ipsec_vti_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
   # Manage Node Exporter settings per device (singleton per device)
   $node_exporters.each |String $device_name, Hash $ne_options| {
     $ne_ensure = 'ensure' in $ne_options ? {
@@ -1062,6 +1352,69 @@ class opn (
       ensure  => $ne_ensure,
       config  => $ne_config,
       require => Class['opn::config'],
+    }
+  }
+
+  # Manage OpenVPN client-specific overrides across devices
+  $openvpn_csos.each |String $item_name, Hash $item_options| {
+    $ovpn_cso_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $ovpn_cso_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ovpn_cso_config = $item_options - ['devices', 'ensure']
+
+    $ovpn_cso_devices.each |String $device_name| {
+      opn_openvpn_cso { "${item_name}@${device_name}":
+        ensure  => $ovpn_cso_ensure,
+        config  => $ovpn_cso_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage OpenVPN instances across devices
+  $openvpn_instances.each |String $item_name, Hash $item_options| {
+    $ovpn_inst_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $ovpn_inst_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ovpn_inst_config = $item_options - ['devices', 'ensure']
+
+    $ovpn_inst_devices.each |String $device_name| {
+      opn_openvpn_instance { "${item_name}@${device_name}":
+        ensure  => $ovpn_inst_ensure,
+        config  => $ovpn_inst_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage OpenVPN static keys across devices
+  $openvpn_statickeys.each |String $item_name, Hash $item_options| {
+    $ovpn_sk_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $ovpn_sk_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ovpn_sk_config = $item_options - ['devices', 'ensure']
+
+    $ovpn_sk_devices.each |String $device_name| {
+      opn_openvpn_statickey { "${item_name}@${device_name}":
+        ensure  => $ovpn_sk_ensure,
+        config  => $ovpn_sk_config,
+        require => Class['opn::config'],
+      }
     }
   }
 
@@ -1347,6 +1700,30 @@ class opn (
       Opn_group <<| tag == $device_name |>> {
         require => Class['opn::config'],
       }
+      Opn_ipsec_child <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_ipsec_connection <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_ipsec_keypair <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_ipsec_local <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_ipsec_pool <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_ipsec_presharedkey <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_ipsec_remote <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_ipsec_vti <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
       Opn_haproxy_acl <<| tag == $device_name |>> {
         require => Class['opn::config'],
       }
@@ -1390,6 +1767,15 @@ class opn (
         require => Class['opn::config'],
       }
       Opn_haproxy_user <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_openvpn_cso <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_openvpn_instance <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_openvpn_statickey <<| tag == $device_name |>> {
         require => Class['opn::config'],
       }
       Opn_plugin <<| tag == $device_name |>> {

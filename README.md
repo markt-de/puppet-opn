@@ -20,7 +20,9 @@
     - [Managing users](#managing-users)
     - [Managing groups](#managing-groups)
     - [Managing HA sync](#managing-ha-sync)
+    - [Managing IPsec](#managing-ipsec)
     - [Managing Node Exporter](#managing-node-exporter)
+    - [Managing OpenVPN](#managing-openvpn)
     - [Managing HAProxy](#managing-haproxy)
     - [Managing HAProxy settings](#managing-haproxy-settings)
     - [Managing snapshots](#managing-snapshots)
@@ -77,7 +79,19 @@ This module provides the following resource types for one or more OPNsense devic
 | `opn_haproxy_settings` | HAProxy global settings (singleton per device) |
 | `opn_haproxy_user` | HAProxy user-list users |
 | `opn_hasync` | HA sync / CARP settings (singleton per device) |
+| `opn_ipsec_child` | IPsec child SAs (Swanctl/MVC) |
+| `opn_ipsec_connection` | IPsec connections (Swanctl/MVC) |
+| `opn_ipsec_keypair` | IPsec key pairs (Swanctl/MVC) |
+| `opn_ipsec_local` | IPsec local authentication (Swanctl/MVC) |
+| `opn_ipsec_pool` | IPsec address pools (Swanctl/MVC) |
+| `opn_ipsec_presharedkey` | IPsec pre-shared keys (Swanctl/MVC) |
+| `opn_ipsec_remote` | IPsec remote authentication (Swanctl/MVC) |
+| `opn_ipsec_settings` | IPsec global settings (singleton per device) |
+| `opn_ipsec_vti` | IPsec VTI entries (Swanctl/MVC) |
 | `opn_node_exporter` | Prometheus Node Exporter settings (singleton per device) |
+| `opn_openvpn_cso` | OpenVPN client-specific overrides (MVC) |
+| `opn_openvpn_instance` | OpenVPN instances (MVC) |
+| `opn_openvpn_statickey` | OpenVPN static keys (MVC) |
 | `opn_plugin` | Firmware plugins / packages |
 | `opn_snapshot` | ZFS snapshots |
 | `opn_syslog` | Syslog remote destinations |
@@ -189,9 +203,9 @@ opn_haproxy_server { 'new-web01@opnsense01.example.com':
 }
 ```
 
-The same pattern applies to all list-based types: `opn_acmeclient_account`, `opn_acmeclient_action`, `opn_acmeclient_certificate`, `opn_acmeclient_validation`, `opn_cron`, `opn_dhcrelay_destination`, `opn_dhcrelay`, `opn_firewall_alias`, `opn_firewall_category`, `opn_firewall_group`, `opn_firewall_rule`, `opn_user`, `opn_group`, all `opn_haproxy_*` types, `opn_snapshot`, `opn_syslog`, `opn_trust_ca`, `opn_trust_cert`, `opn_trust_crl`, `opn_tunable`, `opn_zabbix_agent_userparameter`, and `opn_zabbix_agent_alias`.
+The same pattern applies to all list-based types: `opn_acmeclient_account`, `opn_acmeclient_action`, `opn_acmeclient_certificate`, `opn_acmeclient_validation`, `opn_cron`, `opn_dhcrelay_destination`, `opn_dhcrelay`, `opn_firewall_alias`, `opn_firewall_category`, `opn_firewall_group`, `opn_firewall_rule`, `opn_user`, `opn_group`, all `opn_haproxy_*` types, all `opn_ipsec_*` list types, all `opn_openvpn_*` types, `opn_snapshot`, `opn_syslog`, `opn_trust_ca`, `opn_trust_cert`, `opn_trust_crl`, `opn_tunable`, `opn_zabbix_agent_userparameter`, and `opn_zabbix_agent_alias`.
 
-**Singleton resources** (`opn_acmeclient_settings`, `opn_haproxy_settings`, `opn_hasync`, `opn_node_exporter`, `opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
+**Singleton resources** (`opn_acmeclient_settings`, `opn_haproxy_settings`, `opn_hasync`, `opn_ipsec_settings`, `opn_node_exporter`, `opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
 
 **Important:** Singleton resources always exist in the OPNsense API — the API always returns their current configuration, even when all values are at defaults. Because of this, `ensure => absent` will trigger a `destroy` action on **every** Puppet run (resetting the config and calling reconfigure each time). To disable a singleton service, use `ensure => present` with `'enabled' => '0'` instead. This is idempotent and only triggers a change when the current state differs from the desired state.
 
@@ -501,6 +515,49 @@ class { 'opn':
 }
 ```
 
+### Managing IPsec
+
+IPsec resources (Swanctl/MVC model) are managed via the `ipsec_*` parameters of the `opn` class or directly via the corresponding `opn_ipsec_*` types. After any IPsec change, Puppet calls `ipsec/service/reconfigure` at most once per device per run.
+
+The module manages the full IPsec connection hierarchy: connections, local/remote authentication, child SAs, pools, pre-shared keys, key pairs, VTI entries, and global settings.
+
+Relation fields in `opn_ipsec_child`, `opn_ipsec_local`, and `opn_ipsec_remote` accept connection descriptions and key pair names which are automatically resolved to UUIDs.
+
+The `privateKey` field in `opn_ipsec_keypair` and the `Key` field in `opn_ipsec_presharedkey` are excluded from idempotency checks because they contain secret material.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  ipsec_connections => {
+    'site-to-site' => {
+      'devices'      => ['opnsense01.example.com'],
+      'version'      => '2',
+      'proposals'    => 'aes256-sha256-modp2048',
+      'local_addrs'  => '0.0.0.0/0',
+      'remote_addrs' => '198.51.100.1',
+      'enabled'      => '1',
+    },
+  },
+  ipsec_children => {
+    'child-lan' => {
+      'devices'    => ['opnsense01.example.com'],
+      'connection' => 'site-to-site',
+      'mode'       => 'tunnel',
+      'local_ts'   => '10.0.0.0/24',
+      'remote_ts'  => '10.0.1.0/24',
+      'enabled'    => '1',
+    },
+  },
+  ipsec_settings => {
+    'opnsense01.example.com' => {
+      'general' => {
+        'enabled' => '1',
+      },
+    },
+  },
+}
+```
+
 ### Managing Node Exporter
 
 Prometheus Node Exporter settings are managed as a singleton resource per device via the `node_exporters` parameter or directly via the `opn_node_exporter` type. The `node_exporters` hash is keyed by **device name**. After any change, Puppet calls `nodeexporter/service/reconfigure` once per device. The plugin `os-node_exporter` must be installed on the device.
@@ -531,6 +588,50 @@ class { 'opn':
       'interrupts'    => '0',
       'ntp'           => '0',
       'zfs'           => '1',
+    },
+  },
+}
+```
+
+### Managing OpenVPN
+
+OpenVPN resources (MVC model) are managed via the `openvpn_*` parameters of the `opn` class or directly via the corresponding `opn_openvpn_*` types. After any OpenVPN change, Puppet calls `openvpn/service/reconfigure` at most once per device per run.
+
+The module manages OpenVPN instances, static keys, and client-specific overrides (CSOs).
+
+The `servers` field in `opn_openvpn_cso` and the `tls_key` field in `opn_openvpn_instance` accept instance/key descriptions which are automatically resolved to UUIDs.
+
+The `password` field in `opn_openvpn_instance` is excluded from idempotency checks because it contains secret material.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  openvpn_statickeys => {
+    'my-tls-auth-key' => {
+      'devices' => ['opnsense01.example.com'],
+      'key'     => '-----BEGIN OpenVPN Static key-----',
+      'mode'    => 'auth',
+    },
+  },
+  openvpn_instances => {
+    'my-openvpn-server' => {
+      'devices'            => ['opnsense01.example.com'],
+      'role'               => 'server',
+      'proto'              => 'udp',
+      'port'               => '1194',
+      'server'             => '10.8.0.0/24',
+      'tls_key'            => 'my-tls-auth-key',
+      'cert'               => 'my-openvpn-server-cert',
+      'verify_client_cert' => 'required',
+      'enabled'            => '1',
+    },
+  },
+  openvpn_csos => {
+    'client1' => {
+      'devices'        => ['opnsense01.example.com'],
+      'servers'        => 'my-openvpn-server',
+      'tunnel_network' => '10.8.1.0/24',
+      'enabled'        => '1',
     },
   },
 }

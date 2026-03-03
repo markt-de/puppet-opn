@@ -229,6 +229,94 @@
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #     - All other keys are passed as the 'config' hash to opn_haproxy_user.
 #
+# @param ipsec_children
+#   Hash of IPsec child SAs to export.
+#   Each key is the child SA description.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_child.
+#
+# @param ipsec_connections
+#   Hash of IPsec connections to export.
+#   Each key is the connection description.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_connection.
+#
+# @param ipsec_keypairs
+#   Hash of IPsec key pairs to export.
+#   Each key is the key pair name.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_keypair.
+#
+# @param ipsec_locals
+#   Hash of IPsec local authentication entries to export.
+#   Each key is the local auth description.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_local.
+#
+# @param ipsec_pools
+#   Hash of IPsec address pools to export.
+#   Each key is the pool name.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_pool.
+#
+# @param ipsec_presharedkeys
+#   Hash of IPsec pre-shared keys to export.
+#   Each key is the PSK identifier.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_presharedkey.
+#
+# @param ipsec_remotes
+#   Hash of IPsec remote authentication entries to export.
+#   Each key is the remote auth description.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_remote.
+#
+# @param ipsec_vtis
+#   Hash of IPsec VTI entries to export.
+#   Each key is the VTI description.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_ipsec_vti.
+#
+# @param openvpn_csos
+#   Hash of OpenVPN client-specific overrides to export.
+#   Each key is the client common name.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_openvpn_cso.
+#
+# @param openvpn_instances
+#   Hash of OpenVPN instances to export.
+#   Each key is the instance description.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_openvpn_instance.
+#
+# @param openvpn_statickeys
+#   Hash of OpenVPN static keys to export.
+#   Each key is the static key description.
+#   Each value is a hash with:
+#     - devices [Array] List of target device names (mandatory).
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_openvpn_statickey.
+#
 # @param plugins
 #   Hash of plugins to export.
 #   Each key is the plugin package name (e.g. 'os-haproxy').
@@ -350,6 +438,17 @@ class opn::client (
   Hash $haproxy_resolvers,
   Hash $haproxy_servers,
   Hash $haproxy_users,
+  Hash $ipsec_children,
+  Hash $ipsec_connections,
+  Hash $ipsec_keypairs,
+  Hash $ipsec_locals,
+  Hash $ipsec_pools,
+  Hash $ipsec_presharedkeys,
+  Hash $ipsec_remotes,
+  Hash $ipsec_vtis,
+  Hash $openvpn_csos,
+  Hash $openvpn_instances,
+  Hash $openvpn_statickeys,
   Hash $plugins,
   Hash $snapshots,
   Hash $syslog_destinations,
@@ -842,6 +941,204 @@ class opn::client (
       @@opn_haproxy_user { "${item_name}@${device_name}":
         ensure => $haproxy_user_ensure,
         config => $haproxy_user_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export IPsec child SAs
+  $ipsec_children.each |String $item_name, Hash $item_options| {
+    $ipsec_child_devices = $item_options['devices']
+    $ipsec_child_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_child_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_child_devices.each |String $device_name| {
+      @@opn_ipsec_child { "${item_name}@${device_name}":
+        ensure => $ipsec_child_ensure,
+        config => $ipsec_child_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export IPsec connections
+  $ipsec_connections.each |String $item_name, Hash $item_options| {
+    $ipsec_conn_devices = $item_options['devices']
+    $ipsec_conn_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_conn_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_conn_devices.each |String $device_name| {
+      @@opn_ipsec_connection { "${item_name}@${device_name}":
+        ensure => $ipsec_conn_ensure,
+        config => $ipsec_conn_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export IPsec key pairs
+  $ipsec_keypairs.each |String $item_name, Hash $item_options| {
+    $ipsec_kp_devices = $item_options['devices']
+    $ipsec_kp_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_kp_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_kp_devices.each |String $device_name| {
+      @@opn_ipsec_keypair { "${item_name}@${device_name}":
+        ensure => $ipsec_kp_ensure,
+        config => $ipsec_kp_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export IPsec local authentication entries
+  $ipsec_locals.each |String $item_name, Hash $item_options| {
+    $ipsec_local_devices = $item_options['devices']
+    $ipsec_local_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_local_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_local_devices.each |String $device_name| {
+      @@opn_ipsec_local { "${item_name}@${device_name}":
+        ensure => $ipsec_local_ensure,
+        config => $ipsec_local_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export IPsec address pools
+  $ipsec_pools.each |String $item_name, Hash $item_options| {
+    $ipsec_pool_devices = $item_options['devices']
+    $ipsec_pool_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_pool_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_pool_devices.each |String $device_name| {
+      @@opn_ipsec_pool { "${item_name}@${device_name}":
+        ensure => $ipsec_pool_ensure,
+        config => $ipsec_pool_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export IPsec pre-shared keys
+  $ipsec_presharedkeys.each |String $item_name, Hash $item_options| {
+    $ipsec_psk_devices = $item_options['devices']
+    $ipsec_psk_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_psk_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_psk_devices.each |String $device_name| {
+      @@opn_ipsec_presharedkey { "${item_name}@${device_name}":
+        ensure => $ipsec_psk_ensure,
+        config => $ipsec_psk_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export IPsec remote authentication entries
+  $ipsec_remotes.each |String $item_name, Hash $item_options| {
+    $ipsec_remote_devices = $item_options['devices']
+    $ipsec_remote_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_remote_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_remote_devices.each |String $device_name| {
+      @@opn_ipsec_remote { "${item_name}@${device_name}":
+        ensure => $ipsec_remote_ensure,
+        config => $ipsec_remote_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export IPsec VTI entries
+  $ipsec_vtis.each |String $item_name, Hash $item_options| {
+    $ipsec_vti_devices = $item_options['devices']
+    $ipsec_vti_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ipsec_vti_config = $item_options - ['devices', 'ensure']
+
+    $ipsec_vti_devices.each |String $device_name| {
+      @@opn_ipsec_vti { "${item_name}@${device_name}":
+        ensure => $ipsec_vti_ensure,
+        config => $ipsec_vti_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export OpenVPN client-specific overrides
+  $openvpn_csos.each |String $item_name, Hash $item_options| {
+    $ovpn_cso_devices = $item_options['devices']
+    $ovpn_cso_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ovpn_cso_config = $item_options - ['devices', 'ensure']
+
+    $ovpn_cso_devices.each |String $device_name| {
+      @@opn_openvpn_cso { "${item_name}@${device_name}":
+        ensure => $ovpn_cso_ensure,
+        config => $ovpn_cso_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export OpenVPN instances
+  $openvpn_instances.each |String $item_name, Hash $item_options| {
+    $ovpn_inst_devices = $item_options['devices']
+    $ovpn_inst_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ovpn_inst_config = $item_options - ['devices', 'ensure']
+
+    $ovpn_inst_devices.each |String $device_name| {
+      @@opn_openvpn_instance { "${item_name}@${device_name}":
+        ensure => $ovpn_inst_ensure,
+        config => $ovpn_inst_config,
+        tag    => $device_name,
+      }
+    }
+  }
+
+  # Export OpenVPN static keys
+  $openvpn_statickeys.each |String $item_name, Hash $item_options| {
+    $ovpn_sk_devices = $item_options['devices']
+    $ovpn_sk_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $ovpn_sk_config = $item_options - ['devices', 'ensure']
+
+    $ovpn_sk_devices.each |String $device_name| {
+      @@opn_openvpn_statickey { "${item_name}@${device_name}":
+        ensure => $ovpn_sk_ensure,
+        config => $ovpn_sk_config,
         tag    => $device_name,
       }
     }
