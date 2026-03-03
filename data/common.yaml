@@ -35,6 +35,7 @@ opn::haproxy_settings: {}
 opn::haproxy_users: {}
 opn::hasyncs: {}
 opn::manage_resources: false
+opn::node_exporters: {}
 opn::plugins: {}
 opn::snapshots: {}
 opn::syslog_destinations: {}

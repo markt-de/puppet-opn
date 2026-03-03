@@ -256,6 +256,13 @@
 #   via PuppetDB. When true, the class collects all exported opn_* resources
 #   tagged with the device name. Default: false.
 #
+# @param node_exporters
+#   Hash of Node Exporter configurations, one per device.
+#   Each key is the device name (not a "name@device" title).
+#   Each value is a hash with:
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_node_exporter.
+#
 # @param plugins
 #   Hash of plugins to manage across devices.
 #   Each key is the plugin package name (e.g. 'os-haproxy').
@@ -412,6 +419,7 @@ class opn (
   Hash                 $haproxy_users,
   Hash                 $hasyncs,
   Boolean              $manage_resources,
+  Hash                 $node_exporters,
   Hash                 $plugins,
   Hash                 $snapshots,
   Hash                 $syslog_destinations,
@@ -1038,6 +1046,21 @@ class opn (
     opn_hasync { $device_name:
       ensure  => $hasync_ensure,
       config  => $hasync_config,
+      require => Class['opn::config'],
+    }
+  }
+
+  # Manage Node Exporter settings per device (singleton per device)
+  $node_exporters.each |String $device_name, Hash $ne_options| {
+    $ne_ensure = 'ensure' in $ne_options ? {
+      true    => $ne_options['ensure'],
+      default => 'present',
+    }
+    $ne_config = $ne_options - ['ensure']
+
+    opn_node_exporter { $device_name:
+      ensure  => $ne_ensure,
+      config  => $ne_config,
       require => Class['opn::config'],
     }
   }

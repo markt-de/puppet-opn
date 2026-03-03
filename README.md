@@ -20,6 +20,7 @@
     - [Managing users](#managing-users)
     - [Managing groups](#managing-groups)
     - [Managing HA sync](#managing-ha-sync)
+    - [Managing Node Exporter](#managing-node-exporter)
     - [Managing HAProxy](#managing-haproxy)
     - [Managing HAProxy settings](#managing-haproxy-settings)
     - [Managing snapshots](#managing-snapshots)
@@ -76,6 +77,7 @@ This module provides the following resource types for one or more OPNsense devic
 | `opn_haproxy_settings` | HAProxy global settings (singleton per device) |
 | `opn_haproxy_user` | HAProxy user-list users |
 | `opn_hasync` | HA sync / CARP settings (singleton per device) |
+| `opn_node_exporter` | Prometheus Node Exporter settings (singleton per device) |
 | `opn_plugin` | Firmware plugins / packages |
 | `opn_snapshot` | ZFS snapshots |
 | `opn_syslog` | Syslog remote destinations |
@@ -189,7 +191,9 @@ opn_haproxy_server { 'new-web01@opnsense01.example.com':
 
 The same pattern applies to all list-based types: `opn_acmeclient_account`, `opn_acmeclient_action`, `opn_acmeclient_certificate`, `opn_acmeclient_validation`, `opn_cron`, `opn_dhcrelay_destination`, `opn_dhcrelay`, `opn_firewall_alias`, `opn_firewall_category`, `opn_firewall_group`, `opn_firewall_rule`, `opn_user`, `opn_group`, all `opn_haproxy_*` types, `opn_snapshot`, `opn_syslog`, `opn_trust_ca`, `opn_trust_cert`, `opn_trust_crl`, `opn_tunable`, `opn_zabbix_agent_userparameter`, and `opn_zabbix_agent_alias`.
 
-**Singleton resources** (`opn_acmeclient_settings`, `opn_haproxy_settings`, `opn_hasync`, `opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
+**Singleton resources** (`opn_acmeclient_settings`, `opn_haproxy_settings`, `opn_hasync`, `opn_node_exporter`, `opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
+
+**Important:** Singleton resources always exist in the OPNsense API — the API always returns their current configuration, even when all values are at defaults. Because of this, `ensure => absent` will trigger a `destroy` action on **every** Puppet run (resetting the config and calling reconfigure each time). To disable a singleton service, use `ensure => present` with `'enabled' => '0'` instead. This is idempotent and only triggers a change when the current state differs from the desired state.
 
 ### Managing ACME Client
 
@@ -492,6 +496,41 @@ class { 'opn':
       'synchronizetoip' => '10.0.0.2',
       'username'        => 'root',
       'password'        => 'secret',
+    },
+  },
+}
+```
+
+### Managing Node Exporter
+
+Prometheus Node Exporter settings are managed as a singleton resource per device via the `node_exporters` parameter or directly via the `opn_node_exporter` type. The `node_exporters` hash is keyed by **device name**. After any change, Puppet calls `nodeexporter/service/reconfigure` once per device. The plugin `os-node_exporter` must be installed on the device.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  plugins => {
+    'os-node_exporter' => {
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+    },
+  },
+  node_exporters => {
+    'opnsense01.example.com' => {
+      'ensure'        => 'present',
+      'enabled'       => '1',
+      'listenaddress' => '0.0.0.0',
+      'listenport'    => '9100',
+      'cpu'           => '1',
+      'exec'          => '1',
+      'filesystem'    => '1',
+      'loadavg'       => '1',
+      'meminfo'       => '1',
+      'netdev'        => '1',
+      'time'          => '1',
+      'devstat'       => '1',
+      'interrupts'    => '0',
+      'ntp'           => '0',
+      'zfs'           => '1',
     },
   },
 }
@@ -929,6 +968,24 @@ opn_hasync { 'opnsense01.example.com':
   },
 }
 
+opn_node_exporter { 'opnsense01.example.com':
+  ensure => present,
+  config => {
+    'enabled'       => '1',
+    'listenaddress' => '0.0.0.0',
+    'listenport'    => '9100',
+    'cpu'           => '1',
+    'exec'          => '1',
+    'filesystem'    => '1',
+    'loadavg'       => '1',
+    'meminfo'       => '1',
+    'netdev'        => '1',
+    'time'          => '1',
+    'devstat'       => '1',
+    'zfs'           => '1',
+  },
+}
+
 opn_snapshot { 'pre-upgrade@opnsense01.example.com':
   ensure => present,
   active => true,
@@ -1093,7 +1150,7 @@ class { 'opn':
 }
 ```
 
-Singleton types (`opn_acmeclient_settings`, `opn_haproxy_settings`, `opn_hasync`, `opn_zabbix_agent`, `opn_zabbix_proxy`) are excluded from exported resources because they represent per-device global settings that should only be managed on the management server.
+Singleton types (`opn_acmeclient_settings`, `opn_haproxy_settings`, `opn_hasync`, `opn_node_exporter`, `opn_zabbix_agent`, `opn_zabbix_proxy`) are excluded from exported resources because they represent per-device global settings that should only be managed on the management server.
 
 The same parameters can also be configured via Hiera with deep merge:
 
