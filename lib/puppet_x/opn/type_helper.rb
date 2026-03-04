@@ -2,8 +2,7 @@
 
 module PuppetX # rubocop:disable Style/ClassAndModuleChildren
   module Opn
-    # Shared helper for opn_* type definitions, eliminating boilerplate code
-    # that was previously duplicated across 57 type files.
+    # Shared helper for opn_* type definitions, eliminating boilerplate code.
     #
     # Generates ensurable, name param (with validation), device param
     # (with extraction from title), and config property (with insync?,

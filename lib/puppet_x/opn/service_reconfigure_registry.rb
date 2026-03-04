@@ -19,6 +19,11 @@ PuppetX::Opn::ServiceReconfigure.register(:haproxy,
   log_prefix: 'opn_haproxy',
   configtest_endpoint: 'haproxy/service/configtest')
 
+# KEA DHCP: reconfigure after any KEA settings/subnet/reservation/peer changes
+PuppetX::Opn::ServiceReconfigure.register(:kea,
+  endpoint: 'kea/service/reconfigure',
+  log_prefix: 'opn_kea')
+
 # IPsec: simple reconfigure after connection/child/keypair/etc. changes
 PuppetX::Opn::ServiceReconfigure.register(:ipsec,
   endpoint: 'ipsec/service/reconfigure',

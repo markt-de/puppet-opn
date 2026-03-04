@@ -4,11 +4,6 @@ module PuppetX # rubocop:disable Style/ClassAndModuleChildren
   module Opn
     # Unified reconfigure handler with registry pattern.
     #
-    # Replaces the five individual reconfigure modules (HaproxyReconfigure,
-    # IpsecReconfigure, OpenvpnReconfigure, ZabbixAgentReconfigure,
-    # DhcrelayReconfigure) and the inline reconfigure logic in 11 providers
-    # with a single class.
-    #
     # Each reconfigure group is registered as a named instance. Providers
     # call mark() during create/destroy/flush and run() from
     # post_resource_eval. The first run() call performs the work; subsequent

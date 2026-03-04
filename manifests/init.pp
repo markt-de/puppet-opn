@@ -330,6 +330,83 @@
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #     - All other keys are passed as the 'config' hash to opn_ipsec_vti.
 #
+# @param kea_ctrl_agents
+#   Hash of KEA Control Agent settings, one per device.
+#   Each key is the device name (not a "name@device" title).
+#   Each value is a hash with:
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_kea_ctrl_agent.
+#
+# @param kea_dhcpv4_peers
+#   Hash of KEA DHCPv4 HA peers to manage across devices.
+#   Each key is the peer name.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv4_peer.
+#
+# @param kea_dhcpv4_reservations
+#   Hash of KEA DHCPv4 reservations to manage across devices.
+#   Each key is the reservation description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv4_reservation.
+#
+# @param kea_dhcpv4_subnets
+#   Hash of KEA DHCPv4 subnets to manage across devices.
+#   Each key is the subnet CIDR (e.g. '192.168.1.0/24').
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv4_subnet.
+#
+# @param kea_dhcpv4s
+#   Hash of KEA DHCPv4 global settings, one per device.
+#   Each key is the device name (not a "name@device" title).
+#   Each value is a hash with:
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv4.
+#
+# @param kea_dhcpv6_pd_pools
+#   Hash of KEA DHCPv6 prefix delegation pools to manage across devices.
+#   Each key is the PD pool description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv6_pd_pool.
+#
+# @param kea_dhcpv6_peers
+#   Hash of KEA DHCPv6 HA peers to manage across devices.
+#   Each key is the peer name.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv6_peer.
+#
+# @param kea_dhcpv6_reservations
+#   Hash of KEA DHCPv6 reservations to manage across devices.
+#   Each key is the reservation description.
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv6_reservation.
+#
+# @param kea_dhcpv6_subnets
+#   Hash of KEA DHCPv6 subnets to manage across devices.
+#   Each key is the subnet CIDR (e.g. 'fd00::/64').
+#   Each value is a hash with:
+#     - devices [Array] List of device names. Defaults to all devices.
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv6_subnet.
+#
+# @param kea_dhcpv6s
+#   Hash of KEA DHCPv6 global settings, one per device.
+#   Each key is the device name (not a "name@device" title).
+#   Each value is a hash with:
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv6.
+#
 # @param manage_resources
 #   Boolean to enable collection of exported opn_* resources from client nodes
 #   via PuppetDB. When true, the class collects all exported opn_* resources
@@ -539,6 +616,16 @@ class opn (
   Hash                 $ipsec_remotes,
   Hash                 $ipsec_settings,
   Hash                 $ipsec_vtis,
+  Hash                 $kea_ctrl_agents,
+  Hash                 $kea_dhcpv4_peers,
+  Hash                 $kea_dhcpv4_reservations,
+  Hash                 $kea_dhcpv4_subnets,
+  Hash                 $kea_dhcpv4s,
+  Hash                 $kea_dhcpv6_pd_pools,
+  Hash                 $kea_dhcpv6_peers,
+  Hash                 $kea_dhcpv6_reservations,
+  Hash                 $kea_dhcpv6_subnets,
+  Hash                 $kea_dhcpv6s,
   Boolean              $manage_resources,
   Hash                 $node_exporters,
   Hash                 $openvpn_csos,
@@ -1379,6 +1466,198 @@ class opn (
     }
   }
 
+  # Manage KEA Control Agent settings per device (singleton per device)
+  $kea_ctrl_agents.each |String $device_name, Hash $kca_options| {
+    $kca_ensure = 'ensure' in $kca_options ? {
+      true    => $kca_options['ensure'],
+      default => 'present',
+    }
+    $kca_config = $kca_options - ['ensure']
+
+    opn_kea_ctrl_agent { $device_name:
+      ensure  => $kca_ensure,
+      config  => $kca_config,
+      require => Class['opn::config'],
+    }
+  }
+
+  # Manage KEA DHCPv4 HA peers across devices
+  $kea_dhcpv4_peers.each |String $item_name, Hash $item_options| {
+    $kd4p_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $kd4p_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $kd4p_config = $item_options - ['devices', 'ensure']
+
+    $kd4p_devices.each |String $device_name| {
+      opn_kea_dhcpv4_peer { "${item_name}@${device_name}":
+        ensure  => $kd4p_ensure,
+        config  => $kd4p_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage KEA DHCPv4 reservations across devices
+  $kea_dhcpv4_reservations.each |String $item_name, Hash $item_options| {
+    $kd4r_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $kd4r_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $kd4r_config = $item_options - ['devices', 'ensure']
+
+    $kd4r_devices.each |String $device_name| {
+      opn_kea_dhcpv4_reservation { "${item_name}@${device_name}":
+        ensure  => $kd4r_ensure,
+        config  => $kd4r_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage KEA DHCPv4 subnets across devices
+  $kea_dhcpv4_subnets.each |String $item_name, Hash $item_options| {
+    $kd4s_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $kd4s_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $kd4s_config = $item_options - ['devices', 'ensure']
+
+    $kd4s_devices.each |String $device_name| {
+      opn_kea_dhcpv4_subnet { "${item_name}@${device_name}":
+        ensure  => $kd4s_ensure,
+        config  => $kd4s_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage KEA DHCPv4 global settings per device (singleton per device)
+  $kea_dhcpv4s.each |String $device_name, Hash $kd4_options| {
+    $kd4_ensure = 'ensure' in $kd4_options ? {
+      true    => $kd4_options['ensure'],
+      default => 'present',
+    }
+    $kd4_config = $kd4_options - ['ensure']
+
+    opn_kea_dhcpv4 { $device_name:
+      ensure  => $kd4_ensure,
+      config  => $kd4_config,
+      require => Class['opn::config'],
+    }
+  }
+
+  # Manage KEA DHCPv6 prefix delegation pools across devices
+  $kea_dhcpv6_pd_pools.each |String $item_name, Hash $item_options| {
+    $kd6pd_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $kd6pd_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $kd6pd_config = $item_options - ['devices', 'ensure']
+
+    $kd6pd_devices.each |String $device_name| {
+      opn_kea_dhcpv6_pd_pool { "${item_name}@${device_name}":
+        ensure  => $kd6pd_ensure,
+        config  => $kd6pd_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage KEA DHCPv6 HA peers across devices
+  $kea_dhcpv6_peers.each |String $item_name, Hash $item_options| {
+    $kd6p_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $kd6p_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $kd6p_config = $item_options - ['devices', 'ensure']
+
+    $kd6p_devices.each |String $device_name| {
+      opn_kea_dhcpv6_peer { "${item_name}@${device_name}":
+        ensure  => $kd6p_ensure,
+        config  => $kd6p_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage KEA DHCPv6 reservations across devices
+  $kea_dhcpv6_reservations.each |String $item_name, Hash $item_options| {
+    $kd6r_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $kd6r_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $kd6r_config = $item_options - ['devices', 'ensure']
+
+    $kd6r_devices.each |String $device_name| {
+      opn_kea_dhcpv6_reservation { "${item_name}@${device_name}":
+        ensure  => $kd6r_ensure,
+        config  => $kd6r_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage KEA DHCPv6 subnets across devices
+  $kea_dhcpv6_subnets.each |String $item_name, Hash $item_options| {
+    $kd6s_devices = 'devices' in $item_options ? {
+      true    => $item_options['devices'],
+      default => keys($devices),
+    }
+    $kd6s_ensure = 'ensure' in $item_options ? {
+      true    => $item_options['ensure'],
+      default => 'present',
+    }
+    $kd6s_config = $item_options - ['devices', 'ensure']
+
+    $kd6s_devices.each |String $device_name| {
+      opn_kea_dhcpv6_subnet { "${item_name}@${device_name}":
+        ensure  => $kd6s_ensure,
+        config  => $kd6s_config,
+        require => Class['opn::config'],
+      }
+    }
+  }
+
+  # Manage KEA DHCPv6 global settings per device (singleton per device)
+  $kea_dhcpv6s.each |String $device_name, Hash $kd6_options| {
+    $kd6_ensure = 'ensure' in $kd6_options ? {
+      true    => $kd6_options['ensure'],
+      default => 'present',
+    }
+    $kd6_config = $kd6_options - ['ensure']
+
+    opn_kea_dhcpv6 { $device_name:
+      ensure  => $kd6_ensure,
+      config  => $kd6_config,
+      require => Class['opn::config'],
+    }
+  }
+
   # Manage Node Exporter settings per device (singleton per device)
   $node_exporters.each |String $device_name, Hash $ne_options| {
     $ne_ensure = 'ensure' in $ne_options ? {
@@ -1785,6 +2064,27 @@ class opn (
         require => Class['opn::config'],
       }
       Opn_ipsec_vti <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_kea_dhcpv4_peer <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_kea_dhcpv4_reservation <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_kea_dhcpv4_subnet <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_kea_dhcpv6_pd_pool <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_kea_dhcpv6_peer <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_kea_dhcpv6_reservation <<| tag == $device_name |>> {
+        require => Class['opn::config'],
+      }
+      Opn_kea_dhcpv6_subnet <<| tag == $device_name |>> {
         require => Class['opn::config'],
       }
       Opn_haproxy_acl <<| tag == $device_name |>> {

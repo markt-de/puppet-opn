@@ -22,6 +22,7 @@
     - [Managing groups](#managing-groups)
     - [Managing HA sync](#managing-ha-sync)
     - [Managing IPsec](#managing-ipsec)
+    - [Managing KEA DHCP](#managing-kea-dhcp)
     - [Managing Node Exporter](#managing-node-exporter)
     - [Managing OpenVPN](#managing-openvpn)
     - [Managing HAProxy](#managing-haproxy)
@@ -90,6 +91,16 @@ This module provides the following resource types for one or more OPNsense devic
 | `opn_ipsec_remote` | IPsec remote authentication (Swanctl) |
 | `opn_ipsec_settings` | IPsec global settings (singleton per device) |
 | `opn_ipsec_vti` | IPsec VTI entries (Swanctl) |
+| `opn_kea_ctrl_agent` | KEA Control Agent settings (singleton per device) |
+| `opn_kea_dhcpv4` | KEA DHCPv4 global settings (singleton per device) |
+| `opn_kea_dhcpv4_peer` | KEA DHCPv4 HA peers |
+| `opn_kea_dhcpv4_reservation` | KEA DHCPv4 reservations |
+| `opn_kea_dhcpv4_subnet` | KEA DHCPv4 subnets |
+| `opn_kea_dhcpv6` | KEA DHCPv6 global settings (singleton per device) |
+| `opn_kea_dhcpv6_pd_pool` | KEA DHCPv6 prefix delegation pools |
+| `opn_kea_dhcpv6_peer` | KEA DHCPv6 HA peers |
+| `opn_kea_dhcpv6_reservation` | KEA DHCPv6 reservations |
+| `opn_kea_dhcpv6_subnet` | KEA DHCPv6 subnets |
 | `opn_node_exporter` | Prometheus Node Exporter settings (singleton per device) |
 | `opn_openvpn_cso` | OpenVPN client-specific overrides |
 | `opn_openvpn_instance` | OpenVPN instances |
@@ -580,6 +591,216 @@ class { 'opn':
       'general' => {
         'enabled' => '1',
       },
+    },
+  },
+}
+```
+
+### Managing KEA DHCP
+
+KEA DHCP is the modern DHCP service in OPNsense, supporting both DHCPv4 and DHCPv6
+with high availability, prefix delegation, and per-subnet option data. After any
+change to KEA types, Puppet calls `kea/service/reconfigure` once per device.
+
+#### Managing KEA Control Agent
+
+The KEA Control Agent is managed as a singleton resource per device via the
+`kea_ctrl_agents` parameter or directly via the `opn_kea_ctrl_agent` type.
+
+```puppet
+class { 'opn':
+  kea_ctrl_agents => {
+    'opnsense01.example.com' => {
+      'general' => {
+        'enabled'   => '1',
+        'http_host' => '127.0.0.1',
+        'http_port' => '8000',
+      },
+    },
+  },
+}
+```
+
+#### Managing KEA DHCPv4
+
+DHCPv4 global settings are managed as a singleton resource per device via the
+`kea_dhcpv4s` parameter or directly via the `opn_kea_dhcpv4` type. The `general`,
+`lexpire` and `ha` sections are supported.
+
+```puppet
+class { 'opn':
+  kea_dhcpv4s => {
+    'opnsense01.example.com' => {
+      'general' => {
+        'enabled'          => '1',
+        'interfaces'       => 'lan',
+        'valid_lifetime'   => '4000',
+        'fwrules'          => '1',
+        'dhcp_socket_type' => 'raw',
+      },
+      'lexpire' => {
+        'reclaim_timer_wait_time' => '10',
+      },
+      'ha' => {
+        'enabled' => '0',
+      },
+    },
+  },
+}
+```
+
+#### Managing KEA DHCPv4 subnets
+
+DHCPv4 subnets are managed via `kea_dhcpv4_subnets` or the `opn_kea_dhcpv4_subnet`
+type. The resource title is the subnet CIDR (e.g. `192.168.1.0/24`). The provider
+uses a search+get pattern to fetch full subnet details including option_data.
+
+```puppet
+class { 'opn':
+  kea_dhcpv4_subnets => {
+    '192.168.1.0/24' => {
+      'description'             => 'LAN DHCP',
+      'option_data_autocollect' => '1',
+      'option_data'             => {
+        'routers'             => '192.168.1.1',
+        'domain_name_servers' => '8.8.8.8,8.8.4.4',
+        'domain_name'         => 'example.com',
+      },
+      'pools' => '192.168.1.100 - 192.168.1.200',
+    },
+  },
+}
+```
+
+#### Managing KEA DHCPv4 reservations
+
+DHCPv4 reservations are managed via `kea_dhcpv4_reservations` or the
+`opn_kea_dhcpv4_reservation` type. The resource title is the reservation
+description. Reservations autorequire their parent subnet. The `subnet` field
+accepts a subnet CIDR which is resolved to a UUID via the IdResolver.
+
+```puppet
+class { 'opn':
+  kea_dhcpv4_reservations => {
+    'Web Server' => {
+      'subnet'     => '192.168.1.0/24',
+      'hw_address' => 'AA:BB:CC:DD:EE:FF',
+      'ip_address' => '192.168.1.10',
+      'hostname'   => 'webserver',
+    },
+  },
+}
+```
+
+#### Managing KEA DHCPv4 HA peers
+
+DHCPv4 HA peers are managed via `kea_dhcpv4_peers` or the `opn_kea_dhcpv4_peer`
+type. The resource title is the peer name.
+
+```puppet
+class { 'opn':
+  kea_dhcpv4_peers => {
+    'primary-node' => {
+      'role' => 'primary',
+      'url'  => 'http://10.0.0.1:8000',
+    },
+  },
+}
+```
+
+#### Managing KEA DHCPv6
+
+DHCPv6 global settings are managed as a singleton resource per device via the
+`kea_dhcpv6s` parameter or directly via the `opn_kea_dhcpv6` type. The `general`,
+`lexpire` and `ha` sections are supported.
+
+```puppet
+class { 'opn':
+  kea_dhcpv6s => {
+    'opnsense01.example.com' => {
+      'general' => {
+        'enabled'    => '1',
+        'interfaces' => 'lan',
+      },
+      'lexpire' => {
+        'reclaim_timer_wait_time' => '10',
+      },
+      'ha' => {
+        'enabled' => '0',
+      },
+    },
+  },
+}
+```
+
+#### Managing KEA DHCPv6 subnets
+
+DHCPv6 subnets are managed via `kea_dhcpv6_subnets` or the `opn_kea_dhcpv6_subnet`
+type. The resource title is the subnet CIDR (e.g. `fd00::/64`). The provider
+uses a search+get pattern to fetch full subnet details.
+
+```puppet
+class { 'opn':
+  kea_dhcpv6_subnets => {
+    'fd00::/64' => {
+      'description' => 'LAN DHCPv6',
+      'interface'   => 'lan',
+      'option_data' => {
+        'dns_servers' => 'fd00::1',
+      },
+      'pools' => 'fd00::100 - fd00::200',
+    },
+  },
+}
+```
+
+#### Managing KEA DHCPv6 reservations
+
+DHCPv6 reservations are managed via `kea_dhcpv6_reservations` or the
+`opn_kea_dhcpv6_reservation` type. Reservations autorequire their parent subnet.
+
+```puppet
+class { 'opn':
+  kea_dhcpv6_reservations => {
+    'Mail Server' => {
+      'subnet'     => 'fd00::/64',
+      'ip_address' => 'fd00::10',
+      'duid'       => '01:02:03:04:05:06',
+      'hostname'   => 'mailserver',
+    },
+  },
+}
+```
+
+#### Managing KEA DHCPv6 prefix delegation pools
+
+DHCPv6 prefix delegation pools are managed via `kea_dhcpv6_pd_pools` or the
+`opn_kea_dhcpv6_pd_pool` type. PD pools autorequire their parent subnet.
+
+```puppet
+class { 'opn':
+  kea_dhcpv6_pd_pools => {
+    'Customer PD Pool' => {
+      'subnet'        => 'fd00::/64',
+      'prefix'        => 'fd00:1::/48',
+      'prefix_len'    => '48',
+      'delegated_len' => '64',
+    },
+  },
+}
+```
+
+#### Managing KEA DHCPv6 HA peers
+
+DHCPv6 HA peers are managed via `kea_dhcpv6_peers` or the `opn_kea_dhcpv6_peer`
+type. The resource title is the peer name.
+
+```puppet
+class { 'opn':
+  kea_dhcpv6_peers => {
+    'primary-node' => {
+      'role' => 'primary',
+      'url'  => 'http://[fd00::1]:8000',
     },
   },
 }

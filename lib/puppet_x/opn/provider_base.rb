@@ -4,8 +4,7 @@ require 'puppet_x/opn/api_client'
 
 module PuppetX # rubocop:disable Style/ClassAndModuleChildren
   module Opn
-    # Shared mixin for all opn_* providers, eliminating boilerplate methods
-    # that were previously duplicated across 57 provider files.
+    # Shared mixin for all opn_* providers, eliminating boilerplate methods.
     #
     # Usage in a provider:
     #   extend  PuppetX::Opn::ProviderBase::ClassMethods
