@@ -1,17 +1,13 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
+require 'puppet_x/opn/provider_base'
 
 Puppet::Type.type(:opn_group).provide(:opnsense_api) do
   desc 'Manages OPNsense local groups via the REST API.'
 
-  # Returns an ApiClient instance for the given device.
-  #
-  # @param device_name [String]
-  # @return [PuppetX::Opn::ApiClient]
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
-  end
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
   # Fetches all local groups from all configured OPNsense devices.
   #
@@ -46,22 +42,9 @@ Puppet::Type.type(:opn_group).provide(:opnsense_api) do
     instances
   end
 
-  # Matches provider instances to Puppet resources.
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
-  def exists?
-    @property_hash[:ensure] == :present
-  end
-
   def create
     client     = api_client
-    group_name = resource_group_name
+    group_name = resource_item_name
     config     = (resource[:config] || {}).dup
     config['name'] = group_name
 
@@ -73,7 +56,7 @@ Puppet::Type.type(:opn_group).provide(:opnsense_api) do
   def destroy
     client     = api_client
     uuid       = @property_hash[:uuid]
-    group_name = resource_group_name
+    group_name = resource_item_name
 
     result = client.post("auth/group/del/#{uuid}", {})
     unless result['result'].to_s.strip.downcase == 'deleted'
@@ -84,21 +67,13 @@ Puppet::Type.type(:opn_group).provide(:opnsense_api) do
     @property_hash.clear
   end
 
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
-  end
-
   # Applies pending config changes to OPNsense.
   def flush
     return unless @pending_config
 
     client     = api_client
     uuid       = @property_hash[:uuid]
-    group_name = resource_group_name
+    group_name = resource_item_name
     config     = @pending_config.dup
     config['name'] = group_name
 
@@ -106,18 +81,5 @@ Puppet::Type.type(:opn_group).provide(:opnsense_api) do
     return if result['result'].to_s.strip.downcase == 'saved'
     raise Puppet::Error,
           "opn_group: failed to update '#{group_name}' (uuid: #{uuid}): #{result.inspect}"
-  end
-
-  private
-
-  # Returns an ApiClient for the current resource's device.
-  def api_client
-    device = @property_hash[:device] || resource[:device]
-    self.class.api_client(device)
-  end
-
-  # Extracts the plain group name (before the '@') from the resource title.
-  def resource_group_name
-    resource[:name].split('@', 2).first
   end
 end

@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 require 'puppet_x/opn/api_client'
-require 'puppet_x/opn/haproxy_reconfigure'
+require 'puppet_x/opn/service_reconfigure_registry'
 require 'puppet_x/opn/id_resolver'
 
 type_class = Puppet::Type.type(:opn_haproxy_action)
@@ -14,8 +14,8 @@ RSpec.describe provider_class do
   before(:each) do
     allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
     allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
-    PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
-    PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_with_errors, {})
+    PuppetX::Opn::ServiceReconfigure.reset!
+    load 'puppet_x/opn/service_reconfigure_registry.rb'
     PuppetX::Opn::IdResolver.instance_variable_set(:@cache, {})
   end
 
@@ -74,8 +74,8 @@ RSpec.describe provider_class do
   end
 
   describe '.post_resource_eval' do
-    it 'delegates to HaproxyReconfigure.run' do
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:run)
+    it 'delegates to ServiceReconfigure[:haproxy].run' do
+      expect(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:run)
       described_class.post_resource_eval
     end
   end
@@ -98,7 +98,7 @@ RSpec.describe provider_class do
       provider = described_class.new(resource)
       expect(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'redirect_https', 'type' => 'redirect' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
+      expect(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark).with('opnsense01', client)
       allow(client).to receive(:post).with('haproxy/settings/add_action', { 'action' => { 'name' => 'redirect_https', 'type' => 'redirect' } })
                                      .and_return({ 'result' => 'saved' })
 
@@ -111,7 +111,7 @@ RSpec.describe provider_class do
       allow(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'redirect_https', 'type' => 'redirect' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')
+      expect(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark_error).with('opnsense01')
 
       expect { provider.create }.to raise_error(Puppet::Error)
     end
@@ -127,7 +127,7 @@ RSpec.describe provider_class do
         uuid: 'aaa-bbb',
       )
       provider.resource = resource
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
+      expect(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark).with('opnsense01', client)
       expect(client).to receive(:post).with('haproxy/settings/del_action/aaa-bbb', {})
                                       .and_return({ 'result' => 'deleted' })
 
@@ -144,7 +144,7 @@ RSpec.describe provider_class do
       )
       provider.resource = resource
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')
+      expect(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark_error).with('opnsense01')
 
       expect { provider.destroy }.to raise_error(Puppet::Error)
     end
@@ -165,7 +165,7 @@ RSpec.describe provider_class do
 
       expect(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'redirect_https', 'type' => 'use_backend' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
+      expect(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark).with('opnsense01', client)
       allow(client).to receive(:post)
         .with('haproxy/settings/set_action/aaa-bbb', { 'action' => { 'name' => 'redirect_https', 'type' => 'use_backend' } })
         .and_return({ 'result' => 'saved' })
@@ -202,7 +202,7 @@ RSpec.describe provider_class do
       allow(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'name' => 'redirect_https', 'type' => 'use_backend' })
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark_error).with('opnsense01')
+      expect(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark_error).with('opnsense01')
 
       expect { provider.flush }.to raise_error(Puppet::Error)
     end

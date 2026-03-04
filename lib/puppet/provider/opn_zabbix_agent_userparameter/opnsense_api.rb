@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
-require 'puppet_x/opn/zabbix_agent_reconfigure'
+require 'puppet_x/opn/provider_base'
+require 'puppet_x/opn/service_reconfigure_registry'
 
 Puppet::Type.type(:opn_zabbix_agent_userparameter).provide(:opnsense_api) do
   desc 'Manages OPNsense Zabbix Agent UserParameter entries via the REST API.'
 
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
-  end
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
   # Fetches all Zabbix Agent userparameters from all configured devices.
   # Uses GET /api/zabbixagent/settings/get and navigates to the userparameter
@@ -44,21 +44,9 @@ Puppet::Type.type(:opn_zabbix_agent_userparameter).provide(:opnsense_api) do
     instances
   end
 
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
   # Called once after ALL opn_zabbix_agent* resources are evaluated.
   def self.post_resource_eval
-    PuppetX::Opn::ZabbixAgentReconfigure.run
-  end
-
-  def exists?
-    @property_hash[:ensure] == :present
+    PuppetX::Opn::ServiceReconfigure[:zabbix_agent].run
   end
 
   def create
@@ -92,14 +80,6 @@ Puppet::Type.type(:opn_zabbix_agent_userparameter).provide(:opnsense_api) do
     @property_hash.clear
   end
 
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
-  end
-
   def flush
     return unless @pending_config
 
@@ -124,17 +104,13 @@ Puppet::Type.type(:opn_zabbix_agent_userparameter).provide(:opnsense_api) do
 
   private
 
-  def api_client
-    device = @property_hash[:device] || resource[:device]
-    self.class.api_client(device)
-  end
-
+  # Extracts the key portion (before '@') from the resource title.
   def resource_item_key
     resource[:name].split('@', 2).first
   end
 
   def mark_reconfigure(client)
     device = @property_hash[:device] || resource[:device]
-    PuppetX::Opn::ZabbixAgentReconfigure.mark(device, client)
+    PuppetX::Opn::ServiceReconfigure[:zabbix_agent].mark(device, client)
   end
 end

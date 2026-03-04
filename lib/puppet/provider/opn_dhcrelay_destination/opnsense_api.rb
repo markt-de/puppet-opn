@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
-require 'puppet_x/opn/dhcrelay_reconfigure'
+require 'puppet_x/opn/provider_base'
+require 'puppet_x/opn/service_reconfigure_registry'
 
 Puppet::Type.type(:opn_dhcrelay_destination).provide(:opnsense_api) do
   desc 'Manages OPNsense DHCP Relay destinations via the REST API.'
 
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
-  end
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
   def self.instances
     instances = []
@@ -37,20 +37,8 @@ Puppet::Type.type(:opn_dhcrelay_destination).provide(:opnsense_api) do
     instances
   end
 
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
   def self.post_resource_eval
-    PuppetX::Opn::DhcrelayReconfigure.run
-  end
-
-  def exists?
-    @property_hash[:ensure] == :present
+    PuppetX::Opn::ServiceReconfigure[:dhcrelay].run
   end
 
   def create
@@ -82,14 +70,6 @@ Puppet::Type.type(:opn_dhcrelay_destination).provide(:opnsense_api) do
     @property_hash.clear
   end
 
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
-  end
-
   def flush
     return unless @pending_config
 
@@ -110,17 +90,8 @@ Puppet::Type.type(:opn_dhcrelay_destination).provide(:opnsense_api) do
 
   private
 
-  def api_client
-    device = @property_hash[:device] || resource[:device]
-    self.class.api_client(device)
-  end
-
-  def resource_item_name
-    resource[:name].split('@', 2).first
-  end
-
   def mark_reconfigure(client)
     device = @property_hash[:device] || resource[:device]
-    PuppetX::Opn::DhcrelayReconfigure.mark(device, client)
+    PuppetX::Opn::ServiceReconfigure[:dhcrelay].mark(device, client)
   end
 end

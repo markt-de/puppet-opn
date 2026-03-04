@@ -1,9 +1,13 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
+require 'puppet_x/opn/provider_base'
 
 Puppet::Type.type(:opn_trust_cert).provide(:opnsense_api) do
   desc 'Manages OPNsense trust certificates via the REST API.'
+
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
   def self.volatile_fields
     ['action', 'key_type', 'digest', 'cert_type', 'lifetime', 'private_key_location',
@@ -11,10 +15,6 @@ Puppet::Type.type(:opn_trust_cert).provide(:opnsense_api) do
      'ocsp_uri', 'altnames_dns', 'altnames_ip', 'altnames_uri', 'altnames_email',
      'crt_payload', 'csr_payload', 'prv_payload', 'rfc3280_purpose', 'in_use', 'is_user',
      'name', 'valid_from', 'valid_to']
-  end
-
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
   end
 
   def self.instances
@@ -44,18 +44,6 @@ Puppet::Type.type(:opn_trust_cert).provide(:opnsense_api) do
     instances
   end
 
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
-  def exists?
-    @property_hash[:ensure] == :present
-  end
-
   def create
     client = api_client
     descr  = resource_item_name
@@ -81,14 +69,6 @@ Puppet::Type.type(:opn_trust_cert).provide(:opnsense_api) do
     @property_hash.clear
   end
 
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
-  end
-
   def flush
     return unless @pending_config
 
@@ -103,16 +83,5 @@ Puppet::Type.type(:opn_trust_cert).provide(:opnsense_api) do
     return if result['result'].to_s.strip.downcase == 'saved'
     raise Puppet::Error,
           "opn_trust_cert: failed to update '#{descr}' (uuid: #{uuid}): #{result.inspect}"
-  end
-
-  private
-
-  def api_client
-    device = @property_hash[:device] || resource[:device]
-    self.class.api_client(device)
-  end
-
-  def resource_item_name
-    resource[:name].split('@', 2).first
   end
 end

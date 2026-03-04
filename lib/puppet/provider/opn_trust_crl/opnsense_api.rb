@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
+require 'puppet_x/opn/provider_base'
 
 Puppet::Type.type(:opn_trust_crl).provide(:opnsense_api) do
   desc 'Manages OPNsense trust CRLs via the REST API.'
 
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
-  end
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
   def self.instances
     instances = []
@@ -34,7 +34,7 @@ Puppet::Type.type(:opn_trust_crl).provide(:opnsense_api) do
         # Fetch full CRL details
         crl_detail = client.get("trust/crl/get/#{caref}")
         crl_data = crl_detail['crl'] || {}
-        config = normalize_crl_config(crl_data)
+        config = normalize_config(crl_data)
 
         instances << new(
           ensure: :present,
@@ -49,36 +49,6 @@ Puppet::Type.type(:opn_trust_crl).provide(:opnsense_api) do
     end
 
     instances
-  end
-
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
-  # Normalizes selection hashes in CRL config to plain strings.
-  def self.normalize_crl_config(obj)
-    return obj unless obj.is_a?(Hash)
-    return normalize_selection(obj) if selection_hash?(obj)
-
-    obj.transform_values { |v| normalize_crl_config(v) }
-  end
-
-  def self.selection_hash?(hash)
-    hash.is_a?(Hash) &&
-      !hash.empty? &&
-      hash.values.all? { |v| v.is_a?(Hash) && v.key?('value') && v.key?('selected') }
-  end
-
-  def self.normalize_selection(hash)
-    hash.select { |_k, v| v['selected'].to_i == 1 }.keys.join(',')
-  end
-
-  def exists?
-    @property_hash[:ensure] == :present
   end
 
   def create
@@ -108,14 +78,6 @@ Puppet::Type.type(:opn_trust_crl).provide(:opnsense_api) do
     @property_hash.clear
   end
 
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
-  end
-
   def flush
     return unless @pending_config
 
@@ -131,15 +93,6 @@ Puppet::Type.type(:opn_trust_crl).provide(:opnsense_api) do
   end
 
   private
-
-  def api_client
-    device = @property_hash[:device] || resource[:device]
-    self.class.api_client(device)
-  end
-
-  def resource_item_name
-    resource[:name].split('@', 2).first
-  end
 
   # Resolves a CA description to its caref by searching the CA list endpoint.
   def resolve_caref(client)

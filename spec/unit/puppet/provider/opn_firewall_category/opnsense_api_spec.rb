@@ -11,7 +11,8 @@ describe Puppet::Type.type(:opn_firewall_category).provider(:opnsense_api) do
   before(:each) do
     allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
     allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
-    described_class.instance_variable_set(:@devices_to_reconfigure, {}) if described_class.instance_variable_defined?(:@devices_to_reconfigure)
+    PuppetX::Opn::ServiceReconfigure.reset!
+    load 'puppet_x/opn/service_reconfigure_registry.rb'
   end
 
   it_behaves_like 'opn provider basics'

@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
+require 'puppet_x/opn/provider_base'
 
 Puppet::Type.type(:opn_snapshot).provide(:opnsense_api) do
   desc 'Manages OPNsense ZFS snapshots via the REST API.'
 
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
-  end
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
   def self.instances
     instances = []
@@ -44,18 +44,6 @@ Puppet::Type.type(:opn_snapshot).provide(:opnsense_api) do
     end
 
     instances
-  end
-
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
-  def exists?
-    @property_hash[:ensure] == :present
   end
 
   def create
@@ -119,14 +107,6 @@ Puppet::Type.type(:opn_snapshot).provide(:opnsense_api) do
     end
   end
 
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
-  end
-
   def flush
     return unless @pending_config
 
@@ -146,15 +126,6 @@ Puppet::Type.type(:opn_snapshot).provide(:opnsense_api) do
   end
 
   private
-
-  def api_client
-    device = @property_hash[:device] || resource[:device]
-    self.class.api_client(device)
-  end
-
-  def resource_item_name
-    resource[:name].split('@', 2).first
-  end
 
   # Searches for a snapshot by name and returns its UUID.
   def find_uuid_by_name(client, snapshot_name)

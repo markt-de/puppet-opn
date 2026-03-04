@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'puppet_x/opn/type_helper'
+
 Puppet::Type.newtype(:opn_zabbix_agent) do
   desc <<-DOC
     Manages Zabbix Agent settings on an OPNsense device via the OPNsense REST API.
@@ -36,26 +38,14 @@ Puppet::Type.newtype(:opn_zabbix_agent) do
       }
   DOC
 
-  ensurable do
-    defaultvalues
-    defaultto :present
-  end
-
-  newparam(:name, namevar: true) do
-    desc <<-DOC
+  # Singleton type with deep_match insync? — recursive subset comparison
+  # where only keys present in should are checked against is.
+  PuppetX::Opn::TypeHelper.setup(self,
+    name_desc: <<-DOC,
       The OPNsense device name. Must correspond to a config file at
       /etc/puppet/opn/<name>.yaml.
     DOC
-
-    validate do |value|
-      unless value.is_a?(String) && !value.empty?
-        raise ArgumentError, 'Name must be a non-empty string'
-      end
-    end
-  end
-
-  newproperty(:config) do
-    desc <<-DOC
+    config_desc: <<-DOC,
       A hash of Zabbix Agent configuration options passed directly to the
       OPNsense API. Validation is performed by the OPNsense API, not Puppet.
 
@@ -67,36 +57,6 @@ Puppet::Type.newtype(:opn_zabbix_agent) do
 
       Refer to OPNsense Zabbix Agent documentation for all valid keys.
     DOC
-
-    validate do |value|
-      raise ArgumentError, 'config must be a Hash' unless value.is_a?(Hash)
-    end
-
-    def insync?(is)
-      deep_match?(is, should)
-    end
-
-    # Recursively checks that every key/value in +should_val+ matches
-    # the corresponding entry in +is_val+. Keys present in +is_val+ but
-    # absent from +should_val+ are ignored (subset match).
-    def deep_match?(is_val, should_val)
-      return false unless is_val.is_a?(Hash) && should_val.is_a?(Hash)
-
-      should_val.all? do |k, v|
-        if v.is_a?(Hash)
-          deep_match?(is_val[k], v)
-        else
-          is_val[k].to_s == v.to_s
-        end
-      end
-    end
-
-    def is_to_s(current_value)
-      current_value.inspect
-    end
-
-    def should_to_s(new_value)
-      new_value.inspect
-    end
-  end
+    singleton: true,
+    insync_mode: :deep_match)
 end

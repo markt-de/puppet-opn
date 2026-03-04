@@ -1,21 +1,20 @@
 # frozen_string_literal: true
 
-require 'puppet_x/opn/api_client'
-require 'puppet_x/opn/ipsec_reconfigure'
+require 'puppet_x/opn/provider_base'
+require 'puppet_x/opn/service_reconfigure_registry'
 
 Puppet::Type.type(:opn_ipsec_settings).provide(:opnsense_api) do
   desc 'Manages OPNsense IPsec global settings via the REST API.'
 
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
-  end
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
   def self.settings_sections
     ['general', 'charon'].freeze
   end
 
   def self.post_resource_eval
-    PuppetX::Opn::IpsecReconfigure.run
+    PuppetX::Opn::ServiceReconfigure[:ipsec].run
   end
 
   def self.instances
@@ -42,32 +41,6 @@ Puppet::Type.type(:opn_ipsec_settings).provide(:opnsense_api) do
     instances
   end
 
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
-  # Normalize OPNsense selection hashes to simple comma-separated strings.
-  def self.normalize_config(obj)
-    return obj unless obj.is_a?(Hash)
-    return normalize_selection(obj) if selection_hash?(obj)
-
-    obj.transform_values { |v| normalize_config(v) }
-  end
-
-  def self.selection_hash?(hash)
-    hash.is_a?(Hash) &&
-      !hash.empty? &&
-      hash.values.all? { |v| v.is_a?(Hash) && v.key?('value') && v.key?('selected') }
-  end
-
-  def self.normalize_selection(hash)
-    hash.select { |_k, v| v['selected'].to_i == 1 }.keys.join(',')
-  end
-
   # Normalize the general.enabled field from API response.
   #
   # In the OPNsense IPsec model, general.enabled is a LegacyLinkField that
@@ -82,10 +55,6 @@ Puppet::Type.type(:opn_ipsec_settings).provide(:opnsense_api) do
     general['enabled'] = '0' if general['enabled'].to_s.empty?
   end
 
-  def exists?
-    @property_hash[:ensure] == :present
-  end
-
   def create
     apply_config(resource[:config] || {})
   end
@@ -97,14 +66,6 @@ Puppet::Type.type(:opn_ipsec_settings).provide(:opnsense_api) do
     @property_hash.clear
   end
 
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
-  end
-
   def flush
     return unless @pending_config
 
@@ -113,6 +74,8 @@ Puppet::Type.type(:opn_ipsec_settings).provide(:opnsense_api) do
 
   private
 
+  # Singleton provider: namevar is the device name itself, not name@device.
+  # Override the mixin's api_client to use resource[:name] directly.
   def api_client
     self.class.api_client(resource[:name])
   end
@@ -161,6 +124,6 @@ Puppet::Type.type(:opn_ipsec_settings).provide(:opnsense_api) do
   end
 
   def mark_reconfigure(client)
-    PuppetX::Opn::IpsecReconfigure.mark(resource[:name], client)
+    PuppetX::Opn::ServiceReconfigure[:ipsec].mark(resource[:name], client)
   end
 end

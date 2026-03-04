@@ -1,35 +1,19 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
+require 'puppet_x/opn/provider_base'
+require 'puppet_x/opn/service_reconfigure_registry'
 
 Puppet::Type.type(:opn_node_exporter).provide(:opnsense_api) do
   desc 'Manages OPNsense Node Exporter settings via the REST API.'
 
-  @devices_to_reconfigure = {}
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
-  class << self
-    attr_reader :devices_to_reconfigure
-  end
-
+  # Delegates reconfigure to ServiceReconfigure after all opn_node_exporter
+  # resources have been evaluated in this catalog run.
   def self.post_resource_eval
-    @devices_to_reconfigure.each do |device_name, client|
-      result = client.post('nodeexporter/service/reconfigure', {})
-      status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
-      if status == 'ok'
-        Puppet.notice("opn_node_exporter: reconfigure on '#{device_name}' completed")
-      else
-        Puppet.warning(
-          "opn_node_exporter: reconfigure on '#{device_name}' returned unexpected status: #{result.inspect}",
-        )
-      end
-    rescue Puppet::Error => e
-      Puppet.err("opn_node_exporter: reconfigure on '#{device_name}' failed: #{e.message}")
-    end
-    @devices_to_reconfigure.clear
-  end
-
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
+    PuppetX::Opn::ServiceReconfigure[:node_exporter].run
   end
 
   def self.instances
@@ -54,35 +38,6 @@ Puppet::Type.type(:opn_node_exporter).provide(:opnsense_api) do
     instances
   end
 
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
-  def self.normalize_config(obj)
-    return obj unless obj.is_a?(Hash)
-    return normalize_selection(obj) if selection_hash?(obj)
-
-    obj.transform_values { |v| normalize_config(v) }
-  end
-
-  def self.selection_hash?(hash)
-    hash.is_a?(Hash) &&
-      !hash.empty? &&
-      hash.values.all? { |v| v.is_a?(Hash) && v.key?('value') && v.key?('selected') }
-  end
-
-  def self.normalize_selection(hash)
-    hash.select { |_k, v| v['selected'].to_i == 1 }.keys.join(',')
-  end
-
-  def exists?
-    @property_hash[:ensure] == :present
-  end
-
   def create
     apply_config(resource[:config] || {})
   end
@@ -94,14 +49,6 @@ Puppet::Type.type(:opn_node_exporter).provide(:opnsense_api) do
     @property_hash.clear
   end
 
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
-  end
-
   def flush
     return unless @pending_config
 
@@ -110,6 +57,8 @@ Puppet::Type.type(:opn_node_exporter).provide(:opnsense_api) do
 
   private
 
+  # Singleton override: uses resource[:name] directly as device name
+  # since singletons don't store device in @property_hash.
   def api_client
     self.class.api_client(resource[:name])
   end
@@ -127,7 +76,9 @@ Puppet::Type.type(:opn_node_exporter).provide(:opnsense_api) do
     mark_reconfigure(client)
   end
 
+  # Registers the device as needing a reconfigure at the end of the Puppet run.
+  # The actual API call is made once in post_resource_eval via ServiceReconfigure.
   def mark_reconfigure(client)
-    self.class.devices_to_reconfigure[resource[:name]] ||= client
+    PuppetX::Opn::ServiceReconfigure[:node_exporter].mark(resource[:name], client)
   end
 end

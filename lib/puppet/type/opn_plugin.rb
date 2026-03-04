@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'puppet_x/opn/type_helper'
+
 Puppet::Type.newtype(:opn_plugin) do
   desc <<-DOC
     Manages plugins/packages on an OPNsense device via the OPNsense REST API.
@@ -26,36 +28,13 @@ Puppet::Type.newtype(:opn_plugin) do
       }
   DOC
 
-  ensurable do
-    defaultvalues
-    defaultto :present
-  end
-
-  newparam(:name, namevar: true) do
-    desc <<-DOC
+  # Plugin type has no config property — only ensure + name + device.
+  PuppetX::Opn::TypeHelper.setup(self,
+    name_desc: <<-DOC,
       The resource title in "plugin_name@device_name" format.
       The plugin_name must be a valid OPNsense package name.
       The device_name must correspond to a config file at
       /etc/puppet/opn/<device_name>.yaml.
     DOC
-
-    validate do |value|
-      unless value.is_a?(String) && !value.empty?
-        raise ArgumentError, 'Name must be a non-empty string'
-      end
-    end
-  end
-
-  newparam(:device) do
-    desc <<-DOC
-      The OPNsense device name. If not explicitly set, it is extracted
-      from the resource title (the part after the last "@" character).
-      Falls back to "default" if no "@" is present in the title.
-    DOC
-
-    defaultto do
-      title = @resource[:name]
-      title.include?('@') ? title.split('@', 2).last : 'default'
-    end
-  end
+    config_desc: nil)
 end

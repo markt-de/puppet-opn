@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 require 'puppet/provider/opn_zabbix_agent_userparameter/opnsense_api'
-require 'puppet_x/opn/zabbix_agent_reconfigure'
+require 'puppet_x/opn/service_reconfigure_registry'
 
 describe Puppet::Type.type(:opn_zabbix_agent_userparameter).provider(:opnsense_api) do
   let(:provider_class) { described_class }
@@ -12,7 +12,8 @@ describe Puppet::Type.type(:opn_zabbix_agent_userparameter).provider(:opnsense_a
   before(:each) do
     allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
     allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
-    PuppetX::Opn::ZabbixAgentReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
+    PuppetX::Opn::ServiceReconfigure.reset!
+    load 'puppet_x/opn/service_reconfigure_registry.rb'
   end
 
   it_behaves_like 'opn provider basics'
@@ -173,8 +174,8 @@ describe Puppet::Type.type(:opn_zabbix_agent_userparameter).provider(:opnsense_a
   end
 
   describe '.post_resource_eval' do
-    it 'delegates to ZabbixAgentReconfigure.run' do
-      expect(PuppetX::Opn::ZabbixAgentReconfigure).to receive(:run)
+    it 'delegates to ServiceReconfigure[:zabbix_agent].run' do
+      expect(PuppetX::Opn::ServiceReconfigure[:zabbix_agent]).to receive(:run)
       described_class.post_resource_eval
     end
   end

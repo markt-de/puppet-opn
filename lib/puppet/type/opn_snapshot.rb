@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'puppet_x/opn/api_client'
+require 'puppet_x/opn/type_helper'
 
 Puppet::Type.newtype(:opn_snapshot) do
   desc <<-DOC
@@ -36,46 +36,17 @@ Puppet::Type.newtype(:opn_snapshot) do
       }
   DOC
 
-  ensurable do
-    defaultvalues
-    defaultto :present
-  end
-
-  newparam(:name, namevar: true) do
-    desc <<-DOC
+  # Read-only fields (name, active, dataset, mountpoint, size, created) are
+  # excluded from insync? comparison. The 'active' property is managed
+  # separately below — it is NOT part of the config hash.
+  PuppetX::Opn::TypeHelper.setup(self,
+    name_desc: <<-DOC,
       The resource title in "name@device_name" format.
       The "name" portion (before "@") is the snapshot identifier.
       The device_name must correspond to a config file at
       /etc/puppet/opn/<device_name>.yaml.
     DOC
-
-    validate do |value|
-      unless value.is_a?(String) && !value.empty?
-        raise ArgumentError, 'Name must be a non-empty string'
-      end
-    end
-  end
-
-  newparam(:device) do
-    desc <<-DOC
-      The OPNsense device name. If not explicitly set, it is extracted
-      from the resource title (the part after the last "@" character).
-      Falls back to "default" if no "@" is present in the title.
-    DOC
-
-    defaultto do
-      title = @resource[:name]
-      title.include?('@') ? title.split('@', 2).last : 'default'
-    end
-  end
-
-  newproperty(:active) do
-    desc 'Whether this snapshot is the active boot target.'
-    newvalues(:true, :false)
-  end
-
-  newproperty(:config) do
-    desc <<-DOC
+    config_desc: <<-DOC,
       A hash of snapshot configuration options passed directly to the OPNsense API.
       Validation is performed by the OPNsense API, not by Puppet.
 
@@ -92,26 +63,13 @@ Puppet::Type.newtype(:opn_snapshot) do
 
       Refer to OPNsense documentation for all valid keys and values.
     DOC
+    skip_fields: ['name', 'active', 'dataset', 'mountpoint', 'size', 'created'])
 
-    validate do |value|
-      raise ArgumentError, 'config must be a Hash' unless value.is_a?(Hash)
-    end
-
-    def insync?(is)
-      return false unless is.is_a?(Hash)
-
-      readonly = ['name', 'active', 'dataset', 'mountpoint', 'size', 'created']
-      should.reject { |k, _| readonly.include?(k) }.all? do |key, value|
-        is[key].to_s == value.to_s
-      end
-    end
-
-    def is_to_s(current_value)
-      current_value.inspect
-    end
-
-    def should_to_s(new_value)
-      new_value.inspect
-    end
+  # The 'active' property is separate from config and handled by
+  # the provider via the activate endpoint. It cannot be deactivated
+  # (another snapshot must be activated instead).
+  newproperty(:active) do
+    desc 'Whether this snapshot is the active boot target.'
+    newvalues(:true, :false)
   end
 end

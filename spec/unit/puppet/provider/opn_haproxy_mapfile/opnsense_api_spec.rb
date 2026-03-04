@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 require 'puppet_x/opn/api_client'
-require 'puppet_x/opn/haproxy_reconfigure'
+require 'puppet_x/opn/service_reconfigure_registry'
 
 require 'puppet/type/opn_haproxy_mapfile'
 require 'puppet/provider/opn_haproxy_mapfile/opnsense_api'
@@ -15,8 +15,8 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_mapfile).provider(:opnsense_api) d
   before(:each) do
     allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
     allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
-    PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
-    PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_with_errors, {})
+    PuppetX::Opn::ServiceReconfigure.reset!
+    load 'puppet_x/opn/service_reconfigure_registry.rb'
   end
 
   it_behaves_like 'opn provider basics'
@@ -76,8 +76,8 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_mapfile).provider(:opnsense_api) d
   end
 
   describe '.post_resource_eval' do
-    it 'delegates to HaproxyReconfigure.run' do
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:run)
+    it 'delegates to ServiceReconfigure[:haproxy].run' do
+      expect(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:run)
       described_class.post_resource_eval
     end
   end
@@ -101,21 +101,21 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_mapfile).provider(:opnsense_api) d
         'haproxy/settings/add_mapfile',
         { 'mapfile' => { 'content' => 'example.com backend1', 'name' => 'hosts-map' } },
       ).and_return({ 'result' => 'saved' })
-      allow(PuppetX::Opn::HaproxyReconfigure).to receive(:mark)
+      allow(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark)
 
       provider.create
     end
 
     it 'marks device for reconfigure' do
       allow(client).to receive(:post).and_return({ 'result' => 'saved' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
+      expect(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark).with('opnsense01', client)
 
       provider.create
     end
 
     it 'raises on failure' do
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
-      allow(PuppetX::Opn::HaproxyReconfigure).to receive(:mark)
+      allow(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark)
 
       expect { provider.create }.to raise_error(Puppet::Error, %r{failed to create})
     end
@@ -146,21 +146,21 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_mapfile).provider(:opnsense_api) d
       expect(client).to receive(:post).with(
         'haproxy/settings/del_mapfile/aaa-bbb', {}
       ).and_return({ 'result' => 'deleted' })
-      allow(PuppetX::Opn::HaproxyReconfigure).to receive(:mark)
+      allow(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark)
 
       provider.destroy
     end
 
     it 'marks device for reconfigure' do
       allow(client).to receive(:post).and_return({ 'result' => 'deleted' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
+      expect(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark).with('opnsense01', client)
 
       provider.destroy
     end
 
     it 'raises on failure' do
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
-      allow(PuppetX::Opn::HaproxyReconfigure).to receive(:mark)
+      allow(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark)
 
       expect { provider.destroy }.to raise_error(Puppet::Error, %r{failed to delete})
     end
@@ -195,7 +195,7 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_mapfile).provider(:opnsense_api) d
         'haproxy/settings/set_mapfile/aaa-bbb',
         { 'mapfile' => { 'content' => 'example.org backend2', 'name' => 'hosts-map' } },
       ).and_return({ 'result' => 'saved' })
-      allow(PuppetX::Opn::HaproxyReconfigure).to receive(:mark)
+      allow(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark)
 
       provider.flush
     end
@@ -208,7 +208,7 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_mapfile).provider(:opnsense_api) d
       provider.config = { 'content' => 'example.org backend2' }
 
       allow(client).to receive(:post).and_return({ 'result' => 'saved' })
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:mark).with('opnsense01', client)
+      expect(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark).with('opnsense01', client)
 
       provider.flush
     end
@@ -217,7 +217,7 @@ RSpec.describe Puppet::Type.type(:opn_haproxy_mapfile).provider(:opnsense_api) d
       provider.config = { 'content' => 'example.org backend2' }
 
       allow(client).to receive(:post).and_return({ 'result' => 'failed' })
-      allow(PuppetX::Opn::HaproxyReconfigure).to receive(:mark)
+      allow(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark)
 
       expect { provider.flush }.to raise_error(Puppet::Error, %r{failed to update})
     end

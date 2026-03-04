@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'puppet_x/opn/api_client'
+require 'puppet_x/opn/type_helper'
 
 Puppet::Type.newtype(:opn_cron) do
   desc <<-DOC
@@ -32,41 +32,16 @@ Puppet::Type.newtype(:opn_cron) do
       }
   DOC
 
-  ensurable do
-    defaultvalues
-    defaultto :present
-  end
-
-  newparam(:name, namevar: true) do
-    desc <<-DOC
+  # The 'description' field is injected from the resource title by the provider,
+  # so it must be excluded from insync? comparisons.
+  PuppetX::Opn::TypeHelper.setup(self,
+    name_desc: <<-DOC,
       The resource title in "description@device_name" format.
       The description must uniquely identify the cron job on the device.
       The device_name must correspond to a config file at
       /etc/puppet/opn/<device_name>.yaml.
     DOC
-
-    validate do |value|
-      unless value.is_a?(String) && !value.empty?
-        raise ArgumentError, 'Name must be a non-empty string'
-      end
-    end
-  end
-
-  newparam(:device) do
-    desc <<-DOC
-      The OPNsense device name. If not explicitly set, it is extracted
-      from the resource title (the part after the last "@" character).
-      Falls back to "default" if no "@" is present in the title.
-    DOC
-
-    defaultto do
-      title = @resource[:name]
-      title.include?('@') ? title.split('@', 2).last : 'default'
-    end
-  end
-
-  newproperty(:config) do
-    desc <<-DOC
+    config_desc: <<-DOC,
       A hash of cron job configuration options passed directly to the OPNsense API.
       Validation is performed by the OPNsense API, not by Puppet.
 
@@ -82,25 +57,5 @@ Puppet::Type.newtype(:opn_cron) do
 
       Refer to OPNsense documentation for all valid keys and values.
     DOC
-
-    validate do |value|
-      raise ArgumentError, 'config must be a Hash' unless value.is_a?(Hash)
-    end
-
-    def insync?(is)
-      return false unless is.is_a?(Hash)
-
-      should.reject { |k, _| k == 'description' }.all? do |key, value|
-        is[key].to_s == value.to_s
-      end
-    end
-
-    def is_to_s(current_value)
-      current_value.inspect
-    end
-
-    def should_to_s(new_value)
-      new_value.inspect
-    end
-  end
+    skip_fields: ['description'])
 end

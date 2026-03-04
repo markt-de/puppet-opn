@@ -1,55 +1,51 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
+require 'puppet_x/opn/provider_base'
+require 'puppet_x/opn/service_reconfigure_registry'
 
 Puppet::Type.type(:opn_gateway).provide(:opnsense_api) do
   desc 'Manages OPNsense gateways via the REST API.'
 
-  # Tracks devices that need a reconfigure after gateway changes.
-  # Cleared after post_resource_eval runs the reconfigure call.
-  @devices_to_reconfigure = {}
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
-  class << self
-    attr_reader :devices_to_reconfigure
-  end
-
-  # Called once after all opn_gateway resources have been evaluated.
-  # Triggers routing/settings/reconfigure for each device that had changes.
+  # Delegates reconfigure to ServiceReconfigure after all opn_gateway
+  # resources have been evaluated in this catalog run.
   def self.post_resource_eval
-    @devices_to_reconfigure.each do |device_name, client|
-      result = client.post('routing/settings/reconfigure', {})
-      status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
-      if status == 'ok'
-        Puppet.notice("opn_gateway: reconfigure on '#{device_name}' completed")
-      else
-        Puppet.warning(
-          "opn_gateway: reconfigure on '#{device_name}' returned unexpected status: #{result.inspect}",
-        )
-      end
-    rescue Puppet::Error => e
-      Puppet.err("opn_gateway: reconfigure on '#{device_name}' failed: #{e.message}")
-    end
-    @devices_to_reconfigure.clear
-  end
-
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
+    PuppetX::Opn::ServiceReconfigure[:gateway].run
   end
 
   # Fields added by the searchGateway enrichment that are NOT part of the
   # Gateways model. These are runtime/display fields and must be stripped
   # from the config hash to avoid false-positive idempotency changes.
   def self.search_volatile_fields
-    %w[
-      virtual upstream interface_descr status delay stddev loss
-      label_class if attribute dynamic defunct is_loopback gateway_interface
+    [
+      'virtual',
+      'upstream',
+      'interface_descr',
+      'status',
+      'delay',
+      'stddev',
+      'loss',
+      'label_class',
+      'if',
+      'attribute',
+      'dynamic',
+      'defunct',
+      'is_loopback',
+      'gateway_interface',
     ]
   end
 
   # UUID format regex — only MVC model gateways have real UUIDs.
   # Virtual/dynamic and legacy gateways get their name as UUID by the search
   # API and must be skipped (they are auto-managed by OPNsense).
-  UUID_PATTERN = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i
+  # Class method instead of constant to avoid "already initialized constant"
+  # warnings when the provide block is re-evaluated (e.g. via load in tests).
+  def self.uuid_pattern
+    %r{\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z}i
+  end
 
   # Fetches all gateways from every configured OPNsense device.
   # The searchGateway API returns enriched data including virtual/dynamic
@@ -64,7 +60,7 @@ Puppet::Type.type(:opn_gateway).provide(:opnsense_api) do
 
       rows.each do |row|
         # Skip virtual/dynamic/legacy gateways that lack a real UUID
-        next unless row['uuid'].to_s.match?(UUID_PATTERN)
+        next unless row['uuid'].to_s.match?(uuid_pattern)
 
         gw_name = row['name'].to_s
         next if gw_name.empty?
@@ -115,18 +111,6 @@ Puppet::Type.type(:opn_gateway).provide(:opnsense_api) do
     config
   end
 
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
-  def exists?
-    @property_hash[:ensure] == :present
-  end
-
   # Creates a new gateway via the API.
   # Injects the gateway name from the resource title into the config.
   def create
@@ -158,14 +142,6 @@ Puppet::Type.type(:opn_gateway).provide(:opnsense_api) do
     @property_hash.clear
   end
 
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
-  end
-
   # Updates an existing gateway via the API.
   # Note: OPNsense does not allow renaming gateways after creation, but the
   # name field must still be included in the payload (model validation).
@@ -189,17 +165,10 @@ Puppet::Type.type(:opn_gateway).provide(:opnsense_api) do
 
   private
 
-  def api_client
-    device = @property_hash[:device] || resource[:device]
-    self.class.api_client(device)
-  end
-
-  def resource_item_name
-    resource[:name].split('@', 2).first
-  end
-
+  # Registers the device as needing a reconfigure at the end of the Puppet run.
+  # The actual API call is made once in post_resource_eval via ServiceReconfigure.
   def mark_reconfigure(client)
     device = @property_hash[:device] || resource[:device]
-    self.class.devices_to_reconfigure[device] ||= client
+    PuppetX::Opn::ServiceReconfigure[:gateway].mark(device, client)
   end
 end

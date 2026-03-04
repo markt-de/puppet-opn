@@ -1,35 +1,19 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
+require 'puppet_x/opn/provider_base'
+require 'puppet_x/opn/service_reconfigure_registry'
 
 Puppet::Type.type(:opn_tunable).provide(:opnsense_api) do
   desc 'Manages OPNsense system tunables via the REST API.'
 
-  @devices_to_reconfigure = {}
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
-  class << self
-    attr_reader :devices_to_reconfigure
-  end
-
+  # Delegates reconfigure to ServiceReconfigure after all opn_tunable
+  # resources have been evaluated in this catalog run.
   def self.post_resource_eval
-    @devices_to_reconfigure.each do |device_name, client|
-      result = client.post('core/tunables/reconfigure', {})
-      status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
-      if status == 'ok'
-        Puppet.notice("opn_tunable: reconfigure on '#{device_name}' completed")
-      else
-        Puppet.warning(
-          "opn_tunable: reconfigure on '#{device_name}' returned unexpected status: #{result.inspect}",
-        )
-      end
-    rescue Puppet::Error => e
-      Puppet.err("opn_tunable: reconfigure on '#{device_name}' failed: #{e.message}")
-    end
-    @devices_to_reconfigure.clear
-  end
-
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
+    PuppetX::Opn::ServiceReconfigure[:tunable].run
   end
 
   def self.instances
@@ -57,18 +41,6 @@ Puppet::Type.type(:opn_tunable).provide(:opnsense_api) do
     end
 
     instances
-  end
-
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
-  def exists?
-    @property_hash[:ensure] == :present
   end
 
   def create
@@ -100,14 +72,6 @@ Puppet::Type.type(:opn_tunable).provide(:opnsense_api) do
     @property_hash.clear
   end
 
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
-  end
-
   def flush
     return unless @pending_config
 
@@ -128,17 +92,10 @@ Puppet::Type.type(:opn_tunable).provide(:opnsense_api) do
 
   private
 
-  def api_client
-    device = @property_hash[:device] || resource[:device]
-    self.class.api_client(device)
-  end
-
-  def resource_item_name
-    resource[:name].split('@', 2).first
-  end
-
+  # Registers the device as needing a reconfigure at the end of the Puppet run.
+  # The actual API call is made once in post_resource_eval via ServiceReconfigure.
   def mark_reconfigure(client)
     device = @property_hash[:device] || resource[:device]
-    self.class.devices_to_reconfigure[device] ||= client
+    PuppetX::Opn::ServiceReconfigure[:tunable].mark(device, client)
   end
 end

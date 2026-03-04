@@ -1,47 +1,19 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
+require 'puppet_x/opn/provider_base'
+require 'puppet_x/opn/service_reconfigure_registry'
 
 Puppet::Type.type(:opn_firewall_rule).provide(:opnsense_api) do
   desc 'Manages OPNsense firewall filter rules via the REST API.'
 
-  # Tracks devices that have pending rule changes during this Puppet run.
-  # Maps device_name => ApiClient instance.
-  # Populated by create/destroy/flush; consumed by post_resource_eval.
-  @devices_to_reconfigure = {}
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
-  class << self
-    attr_reader :devices_to_reconfigure
-  end
-
-  # Called by Puppet once after ALL opn_firewall_rule resources have been
-  # evaluated in this catalog run. Triggers exactly one apply API call per
-  # device that had at least one rule change, then clears the tracking hash.
+  # Delegates apply to ServiceReconfigure after all opn_firewall_rule
+  # resources have been evaluated in this catalog run.
   def self.post_resource_eval
-    @devices_to_reconfigure.each do |device_name, client|
-      result = client.post('firewall/filter/apply', {})
-      # Guard against non-Hash responses (e.g. JSON null → nil).
-      # Strip whitespace and downcase because OPNsense returns "OK\n\n".
-      status = result.is_a?(Hash) ? result['status'].to_s.strip.downcase : nil
-      if status == 'ok'
-        Puppet.notice("opn_firewall_rule: apply on '#{device_name}' completed")
-      else
-        Puppet.warning(
-          "opn_firewall_rule: apply on '#{device_name}' returned unexpected status: #{result.inspect}",
-        )
-      end
-    rescue Puppet::Error => e
-      Puppet.err("opn_firewall_rule: apply on '#{device_name}' failed: #{e.message}")
-    end
-    @devices_to_reconfigure.clear
-  end
-
-  # Returns an ApiClient instance for the given device.
-  #
-  # @param device_name [String]
-  # @return [PuppetX::Opn::ApiClient]
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
+    PuppetX::Opn::ServiceReconfigure[:firewall_rule].run
   end
 
   # Fetches all firewall rules from all configured OPNsense devices.
@@ -79,19 +51,6 @@ Puppet::Type.type(:opn_firewall_rule).provide(:opnsense_api) do
     instances
   end
 
-  # Matches provider instances to Puppet resources.
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
-  def exists?
-    @property_hash[:ensure] == :present
-  end
-
   def create
     client      = api_client
     description = resource_description
@@ -122,14 +81,6 @@ Puppet::Type.type(:opn_firewall_rule).provide(:opnsense_api) do
     @property_hash.clear
   end
 
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
-  end
-
   # Applies pending config changes to OPNsense.
   # apply is NOT called here – it is deferred to post_resource_eval.
   def flush
@@ -152,21 +103,15 @@ Puppet::Type.type(:opn_firewall_rule).provide(:opnsense_api) do
 
   private
 
-  # Returns an ApiClient for the current resource's device.
-  def api_client
-    device = @property_hash[:device] || resource[:device]
-    self.class.api_client(device)
-  end
-
   # Extracts the plain description (before the '@') from the resource title.
   def resource_description
     resource[:name].split('@', 2).first
   end
 
   # Registers the device as needing an apply at the end of the Puppet run.
-  # The actual API call is made once in post_resource_eval.
+  # The actual API call is made once in post_resource_eval via ServiceReconfigure.
   def mark_reconfigure(client)
     device = @property_hash[:device] || resource[:device]
-    self.class.devices_to_reconfigure[device] ||= client
+    PuppetX::Opn::ServiceReconfigure[:firewall_rule].mark(device, client)
   end
 end

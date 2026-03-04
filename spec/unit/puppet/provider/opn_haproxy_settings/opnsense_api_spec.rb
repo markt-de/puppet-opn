@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 require 'puppet/provider/opn_haproxy_settings/opnsense_api'
-require 'puppet_x/opn/haproxy_reconfigure'
+require 'puppet_x/opn/service_reconfigure_registry'
 require 'puppet_x/opn/id_resolver'
 
 describe Puppet::Type.type(:opn_haproxy_settings).provider(:opnsense_api) do
@@ -13,8 +13,8 @@ describe Puppet::Type.type(:opn_haproxy_settings).provider(:opnsense_api) do
   before(:each) do
     allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
     allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
-    PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_to_reconfigure, {})
-    PuppetX::Opn::HaproxyReconfigure.instance_variable_set(:@devices_with_errors, {})
+    PuppetX::Opn::ServiceReconfigure.reset!
+    load 'puppet_x/opn/service_reconfigure_registry.rb'
     PuppetX::Opn::IdResolver.instance_variable_set(:@cache, {})
   end
 
@@ -40,7 +40,7 @@ describe Puppet::Type.type(:opn_haproxy_settings).provider(:opnsense_api) do
       resource.provider = provider
       allow(PuppetX::Opn::IdResolver).to receive(:translate_to_uuids)
         .and_return({ 'general' => { 'enabled' => '1' } })
-      allow(PuppetX::Opn::HaproxyReconfigure).to receive(:mark)
+      allow(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:mark)
       expect(client).to receive(:post).with('haproxy/settings/set', anything)
                                       .and_return({ 'result' => 'saved' })
       provider.create
@@ -48,8 +48,8 @@ describe Puppet::Type.type(:opn_haproxy_settings).provider(:opnsense_api) do
   end
 
   describe '.post_resource_eval' do
-    it 'delegates to HaproxyReconfigure.run' do
-      expect(PuppetX::Opn::HaproxyReconfigure).to receive(:run)
+    it 'delegates to ServiceReconfigure[:haproxy].run' do
+      expect(PuppetX::Opn::ServiceReconfigure[:haproxy]).to receive(:run)
       described_class.post_resource_eval
     end
   end

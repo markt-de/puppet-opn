@@ -11,7 +11,8 @@ describe Puppet::Type.type(:opn_node_exporter).provider(:opnsense_api) do
   before(:each) do
     allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
     allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
-    described_class.instance_variable_set(:@devices_to_reconfigure, {})
+    PuppetX::Opn::ServiceReconfigure.reset!
+    load 'puppet_x/opn/service_reconfigure_registry.rb'
   end
 
   it_behaves_like 'opn provider basics'
@@ -40,14 +41,14 @@ describe Puppet::Type.type(:opn_node_exporter).provider(:opnsense_api) do
       provider.create
     end
 
-    it 'marks device for reconfigure' do
+    it 'marks device for reconfigure via ServiceReconfigure' do
       resource = type_class.new(name: 'opnsense01', config: { 'enabled' => '1' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:post).with('nodeexporter/general/set', anything)
                                      .and_return({ 'result' => 'saved' })
+      expect(PuppetX::Opn::ServiceReconfigure[:node_exporter]).to receive(:mark).with('opnsense01', client)
       provider.create
-      expect(described_class.devices_to_reconfigure).to have_key('opnsense01')
     end
 
     it 'raises on failure' do
@@ -60,7 +61,7 @@ describe Puppet::Type.type(:opn_node_exporter).provider(:opnsense_api) do
   end
 
   describe '#destroy' do
-    it 'saves empty settings and marks reconfigure' do
+    it 'saves empty settings and marks reconfigure via ServiceReconfigure' do
       resource = type_class.new(name: 'opnsense01')
       provider = described_class.new
       resource.provider = provider
@@ -69,8 +70,8 @@ describe Puppet::Type.type(:opn_node_exporter).provider(:opnsense_api) do
                                      })
       allow(client).to receive(:post).with('nodeexporter/general/set', anything)
                                      .and_return({ 'result' => 'saved' })
+      expect(PuppetX::Opn::ServiceReconfigure[:node_exporter]).to receive(:mark).with('opnsense01', client)
       provider.destroy
-      expect(described_class.devices_to_reconfigure).to have_key('opnsense01')
     end
   end
 
@@ -103,24 +104,9 @@ describe Puppet::Type.type(:opn_node_exporter).provider(:opnsense_api) do
   end
 
   describe '.post_resource_eval' do
-    it 'calls reconfigure for each device that had changes' do
-      described_class.devices_to_reconfigure['opnsense01'] = client
-      expect(client).to receive(:post).with('nodeexporter/service/reconfigure', {})
-                                      .and_return({ 'status' => 'ok' })
+    it 'delegates to ServiceReconfigure[:node_exporter].run' do
+      expect(PuppetX::Opn::ServiceReconfigure[:node_exporter]).to receive(:run)
       described_class.post_resource_eval
-    end
-
-    it 'clears devices_to_reconfigure after run' do
-      described_class.devices_to_reconfigure['opnsense01'] = client
-      allow(client).to receive(:post).with('nodeexporter/service/reconfigure', {})
-                                     .and_return({ 'status' => 'ok' })
-      described_class.post_resource_eval
-      expect(described_class.devices_to_reconfigure).to be_empty
-    end
-
-    it 'does nothing when no devices need reconfigure' do
-      described_class.post_resource_eval
-      # No API calls expected
     end
   end
 end

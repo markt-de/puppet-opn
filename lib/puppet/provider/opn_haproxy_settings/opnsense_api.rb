@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 
-require 'puppet_x/opn/api_client'
-require 'puppet_x/opn/haproxy_reconfigure'
+require 'puppet_x/opn/provider_base'
+require 'puppet_x/opn/service_reconfigure_registry'
 require 'puppet_x/opn/id_resolver'
 
 Puppet::Type.type(:opn_haproxy_settings).provide(:opnsense_api) do
   desc 'Manages OPNsense HAProxy global settings via the REST API.'
 
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
-  end
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
   def self.relation_fields
     {
@@ -52,37 +51,8 @@ Puppet::Type.type(:opn_haproxy_settings).provide(:opnsense_api) do
     instances
   end
 
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
   def self.post_resource_eval
-    PuppetX::Opn::HaproxyReconfigure.run
-  end
-
-  def self.normalize_config(obj)
-    return obj unless obj.is_a?(Hash)
-    return normalize_selection(obj) if selection_hash?(obj)
-
-    obj.transform_values { |v| normalize_config(v) }
-  end
-
-  def self.selection_hash?(hash)
-    hash.is_a?(Hash) &&
-      !hash.empty? &&
-      hash.values.all? { |v| v.is_a?(Hash) && v.key?('value') && v.key?('selected') }
-  end
-
-  def self.normalize_selection(hash)
-    hash.select { |_k, v| v['selected'].to_i == 1 }.keys.join(',')
-  end
-
-  def exists?
-    @property_hash[:ensure] == :present
+    PuppetX::Opn::ServiceReconfigure[:haproxy].run
   end
 
   def create
@@ -95,16 +65,8 @@ Puppet::Type.type(:opn_haproxy_settings).provide(:opnsense_api) do
     mark_reconfigure(client)
     @property_hash.clear
   rescue
-    PuppetX::Opn::HaproxyReconfigure.mark_error(resource[:name])
+    PuppetX::Opn::ServiceReconfigure[:haproxy].mark_error(resource[:name])
     raise
-  end
-
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
   end
 
   def flush
@@ -115,6 +77,8 @@ Puppet::Type.type(:opn_haproxy_settings).provide(:opnsense_api) do
 
   private
 
+  # Singleton provider: namevar is the device name itself (no '@' separator),
+  # so we override the mixin's api_client to use resource[:name] directly.
   def api_client
     self.class.api_client(resource[:name])
   end
@@ -135,11 +99,11 @@ Puppet::Type.type(:opn_haproxy_settings).provide(:opnsense_api) do
     save_settings(client, config)
     mark_reconfigure(client)
   rescue
-    PuppetX::Opn::HaproxyReconfigure.mark_error(resource[:name])
+    PuppetX::Opn::ServiceReconfigure[:haproxy].mark_error(resource[:name])
     raise
   end
 
   def mark_reconfigure(client)
-    PuppetX::Opn::HaproxyReconfigure.mark(resource[:name], client)
+    PuppetX::Opn::ServiceReconfigure[:haproxy].mark(resource[:name], client)
   end
 end

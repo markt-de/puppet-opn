@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'puppet_x/opn/type_helper'
+
 Puppet::Type.newtype(:opn_zabbix_agent_userparameter) do
   desc <<-DOC
     Manages Zabbix Agent UserParameter entries on an OPNsense device via the
@@ -46,13 +48,11 @@ Puppet::Type.newtype(:opn_zabbix_agent_userparameter) do
       }
   DOC
 
-  ensurable do
-    defaultvalues
-    defaultto :present
-  end
-
-  newparam(:name, namevar: true) do
-    desc <<-DOC
+  # Exclude 'key': it is always derived from the resource title and
+  # overridden in create/flush, so including it would cause an infinite
+  # change loop if the user specifies a different value in config.
+  PuppetX::Opn::TypeHelper.setup(self,
+    name_desc: <<-DOC,
       The resource title in "userparameter_key@device_name" format.
 
       The "userparameter_key" portion (before "@") is the Zabbix UserParameter
@@ -66,29 +66,7 @@ Puppet::Type.newtype(:opn_zabbix_agent_userparameter) do
       The device_name must correspond to a config file at
       /etc/puppet/opn/<device_name>.yaml.
     DOC
-
-    validate do |value|
-      unless value.is_a?(String) && !value.empty?
-        raise ArgumentError, 'Name must be a non-empty string'
-      end
-    end
-  end
-
-  newparam(:device) do
-    desc <<-DOC
-      The OPNsense device name. If not explicitly set, it is extracted
-      from the resource title (the part after the last "@" character).
-      Falls back to "default" if no "@" is present in the title.
-    DOC
-
-    defaultto do
-      title = @resource[:name]
-      title.include?('@') ? title.split('@', 2).last : 'default'
-    end
-  end
-
-  newproperty(:config) do
-    desc <<-DOC
+    config_desc: <<-DOC,
       A hash of userparameter configuration options passed directly to the
       OPNsense API. Validation is performed by the OPNsense API, not Puppet.
 
@@ -103,28 +81,5 @@ Puppet::Type.newtype(:opn_zabbix_agent_userparameter) do
         enabled      - Whether this entry is enabled: '1' or '0'
         acceptParams - Whether the command accepts parameters: '1' or '0'
     DOC
-
-    validate do |value|
-      raise ArgumentError, 'config must be a Hash' unless value.is_a?(Hash)
-    end
-
-    def insync?(is)
-      return false unless is.is_a?(Hash)
-
-      # Exclude 'key': it is always derived from the resource title and
-      # overridden in create/flush, so including it would cause an infinite
-      # change loop if the user specifies a different value in config.
-      should.reject { |k, _| k == 'key' }.all? do |k, v|
-        is[k].to_s == v.to_s
-      end
-    end
-
-    def is_to_s(current_value)
-      current_value.inspect
-    end
-
-    def should_to_s(new_value)
-      new_value.inspect
-    end
-  end
+    skip_fields: ['key'])
 end

@@ -1,17 +1,13 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
+require 'puppet_x/opn/provider_base'
 
 Puppet::Type.type(:opn_plugin).provide(:opnsense_api) do
   desc 'Manages OPNsense plugins via the REST API.'
 
-  # Returns an ApiClient instance for the given device.
-  #
-  # @param device_name [String]
-  # @return [PuppetX::Opn::ApiClient]
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
-  end
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
   # Fetches all installed plugins from all configured OPNsense devices.
   # Uses GET /api/core/firmware/info which returns firmware and package information.
@@ -42,15 +38,6 @@ Puppet::Type.type(:opn_plugin).provide(:opnsense_api) do
     instances
   end
 
-  # Matches provider instances to Puppet resources.
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
   # Fetches the list of installed plugin/package names from a single device.
   # The OPNsense firmware info endpoint returns a "package" array (not "packages").
   #
@@ -69,35 +56,18 @@ Puppet::Type.type(:opn_plugin).provide(:opnsense_api) do
     []
   end
 
-  def exists?
-    @property_hash[:ensure] == :present
-  end
-
   def create
     client   = api_client
-    pkg_name = resource_pkg_name
+    pkg_name = resource_item_name
 
     client.post("core/firmware/install/#{pkg_name}", {})
   end
 
   def destroy
     client   = api_client
-    pkg_name = resource_pkg_name
+    pkg_name = resource_item_name
 
     client.post("core/firmware/remove/#{pkg_name}", {})
     @property_hash.clear
-  end
-
-  private
-
-  # Returns an ApiClient for the current resource's device.
-  def api_client
-    device = @property_hash[:device] || resource[:device]
-    self.class.api_client(device)
-  end
-
-  # Extracts the plain package name (before the '@') from the resource title.
-  def resource_pkg_name
-    resource[:name].split('@', 2).first
   end
 end

@@ -11,7 +11,8 @@ describe Puppet::Type.type(:opn_gateway).provider(:opnsense_api) do
   before(:each) do
     allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
     allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
-    described_class.instance_variable_set(:@devices_to_reconfigure, {})
+    PuppetX::Opn::ServiceReconfigure.reset!
+    load 'puppet_x/opn/service_reconfigure_registry.rb'
   end
 
   it_behaves_like 'opn provider basics'
@@ -138,14 +139,14 @@ describe Puppet::Type.type(:opn_gateway).provider(:opnsense_api) do
       expect { provider.create }.to raise_error(Puppet::Error)
     end
 
-    it 'marks device for reconfigure' do
+    it 'marks device for reconfigure via ServiceReconfigure' do
       resource = type_class.new(name: 'WAN_GW@opnsense01', config: { 'interface' => 'wan' })
       provider = described_class.new
       resource.provider = provider
       allow(client).to receive(:post).with('routing/settings/addGateway', anything)
                                      .and_return({ 'result' => 'saved' })
+      expect(PuppetX::Opn::ServiceReconfigure[:gateway]).to receive(:mark).with('opnsense01', client)
       provider.create
-      expect(described_class.devices_to_reconfigure).to have_key('opnsense01')
     end
   end
 
@@ -175,7 +176,7 @@ describe Puppet::Type.type(:opn_gateway).provider(:opnsense_api) do
       expect { provider.destroy }.to raise_error(Puppet::Error)
     end
 
-    it 'marks device for reconfigure' do
+    it 'marks device for reconfigure via ServiceReconfigure' do
       resource = type_class.new(name: 'WAN_GW@opnsense01')
       provider = described_class.new
       resource.provider = provider
@@ -185,8 +186,8 @@ describe Puppet::Type.type(:opn_gateway).provider(:opnsense_api) do
                                      })
       allow(client).to receive(:post).with('routing/settings/delGateway/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', {})
                                      .and_return({ 'result' => 'deleted' })
+      expect(PuppetX::Opn::ServiceReconfigure[:gateway]).to receive(:mark).with('opnsense01', client)
       provider.destroy
-      expect(described_class.devices_to_reconfigure).to have_key('opnsense01')
     end
   end
 
@@ -233,7 +234,7 @@ describe Puppet::Type.type(:opn_gateway).provider(:opnsense_api) do
       expect { provider.flush }.to raise_error(Puppet::Error)
     end
 
-    it 'marks device for reconfigure' do
+    it 'marks device for reconfigure via ServiceReconfigure' do
       resource = type_class.new(name: 'WAN_GW@opnsense01', config: { 'interface' => 'wan' })
       provider = described_class.new
       resource.provider = provider
@@ -244,30 +245,15 @@ describe Puppet::Type.type(:opn_gateway).provider(:opnsense_api) do
       provider.instance_variable_set(:@pending_config, { 'interface' => 'wan' })
       allow(client).to receive(:post).with('routing/settings/setGateway/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', anything)
                                      .and_return({ 'result' => 'saved' })
+      expect(PuppetX::Opn::ServiceReconfigure[:gateway]).to receive(:mark).with('opnsense01', client)
       provider.flush
-      expect(described_class.devices_to_reconfigure).to have_key('opnsense01')
     end
   end
 
   describe '.post_resource_eval' do
-    it 'calls reconfigure for each device that had changes' do
-      described_class.devices_to_reconfigure['opnsense01'] = client
-      expect(client).to receive(:post).with('routing/settings/reconfigure', {})
-                                      .and_return({ 'status' => 'ok' })
+    it 'delegates to ServiceReconfigure[:gateway].run' do
+      expect(PuppetX::Opn::ServiceReconfigure[:gateway]).to receive(:run)
       described_class.post_resource_eval
-    end
-
-    it 'clears devices_to_reconfigure after reconfigure' do
-      described_class.devices_to_reconfigure['opnsense01'] = client
-      allow(client).to receive(:post).with('routing/settings/reconfigure', {})
-                                     .and_return({ 'status' => 'ok' })
-      described_class.post_resource_eval
-      expect(described_class.devices_to_reconfigure).to be_empty
-    end
-
-    it 'does nothing when no devices need reconfigure' do
-      described_class.post_resource_eval
-      # No API calls expected
     end
   end
 end

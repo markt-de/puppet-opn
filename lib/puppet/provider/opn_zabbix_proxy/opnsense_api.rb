@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 require 'puppet_x/opn/api_client'
+require 'puppet_x/opn/provider_base'
 
 Puppet::Type.type(:opn_zabbix_proxy).provide(:opnsense_api) do
   desc 'Manages OPNsense Zabbix Proxy settings via the REST API.'
 
-  def self.api_client(device_name)
-    PuppetX::Opn::ApiClient.from_device(device_name)
-  end
+  extend  PuppetX::Opn::ProviderBase::ClassMethods
+  include PuppetX::Opn::ProviderBase::InstanceMethods
 
   # Fetches the current Zabbix Proxy configuration for every configured device.
   # Uses GET /api/zabbixproxy/general/get which returns { "general": { ... } }.
@@ -33,18 +33,6 @@ Puppet::Type.type(:opn_zabbix_proxy).provide(:opnsense_api) do
     instances
   end
 
-  def self.prefetch(resources)
-    all_instances = instances
-    resources.each do |name, resource|
-      provider = all_instances.find { |inst| inst.name == name }
-      resource.provider = provider if provider
-    end
-  end
-
-  def exists?
-    @property_hash[:ensure] == :present
-  end
-
   # Called when ensure => present and no current instance exists (plugin not installed
   # or API unreachable). Applies the desired config and triggers a reconfigure.
   def create
@@ -60,14 +48,6 @@ Puppet::Type.type(:opn_zabbix_proxy).provide(:opnsense_api) do
     @property_hash.clear
   end
 
-  def config
-    @property_hash[:config]
-  end
-
-  def config=(value)
-    @pending_config = value
-  end
-
   def flush
     return unless @pending_config
 
@@ -76,6 +56,8 @@ Puppet::Type.type(:opn_zabbix_proxy).provide(:opnsense_api) do
 
   private
 
+  # Singleton provider: namevar is the device name itself (no '@' separator),
+  # so we use resource[:name] directly instead of the default device lookup.
   def api_client
     self.class.api_client(resource[:name])
   end
