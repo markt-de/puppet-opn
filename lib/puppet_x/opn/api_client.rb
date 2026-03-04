@@ -19,7 +19,8 @@ module PuppetX # rubocop:disable Style/ClassAndModuleChildren
       # Uses Puppet[:confdir] so it is automatically correct on every OS:
       #   Linux   -> /etc/puppetlabs/puppet/opn_provider.yaml
       #   FreeBSD -> /usr/local/etc/puppet/opn_provider.yaml
-      # This value equals ${settings::confdir} in Puppet manifests.
+      # The manifest uses the opn_puppet_confdir fact (not ${settings::confdir})
+      # because $settings values are resolved on the server, not the agent.
       def self.provider_config_path
         File.join(Puppet[:confdir], 'opn_provider.yaml')
       end

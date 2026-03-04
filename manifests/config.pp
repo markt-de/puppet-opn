@@ -36,11 +36,10 @@ class opn::config (
   String               $owner,
   String               $group,
 ) {
-  # Write a provider config file at the Puppet confdir so the Ruby providers
-  # can discover $config_dir without it being hardcoded.
-  # ${settings::confdir} in Puppet == Puppet[:confdir] in Ruby, which is
-  # automatically correct per OS (e.g. /usr/local/etc/puppet on FreeBSD).
-  file { "${settings::confdir}/opn_provider.yaml":
+  # Write a provider config file so the Ruby providers can discover
+  # $config_dir. Uses the opn_puppet_confdir fact because
+  # ${settings::confdir} returns the server's path, not the agent's.
+  file { "${facts['opn_puppet_confdir']}/opn_provider.yaml":
     ensure  => file,
     owner   => $owner,
     group   => $group,

@@ -5,7 +5,12 @@ require 'spec_helper'
 describe 'opn::config' do
   on_supported_os.each do |os, os_facts|
     context "on #{os}" do
-      let(:facts) { os_facts }
+      # Provide the custom fact so the manifest can build the provider
+      # config file path. In production, opn_puppet_confdir comes from
+      # Facter on the agent; here we mirror the rspec-puppet confdir.
+      let(:facts) do
+        os_facts.merge('opn_puppet_confdir' => Puppet[:confdir])
+      end
 
       context 'with defaults' do
         let(:params) do
