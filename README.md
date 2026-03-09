@@ -38,6 +38,7 @@
     - [Managing Zabbix Proxy](#managing-zabbix-proxy)
     - [Using types directly](#using-types-directly)
     - [Exported resources](#exported-resources)
+    - [Migration](#migration)
 1. [Reference](#reference)
 1. [Development](#development)
     - [Contributing](#contributing)
@@ -1562,6 +1563,20 @@ opn::client::haproxy_servers:
     description: "%{facts.networking.fqdn} - Web backend"
     enabled: '1'
 ```
+
+### Migration
+
+Migrating to this module is pretty simple: Use the `resource` command to convert the current OPNsense system configuration into Puppet code.
+
+```shell
+$ puppet resource opn_firewall_alias
+
+$ puppet resource opn_zabbix_agent
+
+$ puppet resource opn_zabbix_agent_userparameter
+```
+
+Note that this requires a valid puppet-opn configuration to work as expected. Hence enabling this module without additional parameters is the first step.
 
 ## Reference
 
