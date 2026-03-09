@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_cron).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :cron
 
   # Delegates reconfigure to ServiceReconfigure after all opn_cron resources
   # have been evaluated in this catalog run.

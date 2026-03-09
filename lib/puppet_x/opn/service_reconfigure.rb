@@ -9,8 +9,9 @@ module PuppetX # rubocop:disable Style/ClassAndModuleChildren
     # post_resource_eval. The first run() call performs the work; subsequent
     # calls are no-ops because the tracking hash is cleared.
     #
-    # HAProxy's special behaviour (configtest + error tracking) is supported
-    # via the optional configtest_endpoint parameter.
+    # Error tracking is built in: if any provider marks a device as errored
+    # (via mark_error), reconfigure is skipped for that device.
+    # HAProxy additionally uses configtest before reconfiguring.
     #
     # @example Register a simple reconfigure group
     #   PuppetX::Opn::ServiceReconfigure.register(:ipsec,
@@ -85,7 +86,6 @@ module PuppetX # rubocop:disable Style/ClassAndModuleChildren
 
       # Registers a device as having a resource evaluation error. Used to
       # suppress reconfigure when the service config may be inconsistent.
-      # Only meaningful for groups with configtest_endpoint.
       #
       # @param device_name [String]
       def mark_error(device_name)
@@ -95,9 +95,9 @@ module PuppetX # rubocop:disable Style/ClassAndModuleChildren
       # Performs reconfigure for all marked devices, then clears state.
       # Subsequent calls are no-ops until new devices are marked.
       #
-      # For groups with configtest_endpoint: runs configtest first, skips
-      # reconfigure on ALERT, logs and proceeds on WARNING.
-      # For groups with error tracking: skips errored devices.
+      # For all groups: skips devices with resource evaluation errors.
+      # For groups with configtest_endpoint: additionally runs configtest,
+      # skips reconfigure on ALERT, logs and proceeds on WARNING.
       def run
         @devices_to_reconfigure.each do |device_name, client|
           reconfigure_device(device_name, client)
@@ -131,8 +131,8 @@ module PuppetX # rubocop:disable Style/ClassAndModuleChildren
       # @param device_name [String]
       # @param client [PuppetX::Opn::ApiClient]
       def reconfigure_device(device_name, client)
-        # Skip devices with resource evaluation errors (HAProxy pattern)
-        if @configtest_endpoint && @devices_with_errors[device_name]
+        # Skip devices with resource evaluation errors
+        if @devices_with_errors[device_name]
           Puppet.err(
             "#{@log_prefix}: skipping reconfigure for '#{device_name}' " \
             'because one or more resources failed to evaluate',

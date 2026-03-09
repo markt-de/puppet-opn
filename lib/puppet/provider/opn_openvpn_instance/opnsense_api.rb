@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_openvpn_instance).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :openvpn
 
   def self.volatile_fields
     ['vpnid']

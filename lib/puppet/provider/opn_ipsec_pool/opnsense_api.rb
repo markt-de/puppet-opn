@@ -8,6 +8,7 @@ Puppet::Type.type(:opn_ipsec_pool).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :ipsec
 
   def self.post_resource_eval
     PuppetX::Opn::ServiceReconfigure[:ipsec].run

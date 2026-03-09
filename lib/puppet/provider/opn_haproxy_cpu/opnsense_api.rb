@@ -8,6 +8,7 @@ Puppet::Type.type(:opn_haproxy_cpu).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :haproxy
 
   def self.instances
     instances = []

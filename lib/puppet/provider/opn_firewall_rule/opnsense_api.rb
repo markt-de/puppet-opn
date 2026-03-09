@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_firewall_rule).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :firewall_rule
 
   # Delegates apply to ServiceReconfigure after all opn_firewall_rule
   # resources have been evaluated in this catalog run.

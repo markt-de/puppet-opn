@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_node_exporter).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :node_exporter
 
   # Delegates reconfigure to ServiceReconfigure after all opn_node_exporter
   # resources have been evaluated in this catalog run.

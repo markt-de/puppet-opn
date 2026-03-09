@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_kea_ctrl_agent).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :kea
 
   # Only the 'general' section is managed for the Control Agent
   def self.settings_sections

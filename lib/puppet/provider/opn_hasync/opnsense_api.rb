@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_hasync).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :hasync
 
   # Delegates reconfigure to ServiceReconfigure after all opn_hasync
   # resources have been evaluated in this catalog run.

@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_haproxy_action).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :haproxy
 
   def self.relation_fields
     {
@@ -75,9 +76,6 @@ Puppet::Type.type(:opn_haproxy_action).provide(:opnsense_api) do
     end
 
     mark_reconfigure(client)
-  rescue
-    PuppetX::Opn::ServiceReconfigure[:haproxy].mark_error(@property_hash[:device] || resource[:device])
-    raise
   end
 
   def destroy
@@ -93,9 +91,6 @@ Puppet::Type.type(:opn_haproxy_action).provide(:opnsense_api) do
 
     mark_reconfigure(client)
     @property_hash.clear
-  rescue
-    PuppetX::Opn::ServiceReconfigure[:haproxy].mark_error(@property_hash[:device] || resource[:device])
-    raise
   end
 
   def flush
@@ -118,9 +113,6 @@ Puppet::Type.type(:opn_haproxy_action).provide(:opnsense_api) do
     end
 
     mark_reconfigure(client)
-  rescue
-    PuppetX::Opn::ServiceReconfigure[:haproxy].mark_error(@property_hash[:device] || resource[:device])
-    raise
   end
 
   private

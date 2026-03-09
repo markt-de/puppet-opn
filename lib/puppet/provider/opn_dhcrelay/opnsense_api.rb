@@ -10,6 +10,7 @@ Puppet::Type.type(:opn_dhcrelay).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :dhcrelay
 
   def self.relation_fields
     {

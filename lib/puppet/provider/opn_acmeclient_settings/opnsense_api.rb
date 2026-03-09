@@ -10,6 +10,7 @@ Puppet::Type.type(:opn_acmeclient_settings).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :acmeclient
 
   # Delegates reconfigure to ServiceReconfigure after all opn_acmeclient_settings
   # resources have been evaluated in this catalog run.

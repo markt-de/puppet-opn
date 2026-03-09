@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_zabbix_agent_alias).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :zabbix_agent
 
   # Fetches all Zabbix Agent aliases from all configured devices.
   # Uses GET /api/zabbixagent/settings/get and navigates to the alias

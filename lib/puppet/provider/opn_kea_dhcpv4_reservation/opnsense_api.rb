@@ -10,6 +10,7 @@ Puppet::Type.type(:opn_kea_dhcpv4_reservation).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :kea
 
   # The subnet field is a ModelRelationField referencing DHCPv4 subnets.
   # IdResolver translates between UUIDs and subnet CIDRs.

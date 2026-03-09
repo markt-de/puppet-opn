@@ -129,6 +129,127 @@ describe PuppetX::Opn::ProviderBase do
     end
   end
 
+  # -- ReconfigureErrorTracking --
+
+  describe 'ReconfigureErrorTracking' do
+    # Clean up ServiceReconfigure state after each test.
+    after(:each) do
+      PuppetX::Opn::ServiceReconfigure.reset!
+    end
+
+    # Provider class with reconfigure_group declared.
+    let(:tracked_provider_class) do
+      # Register the group so ServiceReconfigure[:test_group] works.
+      PuppetX::Opn::ServiceReconfigure.register(:test_group,
+        endpoint: 'test/reconfigure', log_prefix: 'opn_test')
+
+      Class.new do
+        extend PuppetX::Opn::ProviderBase::ClassMethods
+        include PuppetX::Opn::ProviderBase::InstanceMethods
+        reconfigure_group :test_group
+
+        attr_accessor :resource
+
+        def initialize(property_hash = {})
+          @property_hash = property_hash
+        end
+
+        # Stub create/destroy/flush that raise on demand.
+        def create
+          raise Puppet::Error, 'create failed' if @fail_on_create
+        end
+
+        def destroy
+          raise Puppet::Error, 'destroy failed' if @fail_on_destroy
+        end
+
+        def flush
+          raise Puppet::Error, 'flush failed' if @fail_on_flush
+        end
+
+        # Test helpers to trigger failures.
+        def fail_on_create!
+          @fail_on_create = true
+        end
+
+        def fail_on_destroy!
+          @fail_on_destroy = true
+        end
+
+        def fail_on_flush!
+          @fail_on_flush = true
+        end
+      end
+    end
+
+    describe '.reconfigure_group_name' do
+      it 'returns the declared group name' do
+        expect(tracked_provider_class.reconfigure_group_name).to eq(:test_group)
+      end
+
+      it 'returns nil for providers without reconfigure_group' do
+        expect(test_provider_class.reconfigure_group_name).to be_nil
+      end
+    end
+
+    describe 'error tracking on create' do
+      it 'calls mark_error when create raises' do
+        provider = tracked_provider_class.new(device: 'opnsense01')
+        provider.resource = instance_double('Puppet::Type')
+        provider.fail_on_create!
+        expect(PuppetX::Opn::ServiceReconfigure[:test_group])
+          .to receive(:mark_error).with('opnsense01')
+        expect { provider.create }.to raise_error(Puppet::Error, %r{create failed})
+      end
+
+      it 'does not call mark_error when create succeeds' do
+        provider = tracked_provider_class.new(device: 'opnsense01')
+        provider.resource = instance_double('Puppet::Type')
+        expect(PuppetX::Opn::ServiceReconfigure[:test_group])
+          .not_to receive(:mark_error)
+        provider.create
+      end
+    end
+
+    describe 'error tracking on destroy' do
+      it 'calls mark_error when destroy raises' do
+        provider = tracked_provider_class.new(device: 'opnsense01')
+        provider.resource = instance_double('Puppet::Type')
+        provider.fail_on_destroy!
+        expect(PuppetX::Opn::ServiceReconfigure[:test_group])
+          .to receive(:mark_error).with('opnsense01')
+        expect { provider.destroy }.to raise_error(Puppet::Error, %r{destroy failed})
+      end
+    end
+
+    describe 'error tracking on flush' do
+      it 'calls mark_error when flush raises' do
+        provider = tracked_provider_class.new(device: 'opnsense01')
+        provider.resource = instance_double('Puppet::Type')
+        provider.fail_on_flush!
+        expect(PuppetX::Opn::ServiceReconfigure[:test_group])
+          .to receive(:mark_error).with('opnsense01')
+        expect { provider.flush }.to raise_error(Puppet::Error, %r{flush failed})
+      end
+    end
+
+    describe 'singleton fallback to resource[:name]' do
+      it 'uses resource[:name] when device is not available' do
+        # Singleton providers have no :device param — property_hash has no
+        # :device, and resource[:device] returns nil.
+        provider = tracked_provider_class.new({})
+        resource = instance_double('Puppet::Type')
+        allow(resource).to receive(:[]).with(:device).and_return(nil)
+        allow(resource).to receive(:[]).with(:name).and_return('opnsense01')
+        provider.resource = resource
+        provider.fail_on_create!
+        expect(PuppetX::Opn::ServiceReconfigure[:test_group])
+          .to receive(:mark_error).with('opnsense01')
+        expect { provider.create }.to raise_error(Puppet::Error, %r{create failed})
+      end
+    end
+  end
+
   # -- normalize_config Helpers --
 
   describe 'normalize_config' do

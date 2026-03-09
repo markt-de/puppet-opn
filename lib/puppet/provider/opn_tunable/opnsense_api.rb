@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_tunable).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :tunable
 
   # Delegates reconfigure to ServiceReconfigure after all opn_tunable
   # resources have been evaluated in this catalog run.

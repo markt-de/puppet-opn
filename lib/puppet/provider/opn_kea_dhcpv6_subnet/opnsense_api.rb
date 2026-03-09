@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_kea_dhcpv6_subnet).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :kea
 
   # Delegates reconfigure to ServiceReconfigure after all opn_kea_dhcpv6_subnet
   # resources have been evaluated in this catalog run.

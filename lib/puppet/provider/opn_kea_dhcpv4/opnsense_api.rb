@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_kea_dhcpv4).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :kea
 
   # Managed sections: general (service config), lexpire (lease expiration),
   # ha (high availability)

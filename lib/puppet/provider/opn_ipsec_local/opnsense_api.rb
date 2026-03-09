@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_ipsec_local).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :ipsec
 
   def self.relation_fields
     {

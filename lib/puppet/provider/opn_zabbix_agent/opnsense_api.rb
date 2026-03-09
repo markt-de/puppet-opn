@@ -9,6 +9,7 @@ Puppet::Type.type(:opn_zabbix_agent).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :zabbix_agent
 
   # Fetches the current Zabbix Agent configuration for every configured device.
   # Uses GET /api/zabbixagent/settings/get which returns:

@@ -212,6 +212,37 @@ describe PuppetX::Opn::ServiceReconfigure do
     end
   end
 
+  # -- Error tracking without configtest --
+
+  context 'error tracking without configtest' do
+    let(:instance) do
+      described_class.register(:simple_error,
+        endpoint: 'test/service/reconfigure', log_prefix: 'opn_test')
+    end
+
+    it 'skips reconfigure for errored devices' do
+      instance.mark('opnsense01', client)
+      instance.mark_error('opnsense01')
+      expect(client).not_to receive(:post)
+      expect(Puppet).to receive(:err).with(%r{skipping reconfigure.*opnsense01})
+      instance.run
+    end
+
+    it 'still reconfigures non-errored devices' do
+      client2 = instance_double('PuppetX::Opn::ApiClient')
+      instance.mark('opnsense01', client)
+      instance.mark('opnsense02', client2)
+      instance.mark_error('opnsense01')
+      # opnsense01 should be skipped, opnsense02 should proceed.
+      expect(client).not_to receive(:post)
+      expect(Puppet).to receive(:err).with(%r{skipping reconfigure.*opnsense01})
+      expect(client2).to receive(:post)
+        .with('test/service/reconfigure', {})
+        .and_return({ 'status' => 'ok' })
+      instance.run
+    end
+  end
+
   # -- State isolation between groups --
 
   describe 'state isolation' do

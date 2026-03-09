@@ -8,6 +8,7 @@ Puppet::Type.type(:opn_openvpn_statickey).provide(:opnsense_api) do
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :openvpn
 
   def self.post_resource_eval
     PuppetX::Opn::ServiceReconfigure[:openvpn].run
