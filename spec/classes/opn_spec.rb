@@ -57,8 +57,10 @@ describe 'opn' do
             },
             'firewall_rules' => {
               'Allow HTTP' => {
-                'action'   => 'pass',
-                'protocol' => 'tcp',
+                'config' => {
+                  'action'   => 'pass',
+                  'protocol' => 'tcp',
+                },
               },
             },
           }
@@ -110,7 +112,9 @@ describe 'opn' do
             },
             'haproxy_settings' => {
               'opnsense01' => {
-                'general' => { 'enabled' => '1' },
+                'config' => {
+                  'general' => { 'enabled' => '1' },
+                },
               },
             },
           }
@@ -154,8 +158,10 @@ describe 'opn' do
             },
             'snapshots' => {
               'stable' => {
-                'active' => true,
-                'note'   => 'test',
+                'config' => {
+                  'active' => true,
+                  'note'   => 'test',
+                },
               },
             },
           }

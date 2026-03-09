@@ -16,11 +16,13 @@ describe 'opn::client' do
           {
             'firewall_aliases' => {
               'webserver_ips' => {
-                'devices'     => ['opnsense01'],
-                'type'        => 'host',
-                'content'     => '10.0.0.1',
-                'description' => 'Web server IPs',
-                'enabled'     => '1',
+                'devices' => ['opnsense01'],
+                'config'  => {
+                  'type'        => 'host',
+                  'content'     => '10.0.0.1',
+                  'description' => 'Web server IPs',
+                  'enabled'     => '1',
+                },
               },
             },
           }
@@ -69,8 +71,10 @@ describe 'opn::client' do
             'snapshots' => {
               'pre-upgrade' => {
                 'devices' => ['opnsense01'],
-                'active'  => true,
-                'note'    => 'Before upgrade',
+                'config'  => {
+                  'active' => true,
+                  'note'   => 'Before upgrade',
+                },
               },
             },
           }
@@ -82,7 +86,7 @@ describe 'opn::client' do
           expect(exported_resources).to contain_opn_snapshot('pre-upgrade@opnsense01').with(
             ensure: 'present',
             active: true,
-            config: { 'note' => 'Before upgrade' },
+            config: { 'active' => true, 'note' => 'Before upgrade' },
             tag: 'opnsense01',
           )
         end
@@ -94,9 +98,11 @@ describe 'opn::client' do
             'haproxy_servers' => {
               'web01' => {
                 'devices' => ['opnsense01', 'opnsense02'],
-                'address' => '10.0.0.1',
-                'port'    => '80',
-                'enabled' => '1',
+                'config'  => {
+                  'address' => '10.0.0.1',
+                  'port'    => '80',
+                  'enabled' => '1',
+                },
               },
             },
           }

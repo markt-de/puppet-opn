@@ -10,7 +10,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_acmeclient_account.
+#     - config  [Hash] Configuration hash passed to opn_acmeclient_account.
 #
 # @param acmeclient_actions
 #   Hash of ACME Client automation actions to manage across devices.
@@ -18,7 +18,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_acmeclient_action.
+#     - config  [Hash] Configuration hash passed to opn_acmeclient_action.
 #
 # @param acmeclient_certificates
 #   Hash of ACME Client certificates to manage across devices.
@@ -26,14 +26,14 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_acmeclient_certificate.
+#     - config  [Hash] Configuration hash passed to opn_acmeclient_certificate.
 #
 # @param acmeclient_settings
 #   Hash of ACME Client global settings, one per device.
 #   Each key is the device name (not a "name@device" title).
 #   Each value is a hash with:
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_acmeclient_settings.
+#     - config  [Hash] Configuration hash passed to opn_acmeclient_settings.
 #
 # @param acmeclient_validations
 #   Hash of ACME Client validation methods to manage across devices.
@@ -41,7 +41,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_acmeclient_validation.
+#     - config  [Hash] Configuration hash passed to opn_acmeclient_validation.
 #
 # @param cron_jobs
 #   Hash of cron jobs to manage across devices.
@@ -49,7 +49,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_cron.
+#     - config  [Hash] Configuration hash passed to opn_cron.
 #
 # @param dhcrelay_destinations
 #   Hash of DHCP Relay destinations to manage across devices.
@@ -57,7 +57,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_dhcrelay_destination.
+#     - config  [Hash] Configuration hash passed to opn_dhcrelay_destination.
 #
 # @param dhcrelays
 #   Hash of DHCP Relay instances to manage across devices.
@@ -65,7 +65,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_dhcrelay.
+#     - config  [Hash] Configuration hash passed to opn_dhcrelay.
 #
 # @param devices
 #   Hash of OPNsense devices to manage. Each key is the device name used as
@@ -83,7 +83,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_firewall_alias.
+#     - config  [Hash] Configuration hash passed to opn_firewall_alias.
 #
 # @param firewall_categories
 #   Hash of firewall categories to manage across devices.
@@ -91,7 +91,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_firewall_category.
+#     - config  [Hash] Configuration hash passed to opn_firewall_category.
 #
 # @param firewall_groups
 #   Hash of firewall interface groups to manage across devices.
@@ -99,7 +99,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_firewall_group.
+#     - config  [Hash] Configuration hash passed to opn_firewall_group.
 #
 # @param firewall_rules
 #   Hash of firewall filter rules to manage across devices.
@@ -107,7 +107,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_firewall_rule.
+#     - config  [Hash] Configuration hash passed to opn_firewall_rule.
 #
 # @param gateways
 #   Hash of gateways to manage across devices.
@@ -115,7 +115,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_gateway.
+#     - config  [Hash] Configuration hash passed to opn_gateway.
 #
 # @param groups
 #   Hash of local groups to manage across devices.
@@ -123,7 +123,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_group.
+#     - config  [Hash] Configuration hash passed to opn_group.
 #
 # @param haproxy_acls
 #   Hash of HAProxy ACL rules to manage across devices.
@@ -131,7 +131,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_acl.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_acl.
 #
 # @param haproxy_actions
 #   Hash of HAProxy actions to manage across devices.
@@ -139,7 +139,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_action.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_action.
 #
 # @param haproxy_backends
 #   Hash of HAProxy backends to manage across devices.
@@ -147,7 +147,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_backend.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_backend.
 #
 # @param haproxy_cpus
 #   Hash of HAProxy CPU affinity entries to manage across devices.
@@ -155,7 +155,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_cpu.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_cpu.
 #
 # @param haproxy_errorfiles
 #   Hash of HAProxy error files to manage across devices.
@@ -163,7 +163,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_errorfile.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_errorfile.
 #
 # @param haproxy_fcgis
 #   Hash of HAProxy FastCGI applications to manage across devices.
@@ -171,7 +171,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_fcgi.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_fcgi.
 #
 # @param haproxy_frontends
 #   Hash of HAProxy frontends to manage across devices.
@@ -179,7 +179,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_frontend.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_frontend.
 #
 # @param haproxy_groups
 #   Hash of HAProxy user-list groups to manage across devices.
@@ -187,7 +187,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_group.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_group.
 #
 # @param haproxy_healthchecks
 #   Hash of HAProxy health checks to manage across devices.
@@ -195,7 +195,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_healthcheck.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_healthcheck.
 #
 # @param haproxy_luas
 #   Hash of HAProxy Lua scripts to manage across devices.
@@ -203,7 +203,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_lua.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_lua.
 #
 # @param haproxy_mailers
 #   Hash of HAProxy mailers to manage across devices.
@@ -211,7 +211,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_mailer.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_mailer.
 #
 # @param haproxy_mapfiles
 #   Hash of HAProxy map files to manage across devices.
@@ -219,7 +219,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_mapfile.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_mapfile.
 #
 # @param haproxy_resolvers
 #   Hash of HAProxy DNS resolvers to manage across devices.
@@ -227,7 +227,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_resolver.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_resolver.
 #
 # @param haproxy_servers
 #   Hash of HAProxy backend servers to manage across devices.
@@ -235,14 +235,14 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_server.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_server.
 #
 # @param haproxy_settings
 #   Hash of HAProxy global settings, one per device.
 #   Each key is the device name (not a "name@device" title).
 #   Each value is a hash with:
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_settings.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_settings.
 #
 # @param haproxy_users
 #   Hash of HAProxy user-list users to manage across devices.
@@ -250,14 +250,14 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_haproxy_user.
+#     - config  [Hash] Configuration hash passed to opn_haproxy_user.
 #
 # @param hasyncs
 #   Hash of HA sync configurations, one per device.
 #   Each key is the device name (not a "name@device" title).
 #   Each value is a hash with:
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_hasync.
+#     - config  [Hash] Configuration hash passed to opn_hasync.
 #
 # @param ipsec_children
 #   Hash of IPsec child SAs to manage across devices.
@@ -265,7 +265,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_ipsec_child.
+#     - config  [Hash] Configuration hash passed to opn_ipsec_child.
 #
 # @param ipsec_connections
 #   Hash of IPsec connections to manage across devices.
@@ -273,7 +273,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_ipsec_connection.
+#     - config  [Hash] Configuration hash passed to opn_ipsec_connection.
 #
 # @param ipsec_keypairs
 #   Hash of IPsec key pairs to manage across devices.
@@ -281,7 +281,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_ipsec_keypair.
+#     - config  [Hash] Configuration hash passed to opn_ipsec_keypair.
 #
 # @param ipsec_locals
 #   Hash of IPsec local authentication entries to manage across devices.
@@ -289,7 +289,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_ipsec_local.
+#     - config  [Hash] Configuration hash passed to opn_ipsec_local.
 #
 # @param ipsec_pools
 #   Hash of IPsec address pools to manage across devices.
@@ -297,7 +297,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_ipsec_pool.
+#     - config  [Hash] Configuration hash passed to opn_ipsec_pool.
 #
 # @param ipsec_presharedkeys
 #   Hash of IPsec pre-shared keys to manage across devices.
@@ -305,7 +305,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_ipsec_presharedkey.
+#     - config  [Hash] Configuration hash passed to opn_ipsec_presharedkey.
 #
 # @param ipsec_remotes
 #   Hash of IPsec remote authentication entries to manage across devices.
@@ -313,14 +313,14 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_ipsec_remote.
+#     - config  [Hash] Configuration hash passed to opn_ipsec_remote.
 #
 # @param ipsec_settings
 #   Hash of IPsec global settings, one per device.
 #   Each key is the device name (not a "name@device" title).
 #   Each value is a hash with:
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_ipsec_settings.
+#     - config  [Hash] Configuration hash passed to opn_ipsec_settings.
 #
 # @param ipsec_vtis
 #   Hash of IPsec VTI entries to manage across devices.
@@ -328,14 +328,14 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_ipsec_vti.
+#     - config  [Hash] Configuration hash passed to opn_ipsec_vti.
 #
 # @param kea_ctrl_agents
 #   Hash of KEA Control Agent settings, one per device.
 #   Each key is the device name (not a "name@device" title).
 #   Each value is a hash with:
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_kea_ctrl_agent.
+#     - config  [Hash] Configuration hash passed to opn_kea_ctrl_agent.
 #
 # @param kea_dhcpv4_peers
 #   Hash of KEA DHCPv4 HA peers to manage across devices.
@@ -343,7 +343,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv4_peer.
+#     - config  [Hash] Configuration hash passed to opn_kea_dhcpv4_peer.
 #
 # @param kea_dhcpv4_reservations
 #   Hash of KEA DHCPv4 reservations to manage across devices.
@@ -351,7 +351,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv4_reservation.
+#     - config  [Hash] Configuration hash passed to opn_kea_dhcpv4_reservation.
 #
 # @param kea_dhcpv4_subnets
 #   Hash of KEA DHCPv4 subnets to manage across devices.
@@ -359,14 +359,14 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv4_subnet.
+#     - config  [Hash] Configuration hash passed to opn_kea_dhcpv4_subnet.
 #
 # @param kea_dhcpv4s
 #   Hash of KEA DHCPv4 global settings, one per device.
 #   Each key is the device name (not a "name@device" title).
 #   Each value is a hash with:
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv4.
+#     - config  [Hash] Configuration hash passed to opn_kea_dhcpv4.
 #
 # @param kea_dhcpv6_pd_pools
 #   Hash of KEA DHCPv6 prefix delegation pools to manage across devices.
@@ -374,7 +374,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv6_pd_pool.
+#     - config  [Hash] Configuration hash passed to opn_kea_dhcpv6_pd_pool.
 #
 # @param kea_dhcpv6_peers
 #   Hash of KEA DHCPv6 HA peers to manage across devices.
@@ -382,7 +382,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv6_peer.
+#     - config  [Hash] Configuration hash passed to opn_kea_dhcpv6_peer.
 #
 # @param kea_dhcpv6_reservations
 #   Hash of KEA DHCPv6 reservations to manage across devices.
@@ -390,7 +390,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv6_reservation.
+#     - config  [Hash] Configuration hash passed to opn_kea_dhcpv6_reservation.
 #
 # @param kea_dhcpv6_subnets
 #   Hash of KEA DHCPv6 subnets to manage across devices.
@@ -398,14 +398,14 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv6_subnet.
+#     - config  [Hash] Configuration hash passed to opn_kea_dhcpv6_subnet.
 #
 # @param kea_dhcpv6s
 #   Hash of KEA DHCPv6 global settings, one per device.
 #   Each key is the device name (not a "name@device" title).
 #   Each value is a hash with:
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_kea_dhcpv6.
+#     - config  [Hash] Configuration hash passed to opn_kea_dhcpv6.
 #
 # @param manage_resources
 #   Boolean to enable collection of exported opn_* resources from client nodes
@@ -417,7 +417,7 @@
 #   Each key is the device name (not a "name@device" title).
 #   Each value is a hash with:
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_node_exporter.
+#     - config  [Hash] Configuration hash passed to opn_node_exporter.
 #
 # @param openvpn_csos
 #   Hash of OpenVPN client-specific overrides to manage across devices.
@@ -425,7 +425,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_openvpn_cso.
+#     - config  [Hash] Configuration hash passed to opn_openvpn_cso.
 #
 # @param openvpn_instances
 #   Hash of OpenVPN instances to manage across devices.
@@ -433,7 +433,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_openvpn_instance.
+#     - config  [Hash] Configuration hash passed to opn_openvpn_instance.
 #
 # @param openvpn_statickeys
 #   Hash of OpenVPN static keys to manage across devices.
@@ -441,7 +441,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_openvpn_statickey.
+#     - config  [Hash] Configuration hash passed to opn_openvpn_statickey.
 #
 # @param plugins
 #   Hash of plugins to manage across devices.
@@ -457,7 +457,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_route.
+#     - config  [Hash] Configuration hash passed to opn_route.
 #
 # @param snapshots
 #   Hash of ZFS snapshots to manage across devices.
@@ -465,8 +465,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - active  [Boolean] Whether snapshot is the active boot target.
-#     - All other keys are passed as the 'config' hash to opn_snapshot.
+#     - config  [Hash] Configuration hash passed to opn_snapshot.
 #
 # @param syslog_destinations
 #   Hash of syslog destinations to manage across devices.
@@ -474,7 +473,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_syslog.
+#     - config  [Hash] Configuration hash passed to opn_syslog.
 #
 # @param trust_cas
 #   Hash of trust CAs to manage across devices.
@@ -482,7 +481,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_trust_ca.
+#     - config  [Hash] Configuration hash passed to opn_trust_ca.
 #
 # @param trust_certs
 #   Hash of trust certificates to manage across devices.
@@ -490,7 +489,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_trust_cert.
+#     - config  [Hash] Configuration hash passed to opn_trust_cert.
 #
 # @param trust_crls
 #   Hash of trust CRLs to manage across devices.
@@ -498,7 +497,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_trust_crl.
+#     - config  [Hash] Configuration hash passed to opn_trust_crl.
 #
 # @param tunables
 #   Hash of system tunables to manage across devices.
@@ -506,7 +505,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_tunable.
+#     - config  [Hash] Configuration hash passed to opn_tunable.
 #
 # @param users
 #   Hash of local users to manage across devices.
@@ -514,7 +513,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_user.
+#     - config  [Hash] Configuration hash passed to opn_user.
 #
 # @param zabbix_agent_aliases
 #   Hash of Zabbix Agent Alias entries to manage across devices.
@@ -522,7 +521,7 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_zabbix_agent_alias.
+#     - config  [Hash] Configuration hash passed to opn_zabbix_agent_alias.
 #
 # @param zabbix_agent_userparameters
 #   Hash of Zabbix Agent UserParameter entries to manage across devices.
@@ -530,21 +529,21 @@
 #   Each value is a hash with:
 #     - devices [Array] List of device names. Defaults to all devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_zabbix_agent_userparameter.
+#     - config  [Hash] Configuration hash passed to opn_zabbix_agent_userparameter.
 #
 # @param zabbix_agents
 #   Hash of Zabbix Agent configurations, one per device.
 #   Each key is the device name (not a "name@device" title).
 #   Each value is a hash with:
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_zabbix_agent.
+#     - config  [Hash] Configuration hash passed to opn_zabbix_agent.
 #
 # @param zabbix_proxies
 #   Hash of Zabbix Proxy configurations, one per device.
 #   Each key is the device name (not a "name@device" title).
 #   Each value is a hash with:
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
-#     - All other keys are passed as the 'config' hash to opn_zabbix_proxy.
+#     - config  [Hash] Configuration hash passed to opn_zabbix_proxy.
 #
 # @example Single device with plugins and aliases
 #   class { 'opn':
@@ -564,12 +563,14 @@
 #     },
 #     firewall_aliases => {
 #       'http_ports' => {
-#         'devices'     => ['opnsense.example.com'],
-#         'ensure'      => 'present',
-#         'type'        => 'port',
-#         'content'     => '80,443',
-#         'description' => 'HTTP(S) ports',
-#         'enabled'     => '1',
+#         'devices' => ['opnsense.example.com'],
+#         'ensure'  => 'present',
+#         'config'  => {
+#           'type'        => 'port',
+#           'content'     => '80,443',
+#           'description' => 'HTTP(S) ports',
+#           'enabled'     => '1',
+#         },
 #       },
 #     },
 #   }
@@ -660,12 +661,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $acme_account_config = $item_options - ['devices', 'ensure']
-
     $acme_account_devices.each |String $device_name| {
       opn_acmeclient_account { "${item_name}@${device_name}":
         ensure  => $acme_account_ensure,
-        config  => $acme_account_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -681,12 +680,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $acme_action_config = $item_options - ['devices', 'ensure']
-
     $acme_action_devices.each |String $device_name| {
       opn_acmeclient_action { "${item_name}@${device_name}":
         ensure  => $acme_action_ensure,
-        config  => $acme_action_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -702,12 +699,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $acme_cert_config = $item_options - ['devices', 'ensure']
-
     $acme_cert_devices.each |String $device_name| {
       opn_acmeclient_certificate { "${item_name}@${device_name}":
         ensure  => $acme_cert_ensure,
-        config  => $acme_cert_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -719,11 +714,9 @@ class opn (
       true    => $settings_options['ensure'],
       default => 'present',
     }
-    $acme_settings_config = $settings_options - ['ensure']
-
     opn_acmeclient_settings { $device_name:
       ensure  => $acme_settings_ensure,
-      config  => $acme_settings_config,
+      config  => $settings_options['config'],
       require => Class['opn::config'],
     }
   }
@@ -738,12 +731,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $acme_validation_config = $item_options - ['devices', 'ensure']
-
     $acme_validation_devices.each |String $device_name| {
       opn_acmeclient_validation { "${item_name}@${device_name}":
         ensure  => $acme_validation_ensure,
-        config  => $acme_validation_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -759,12 +750,10 @@ class opn (
       true    => $job_options['ensure'],
       default => 'present',
     }
-    $job_config = $job_options - ['devices', 'ensure']
-
     $job_devices.each |String $device_name| {
       opn_cron { "${job_desc}@${device_name}":
         ensure  => $job_ensure,
-        config  => $job_config,
+        config  => $job_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -780,12 +769,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $dhcrelay_dest_config = $item_options - ['devices', 'ensure']
-
     $dhcrelay_dest_devices.each |String $device_name| {
       opn_dhcrelay_destination { "${item_name}@${device_name}":
         ensure  => $dhcrelay_dest_ensure,
-        config  => $dhcrelay_dest_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -801,12 +788,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $dhcrelay_config = $item_options - ['devices', 'ensure']
-
     $dhcrelay_devices.each |String $device_name| {
       opn_dhcrelay { "${item_name}@${device_name}":
         ensure  => $dhcrelay_ensure,
-        config  => $dhcrelay_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -822,12 +807,10 @@ class opn (
       true    => $alias_options['ensure'],
       default => 'present',
     }
-    $alias_config = $alias_options - ['devices', 'ensure']
-
     $alias_devices.each |String $device_name| {
       opn_firewall_alias { "${alias_name}@${device_name}":
         ensure  => $alias_ensure,
-        config  => $alias_config,
+        config  => $alias_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -843,12 +826,10 @@ class opn (
       true    => $cat_options['ensure'],
       default => 'present',
     }
-    $cat_config = $cat_options - ['devices', 'ensure']
-
     $cat_devices.each |String $device_name| {
       opn_firewall_category { "${cat_name}@${device_name}":
         ensure  => $cat_ensure,
-        config  => $cat_config,
+        config  => $cat_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -864,12 +845,10 @@ class opn (
       true    => $fwgroup_options['ensure'],
       default => 'present',
     }
-    $fwgroup_config = $fwgroup_options - ['devices', 'ensure']
-
     $fwgroup_devices.each |String $device_name| {
       opn_firewall_group { "${fwgroup_name}@${device_name}":
         ensure  => $fwgroup_ensure,
-        config  => $fwgroup_config,
+        config  => $fwgroup_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -885,12 +864,10 @@ class opn (
       true    => $rule_options['ensure'],
       default => 'present',
     }
-    $rule_config = $rule_options - ['devices', 'ensure']
-
     $rule_devices.each |String $device_name| {
       opn_firewall_rule { "${rule_desc}@${device_name}":
         ensure  => $rule_ensure,
-        config  => $rule_config,
+        config  => $rule_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -906,12 +883,10 @@ class opn (
       true    => $gw_options['ensure'],
       default => 'present',
     }
-    $gw_config = $gw_options - ['devices', 'ensure']
-
     $gw_devices.each |String $device_name| {
       opn_gateway { "${gw_name}@${device_name}":
         ensure  => $gw_ensure,
-        config  => $gw_config,
+        config  => $gw_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -927,12 +902,10 @@ class opn (
       true    => $group_options['ensure'],
       default => 'present',
     }
-    $group_config = $group_options - ['devices', 'ensure']
-
     $group_devices.each |String $device_name| {
       opn_group { "${group_name}@${device_name}":
         ensure  => $group_ensure,
-        config  => $group_config,
+        config  => $group_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -948,12 +921,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_acl_config = $item_options - ['devices', 'ensure']
-
     $haproxy_acl_devices.each |String $device_name| {
       opn_haproxy_acl { "${item_name}@${device_name}":
         ensure  => $haproxy_acl_ensure,
-        config  => $haproxy_acl_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -969,12 +940,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_action_config = $item_options - ['devices', 'ensure']
-
     $haproxy_action_devices.each |String $device_name| {
       opn_haproxy_action { "${item_name}@${device_name}":
         ensure  => $haproxy_action_ensure,
-        config  => $haproxy_action_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -990,12 +959,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_backend_config = $item_options - ['devices', 'ensure']
-
     $haproxy_backend_devices.each |String $device_name| {
       opn_haproxy_backend { "${item_name}@${device_name}":
         ensure  => $haproxy_backend_ensure,
-        config  => $haproxy_backend_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1011,12 +978,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_cpu_config = $item_options - ['devices', 'ensure']
-
     $haproxy_cpu_devices.each |String $device_name| {
       opn_haproxy_cpu { "${item_name}@${device_name}":
         ensure  => $haproxy_cpu_ensure,
-        config  => $haproxy_cpu_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1032,12 +997,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_errorfile_config = $item_options - ['devices', 'ensure']
-
     $haproxy_errorfile_devices.each |String $device_name| {
       opn_haproxy_errorfile { "${item_name}@${device_name}":
         ensure  => $haproxy_errorfile_ensure,
-        config  => $haproxy_errorfile_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1053,12 +1016,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_fcgi_config = $item_options - ['devices', 'ensure']
-
     $haproxy_fcgi_devices.each |String $device_name| {
       opn_haproxy_fcgi { "${item_name}@${device_name}":
         ensure  => $haproxy_fcgi_ensure,
-        config  => $haproxy_fcgi_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1074,12 +1035,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_frontend_config = $item_options - ['devices', 'ensure']
-
     $haproxy_frontend_devices.each |String $device_name| {
       opn_haproxy_frontend { "${item_name}@${device_name}":
         ensure  => $haproxy_frontend_ensure,
-        config  => $haproxy_frontend_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1095,12 +1054,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_group_config = $item_options - ['devices', 'ensure']
-
     $haproxy_group_devices.each |String $device_name| {
       opn_haproxy_group { "${item_name}@${device_name}":
         ensure  => $haproxy_group_ensure,
-        config  => $haproxy_group_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1116,12 +1073,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_healthcheck_config = $item_options - ['devices', 'ensure']
-
     $haproxy_healthcheck_devices.each |String $device_name| {
       opn_haproxy_healthcheck { "${item_name}@${device_name}":
         ensure  => $haproxy_healthcheck_ensure,
-        config  => $haproxy_healthcheck_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1137,12 +1092,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_lua_config = $item_options - ['devices', 'ensure']
-
     $haproxy_lua_devices.each |String $device_name| {
       opn_haproxy_lua { "${item_name}@${device_name}":
         ensure  => $haproxy_lua_ensure,
-        config  => $haproxy_lua_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1158,12 +1111,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_mailer_config = $item_options - ['devices', 'ensure']
-
     $haproxy_mailer_devices.each |String $device_name| {
       opn_haproxy_mailer { "${item_name}@${device_name}":
         ensure  => $haproxy_mailer_ensure,
-        config  => $haproxy_mailer_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1179,12 +1130,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_mapfile_config = $item_options - ['devices', 'ensure']
-
     $haproxy_mapfile_devices.each |String $device_name| {
       opn_haproxy_mapfile { "${item_name}@${device_name}":
         ensure  => $haproxy_mapfile_ensure,
-        config  => $haproxy_mapfile_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1200,12 +1149,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_resolver_config = $item_options - ['devices', 'ensure']
-
     $haproxy_resolver_devices.each |String $device_name| {
       opn_haproxy_resolver { "${item_name}@${device_name}":
         ensure  => $haproxy_resolver_ensure,
-        config  => $haproxy_resolver_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1221,12 +1168,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_server_config = $item_options - ['devices', 'ensure']
-
     $haproxy_server_devices.each |String $device_name| {
       opn_haproxy_server { "${item_name}@${device_name}":
         ensure  => $haproxy_server_ensure,
-        config  => $haproxy_server_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1238,11 +1183,9 @@ class opn (
       true    => $settings_options['ensure'],
       default => 'present',
     }
-    $haproxy_settings_config = $settings_options - ['ensure']
-
     opn_haproxy_settings { $device_name:
       ensure  => $haproxy_settings_ensure,
-      config  => $haproxy_settings_config,
+      config  => $settings_options['config'],
       require => Class['opn::config'],
     }
   }
@@ -1257,12 +1200,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $haproxy_user_config = $item_options - ['devices', 'ensure']
-
     $haproxy_user_devices.each |String $device_name| {
       opn_haproxy_user { "${item_name}@${device_name}":
         ensure  => $haproxy_user_ensure,
-        config  => $haproxy_user_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1274,11 +1215,9 @@ class opn (
       true    => $hasync_options['ensure'],
       default => 'present',
     }
-    $hasync_config = $hasync_options - ['ensure']
-
     opn_hasync { $device_name:
       ensure  => $hasync_ensure,
-      config  => $hasync_config,
+      config  => $hasync_options['config'],
       require => Class['opn::config'],
     }
   }
@@ -1293,12 +1232,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $ipsec_child_config = $item_options - ['devices', 'ensure']
-
     $ipsec_child_devices.each |String $device_name| {
       opn_ipsec_child { "${item_name}@${device_name}":
         ensure  => $ipsec_child_ensure,
-        config  => $ipsec_child_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1314,12 +1251,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $ipsec_conn_config = $item_options - ['devices', 'ensure']
-
     $ipsec_conn_devices.each |String $device_name| {
       opn_ipsec_connection { "${item_name}@${device_name}":
         ensure  => $ipsec_conn_ensure,
-        config  => $ipsec_conn_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1335,12 +1270,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $ipsec_kp_config = $item_options - ['devices', 'ensure']
-
     $ipsec_kp_devices.each |String $device_name| {
       opn_ipsec_keypair { "${item_name}@${device_name}":
         ensure  => $ipsec_kp_ensure,
-        config  => $ipsec_kp_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1356,12 +1289,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $ipsec_local_config = $item_options - ['devices', 'ensure']
-
     $ipsec_local_devices.each |String $device_name| {
       opn_ipsec_local { "${item_name}@${device_name}":
         ensure  => $ipsec_local_ensure,
-        config  => $ipsec_local_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1377,12 +1308,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $ipsec_pool_config = $item_options - ['devices', 'ensure']
-
     $ipsec_pool_devices.each |String $device_name| {
       opn_ipsec_pool { "${item_name}@${device_name}":
         ensure  => $ipsec_pool_ensure,
-        config  => $ipsec_pool_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1398,12 +1327,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $ipsec_psk_config = $item_options - ['devices', 'ensure']
-
     $ipsec_psk_devices.each |String $device_name| {
       opn_ipsec_presharedkey { "${item_name}@${device_name}":
         ensure  => $ipsec_psk_ensure,
-        config  => $ipsec_psk_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1419,12 +1346,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $ipsec_remote_config = $item_options - ['devices', 'ensure']
-
     $ipsec_remote_devices.each |String $device_name| {
       opn_ipsec_remote { "${item_name}@${device_name}":
         ensure  => $ipsec_remote_ensure,
-        config  => $ipsec_remote_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1436,11 +1361,9 @@ class opn (
       true    => $settings_options['ensure'],
       default => 'present',
     }
-    $ipsec_settings_config = $settings_options - ['ensure']
-
     opn_ipsec_settings { $device_name:
       ensure  => $ipsec_settings_ensure,
-      config  => $ipsec_settings_config,
+      config  => $settings_options['config'],
       require => Class['opn::config'],
     }
   }
@@ -1455,12 +1378,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $ipsec_vti_config = $item_options - ['devices', 'ensure']
-
     $ipsec_vti_devices.each |String $device_name| {
       opn_ipsec_vti { "${item_name}@${device_name}":
         ensure  => $ipsec_vti_ensure,
-        config  => $ipsec_vti_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1472,11 +1393,9 @@ class opn (
       true    => $kca_options['ensure'],
       default => 'present',
     }
-    $kca_config = $kca_options - ['ensure']
-
     opn_kea_ctrl_agent { $device_name:
       ensure  => $kca_ensure,
-      config  => $kca_config,
+      config  => $kca_options['config'],
       require => Class['opn::config'],
     }
   }
@@ -1491,12 +1410,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $kd4p_config = $item_options - ['devices', 'ensure']
-
     $kd4p_devices.each |String $device_name| {
       opn_kea_dhcpv4_peer { "${item_name}@${device_name}":
         ensure  => $kd4p_ensure,
-        config  => $kd4p_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1512,12 +1429,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $kd4r_config = $item_options - ['devices', 'ensure']
-
     $kd4r_devices.each |String $device_name| {
       opn_kea_dhcpv4_reservation { "${item_name}@${device_name}":
         ensure  => $kd4r_ensure,
-        config  => $kd4r_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1533,12 +1448,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $kd4s_config = $item_options - ['devices', 'ensure']
-
     $kd4s_devices.each |String $device_name| {
       opn_kea_dhcpv4_subnet { "${item_name}@${device_name}":
         ensure  => $kd4s_ensure,
-        config  => $kd4s_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1550,11 +1463,9 @@ class opn (
       true    => $kd4_options['ensure'],
       default => 'present',
     }
-    $kd4_config = $kd4_options - ['ensure']
-
     opn_kea_dhcpv4 { $device_name:
       ensure  => $kd4_ensure,
-      config  => $kd4_config,
+      config  => $kd4_options['config'],
       require => Class['opn::config'],
     }
   }
@@ -1569,12 +1480,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $kd6pd_config = $item_options - ['devices', 'ensure']
-
     $kd6pd_devices.each |String $device_name| {
       opn_kea_dhcpv6_pd_pool { "${item_name}@${device_name}":
         ensure  => $kd6pd_ensure,
-        config  => $kd6pd_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1590,12 +1499,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $kd6p_config = $item_options - ['devices', 'ensure']
-
     $kd6p_devices.each |String $device_name| {
       opn_kea_dhcpv6_peer { "${item_name}@${device_name}":
         ensure  => $kd6p_ensure,
-        config  => $kd6p_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1611,12 +1518,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $kd6r_config = $item_options - ['devices', 'ensure']
-
     $kd6r_devices.each |String $device_name| {
       opn_kea_dhcpv6_reservation { "${item_name}@${device_name}":
         ensure  => $kd6r_ensure,
-        config  => $kd6r_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1632,12 +1537,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $kd6s_config = $item_options - ['devices', 'ensure']
-
     $kd6s_devices.each |String $device_name| {
       opn_kea_dhcpv6_subnet { "${item_name}@${device_name}":
         ensure  => $kd6s_ensure,
-        config  => $kd6s_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1649,11 +1552,9 @@ class opn (
       true    => $kd6_options['ensure'],
       default => 'present',
     }
-    $kd6_config = $kd6_options - ['ensure']
-
     opn_kea_dhcpv6 { $device_name:
       ensure  => $kd6_ensure,
-      config  => $kd6_config,
+      config  => $kd6_options['config'],
       require => Class['opn::config'],
     }
   }
@@ -1664,11 +1565,9 @@ class opn (
       true    => $ne_options['ensure'],
       default => 'present',
     }
-    $ne_config = $ne_options - ['ensure']
-
     opn_node_exporter { $device_name:
       ensure  => $ne_ensure,
-      config  => $ne_config,
+      config  => $ne_options['config'],
       require => Class['opn::config'],
     }
   }
@@ -1683,12 +1582,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $ovpn_cso_config = $item_options - ['devices', 'ensure']
-
     $ovpn_cso_devices.each |String $device_name| {
       opn_openvpn_cso { "${item_name}@${device_name}":
         ensure  => $ovpn_cso_ensure,
-        config  => $ovpn_cso_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1704,12 +1601,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $ovpn_inst_config = $item_options - ['devices', 'ensure']
-
     $ovpn_inst_devices.each |String $device_name| {
       opn_openvpn_instance { "${item_name}@${device_name}":
         ensure  => $ovpn_inst_ensure,
-        config  => $ovpn_inst_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1725,12 +1620,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $ovpn_sk_config = $item_options - ['devices', 'ensure']
-
     $ovpn_sk_devices.each |String $device_name| {
       opn_openvpn_statickey { "${item_name}@${device_name}":
         ensure  => $ovpn_sk_ensure,
-        config  => $ovpn_sk_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1765,12 +1658,10 @@ class opn (
       true    => $route_options['ensure'],
       default => 'present',
     }
-    $route_config = $route_options - ['devices', 'ensure']
-
     $route_devices.each |String $device_name| {
       opn_route { "${route_desc}@${device_name}":
         ensure  => $route_ensure,
-        config  => $route_config,
+        config  => $route_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1786,17 +1677,16 @@ class opn (
       true    => $snap_options['ensure'],
       default => 'present',
     }
-    $snap_active = 'active' in $snap_options ? {
-      true    => $snap_options['active'],
+    $snap_active = 'active' in $snap_options['config'] ? {
+      true    => $snap_options['config']['active'],
       default => undef,
     }
-    $snap_config = $snap_options - ['devices', 'ensure', 'active']
 
     $snap_devices.each |String $device_name| {
       opn_snapshot { "${snap_name}@${device_name}":
         ensure  => $snap_ensure,
         active  => $snap_active,
-        config  => $snap_config,
+        config  => $snap_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1812,12 +1702,10 @@ class opn (
       true    => $dest_options['ensure'],
       default => 'present',
     }
-    $dest_config = $dest_options - ['devices', 'ensure']
-
     $dest_devices.each |String $device_name| {
       opn_syslog { "${dest_desc}@${device_name}":
         ensure  => $dest_ensure,
-        config  => $dest_config,
+        config  => $dest_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1833,12 +1721,10 @@ class opn (
       true    => $ca_options['ensure'],
       default => 'present',
     }
-    $ca_config = $ca_options - ['devices', 'ensure']
-
     $ca_devices.each |String $device_name| {
       opn_trust_ca { "${ca_descr}@${device_name}":
         ensure  => $ca_ensure,
-        config  => $ca_config,
+        config  => $ca_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1854,12 +1740,10 @@ class opn (
       true    => $cert_options['ensure'],
       default => 'present',
     }
-    $cert_config = $cert_options - ['devices', 'ensure']
-
     $cert_devices.each |String $device_name| {
       opn_trust_cert { "${cert_descr}@${device_name}":
         ensure  => $cert_ensure,
-        config  => $cert_config,
+        config  => $cert_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1875,12 +1759,10 @@ class opn (
       true    => $crl_options['ensure'],
       default => 'present',
     }
-    $crl_config = $crl_options - ['devices', 'ensure']
-
     $crl_devices.each |String $device_name| {
       opn_trust_crl { "${crl_ca_descr}@${device_name}":
         ensure  => $crl_ensure,
-        config  => $crl_config,
+        config  => $crl_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1896,12 +1778,10 @@ class opn (
       true    => $tunable_options['ensure'],
       default => 'present',
     }
-    $tunable_config = $tunable_options - ['devices', 'ensure']
-
     $tunable_devices.each |String $device_name| {
       opn_tunable { "${tunable_key}@${device_name}":
         ensure  => $tunable_ensure,
-        config  => $tunable_config,
+        config  => $tunable_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1917,12 +1797,10 @@ class opn (
       true    => $user_options['ensure'],
       default => 'present',
     }
-    $user_config = $user_options - ['devices', 'ensure']
-
     $user_devices.each |String $device_name| {
       opn_user { "${user_name}@${device_name}":
         ensure  => $user_ensure,
-        config  => $user_config,
+        config  => $user_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1938,12 +1816,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $zabbix_alias_config = $item_options - ['devices', 'ensure']
-
     $zabbix_alias_devices.each |String $device_name| {
       opn_zabbix_agent_alias { "${item_name}@${device_name}":
         ensure  => $zabbix_alias_ensure,
-        config  => $zabbix_alias_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1959,12 +1835,10 @@ class opn (
       true    => $item_options['ensure'],
       default => 'present',
     }
-    $zabbix_up_config = $item_options - ['devices', 'ensure']
-
     $zabbix_up_devices.each |String $device_name| {
       opn_zabbix_agent_userparameter { "${item_name}@${device_name}":
         ensure  => $zabbix_up_ensure,
-        config  => $zabbix_up_config,
+        config  => $item_options['config'],
         require => Class['opn::config'],
       }
     }
@@ -1976,11 +1850,9 @@ class opn (
       true    => $agent_options['ensure'],
       default => 'present',
     }
-    $zabbix_agent_config = $agent_options - ['ensure']
-
     opn_zabbix_agent { $device_name:
       ensure  => $zabbix_agent_ensure,
-      config  => $zabbix_agent_config,
+      config  => $agent_options['config'],
       require => Class['opn::config'],
     }
   }
@@ -1991,11 +1863,9 @@ class opn (
       true    => $proxy_options['ensure'],
       default => 'present',
     }
-    $zabbix_proxy_config = $proxy_options - ['ensure']
-
     opn_zabbix_proxy { $device_name:
       ensure  => $zabbix_proxy_ensure,
-      config  => $zabbix_proxy_config,
+      config  => $proxy_options['config'],
       require => Class['opn::config'],
     }
   }

@@ -159,12 +159,14 @@ class { 'opn':
   },
   firewall_aliases => {
     'alias_test001' => {
-      'devices'     => ['localhost'],
-      'ensure'      => 'present',
-      'type'        => 'host',
-      'content'     => '192.168.1.1',
-      'description' => 'Test alias',
-      'enabled'     => '1',
+      'devices' => ['localhost'],
+      'ensure'  => 'present',
+      'config'  => {
+        'type'        => 'host',
+        'content'     => '192.168.1.1',
+        'description' => 'Test alias',
+        'enabled'     => '1',
+      },
     },
   },
 }
@@ -248,45 +250,55 @@ class { 'opn':
     'le-account' => {
       'devices' => ['opnsense01.example.com'],
       'ensure'  => 'present',
-      'ca'      => 'letsencrypt',
-      'email'   => 'admin@example.com',
-      'enabled' => '1',
+      'config'  => {
+        'ca'      => 'letsencrypt',
+        'email'   => 'admin@example.com',
+        'enabled' => '1',
+      },
     },
   },
   acmeclient_actions => {
     'restart_haproxy' => {
-      'devices'                 => ['opnsense01.example.com'],
-      'ensure'                  => 'present',
-      'type'                    => 'configd_generic',
-      'configd_generic_command' => 'haproxy restart',
-      'enabled'                 => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'type'                    => 'configd_generic',
+        'configd_generic_command' => 'haproxy restart',
+        'enabled'                 => '1',
+      },
     },
   },
   acmeclient_validations => {
     'http-01' => {
-      'devices'      => ['opnsense01.example.com'],
-      'ensure'       => 'present',
-      'method'       => 'http01',
-      'http_service' => 'haproxy',
-      'enabled'      => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'method'       => 'http01',
+        'http_service' => 'haproxy',
+        'enabled'      => '1',
+      },
     },
   },
   acmeclient_certificates => {
     'web.example.com' => {
-      'devices'          => ['opnsense01.example.com'],
-      'ensure'           => 'present',
-      'altNames'         => 'www.example.com',
-      'account'          => 'le-account',
-      'validationMethod' => 'http-01',
-      'restartActions'   => 'restart_haproxy',
-      'enabled'          => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'altNames'         => 'www.example.com',
+        'account'          => 'le-account',
+        'validationMethod' => 'http-01',
+        'restartActions'   => 'restart_haproxy',
+        'enabled'          => '1',
+      },
     },
   },
   acmeclient_settings => {
     'opnsense01.example.com' => {
-      'ensure'      => 'present',
-      'environment' => 'stg',
-      'autoRenewal' => '1',
+      'ensure' => 'present',
+      'config' => {
+        'environment' => 'stg',
+        'autoRenewal' => '1',
+      },
     },
   },
 }
@@ -303,25 +315,29 @@ class { 'opn':
     'Reload HAProxy' => {
       'devices' => ['opnsense01.example.com'],
       'ensure'  => 'present',
-      'command' => 'haproxy reload',
-      'minutes' => '0',
-      'hours'   => '3',
-      'days'    => '*',
-      'months'  => '*',
-      'weekdays'=> '*',
-      'enabled' => '1',
+      'config'  => {
+        'command'  => 'haproxy reload',
+        'minutes'  => '0',
+        'hours'    => '3',
+        'days'     => '*',
+        'months'   => '*',
+        'weekdays' => '*',
+        'enabled'  => '1',
+      },
     },
     'HAProxy: sync certificates' => {
       'devices' => ['opnsense01.example.com'],
       'ensure'  => 'present',
-      'command' => 'haproxy cert_sync_bulk',
-      'minutes' => '0',
-      'hours'   => '1',
-      'days'    => '*',
-      'months'  => '*',
-      'weekdays'=> '*',
-      'enabled' => '1',
-      'origin'  => 'HAProxy',
+      'config'  => {
+        'command'  => 'haproxy cert_sync_bulk',
+        'minutes'  => '0',
+        'hours'    => '1',
+        'days'     => '*',
+        'months'   => '*',
+        'weekdays' => '*',
+        'enabled'  => '1',
+        'origin'   => 'HAProxy',
+      },
     },
   },
 }
@@ -344,16 +360,20 @@ class { 'opn':
     'DHCP Servers' => {
       'devices' => ['opnsense01.example.com'],
       'ensure'  => 'present',
-      'server'  => '10.0.0.1,10.0.0.2',
+      'config'  => {
+        'server' => '10.0.0.1,10.0.0.2',
+      },
     },
   },
   dhcrelays => {
     'LAN IPv4 Relay' => {
-      'devices'     => ['opnsense01.example.com'],
-      'ensure'      => 'present',
-      'interface'   => 'lan',
-      'destination' => 'DHCP Servers',
-      'enabled'     => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'interface'   => 'lan',
+        'destination' => 'DHCP Servers',
+        'enabled'     => '1',
+      },
     },
   },
 }
@@ -370,20 +390,24 @@ class { 'opn':
   devices => { ... },
   firewall_aliases => {
     'mgmt_hosts' => {
-      'devices'     => ['opnsense01.example.com'],
-      'ensure'      => 'present',
-      'type'        => 'host',
-      'content'     => "10.0.0.1\n10.0.0.2",
-      'description' => 'Management hosts',
-      'enabled'     => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'type'        => 'host',
+        'content'     => "10.0.0.1\n10.0.0.2",
+        'description' => 'Management hosts',
+        'enabled'     => '1',
+      },
     },
     'http_ports' => {
-      'devices'     => ['opnsense01.example.com', 'opnsense02.example.com'],
-      'ensure'      => 'present',
-      'type'        => 'port',
-      'content'     => "80\n443",
-      'description' => 'HTTP(S) ports',
-      'enabled'     => '1',
+      'devices' => ['opnsense01.example.com', 'opnsense02.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'type'        => 'port',
+        'content'     => "80\n443",
+        'description' => 'HTTP(S) ports',
+        'enabled'     => '1',
+      },
     },
   },
 }
@@ -400,7 +424,9 @@ class { 'opn':
     'web' => {
       'devices' => ['opnsense01.example.com'],
       'ensure'  => 'present',
-      'color'   => '0088cc',
+      'config'  => {
+        'color' => '0088cc',
+      },
     },
   },
 }
@@ -417,8 +443,10 @@ class { 'opn':
     'dmz_ifaces' => {
       'devices' => ['opnsense01.example.com'],
       'ensure'  => 'present',
-      'members' => 'em1,em2',
-      'descr'   => 'DMZ interfaces',
+      'config'  => {
+        'members' => 'em1,em2',
+        'descr'   => 'DMZ interfaces',
+      },
     },
   },
 }
@@ -433,16 +461,18 @@ class { 'opn':
   devices => { ... },
   firewall_rules => {
     'Allow HTTPS from LAN' => {
-      'devices'          => ['opnsense01.example.com'],
-      'ensure'           => 'present',
-      'action'           => 'pass',
-      'interface'        => 'lan',
-      'ipprotocol'       => 'inet',
-      'protocol'         => 'tcp',
-      'source_net'       => 'any',
-      'destination_net'  => 'any',
-      'destination_port' => '443',
-      'enabled'          => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'action'           => 'pass',
+        'interface'        => 'lan',
+        'ipprotocol'       => 'inet',
+        'protocol'         => 'tcp',
+        'source_net'       => 'any',
+        'destination_net'  => 'any',
+        'destination_port' => '443',
+        'enabled'          => '1',
+      },
     },
   },
 }
@@ -457,15 +487,17 @@ class { 'opn':
   devices => { ... },
   gateways => {
     'TEST_GW' => {
-      'devices'         => ['opnsense01.example.com'],
-      'ensure'          => 'present',
-      'interface'       => 'lan',
-      'ipprotocol'      => 'inet',
-      'gateway'         => '192.168.123.1',
-      'descr'           => 'TEST Gateway',
-      'monitor_disable' => '1',
-      'priority'        => '255',
-      'weight'          => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'interface'       => 'lan',
+        'ipprotocol'      => 'inet',
+        'gateway'         => '192.168.123.1',
+        'descr'           => 'TEST Gateway',
+        'monitor_disable' => '1',
+        'priority'        => '255',
+        'weight'          => '1',
+      },
     },
   },
 }
@@ -480,11 +512,13 @@ class { 'opn':
   devices => { ... },
   groups => {
     'vpn_users' => {
-      'devices'     => ['opnsense01.example.com'],
-      'ensure'      => 'present',
-      'description' => 'VPN Users',
-      # The 'member' attribute expects UID values.
-      #'member'     => '2000,2001,2002',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'description' => 'VPN Users',
+        # The 'member' attribute expects UID values.
+        #'member'     => '2000,2001,2002',
+      },
     },
   },
 }
@@ -501,12 +535,14 @@ class { 'opn':
   devices => { ... },
   hasyncs => {
     'opnsense01.example.com' => {
-      'ensure'          => 'present',
-      'pfsyncenabled'   => '1',
-      'pfsyncinterface' => 'lan',
-      'synchronizetoip' => '10.0.0.2',
-      'username'        => 'root',
-      'password'        => 'secret',
+      'ensure' => 'present',
+      'config' => {
+        'pfsyncenabled'   => '1',
+        'pfsyncinterface' => 'lan',
+        'synchronizetoip' => '10.0.0.2',
+        'username'        => 'root',
+        'password'        => 'secret',
+      },
     },
   },
 }
@@ -531,31 +567,37 @@ class { 'opn':
   },
   haproxy_servers => {
     'web01' => {
-      'devices'     => ['opnsense01.example.com'],
-      'ensure'      => 'present',
-      'address'     => '10.0.0.1',
-      'port'        => '80',
-      'description' => 'Web server 01',
-      'enabled'     => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'address'     => '10.0.0.1',
+        'port'        => '80',
+        'description' => 'Web server 01',
+        'enabled'     => '1',
+      },
     },
   },
   haproxy_backends => {
     'web_pool' => {
-      'devices'     => ['opnsense01.example.com'],
-      'ensure'      => 'present',
-      'mode'        => 'http',
-      'description' => 'Web backend pool',
-      'enabled'     => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'mode'        => 'http',
+        'description' => 'Web backend pool',
+        'enabled'     => '1',
+      },
     },
   },
   haproxy_frontends => {
     'http_in' => {
-      'devices'          => ['opnsense01.example.com'],
-      'ensure'           => 'present',
-      'bind'             => '0.0.0.0:80',
-      'mode'             => 'http',
-      'description'      => 'HTTP listener',
-      'enabled'          => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'bind'        => '0.0.0.0:80',
+        'mode'        => 'http',
+        'description' => 'HTTP listener',
+        'enabled'     => '1',
+      },
     },
   },
 }
@@ -573,16 +615,18 @@ class { 'opn':
   haproxy_settings => {
     'opnsense01.example.com' => {
       'ensure' => 'present',
-      'general' => {
-        'enabled' => '1',
-        'stats'   => {
-          'enabled' => '0',
+      'config' => {
+        'general' => {
+          'enabled' => '1',
+          'stats'   => {
+            'enabled' => '0',
+          },
         },
-      },
-      'maintenance' => {
-        'cronjobs' => {
-          # Add a reference to an existing cron job.
-          'syncCertsCron' => 'HAProxy: sync certificates',
+        'maintenance' => {
+          'cronjobs' => {
+            # Add a reference to an existing cron job.
+            'syncCertsCron' => 'HAProxy: sync certificates',
+          },
         },
       },
     },
@@ -605,28 +649,37 @@ class { 'opn':
   devices => { ... },
   ipsec_connections => {
     'site-to-site' => {
-      'devices'      => ['opnsense01.example.com'],
-      'version'      => '2',
-      'proposals'    => 'aes256-sha256-modp2048',
-      'local_addrs'  => '0.0.0.0/0',
-      'remote_addrs' => '198.51.100.1',
-      'enabled'      => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'version'      => '2',
+        'proposals'    => 'aes256-sha256-modp2048',
+        'local_addrs'  => '0.0.0.0/0',
+        'remote_addrs' => '198.51.100.1',
+        'enabled'      => '1',
+      },
     },
   },
   ipsec_children => {
     'child-lan' => {
-      'devices'    => ['opnsense01.example.com'],
-      'connection' => 'site-to-site',
-      'mode'       => 'tunnel',
-      'local_ts'   => '10.0.0.0/24',
-      'remote_ts'  => '10.0.1.0/24',
-      'enabled'    => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'connection' => 'site-to-site',
+        'mode'       => 'tunnel',
+        'local_ts'   => '10.0.0.0/24',
+        'remote_ts'  => '10.0.1.0/24',
+        'enabled'    => '1',
+      },
     },
   },
   ipsec_settings => {
     'opnsense01.example.com' => {
-      'general' => {
-        'enabled' => '1',
+      'ensure' => 'present',
+      'config' => {
+        'general' => {
+          'enabled' => '1',
+        },
       },
     },
   },
@@ -648,10 +701,13 @@ The KEA Control Agent is managed as a singleton resource per device via the
 class { 'opn':
   kea_ctrl_agents => {
     'opnsense01.example.com' => {
-      'general' => {
-        'enabled'   => '1',
-        'http_host' => '127.0.0.1',
-        'http_port' => '8000',
+      'ensure' => 'present',
+      'config' => {
+        'general' => {
+          'enabled'   => '1',
+          'http_host' => '127.0.0.1',
+          'http_port' => '8000',
+        },
       },
     },
   },
@@ -668,18 +724,21 @@ DHCPv4 global settings are managed as a singleton resource per device via the
 class { 'opn':
   kea_dhcpv4s => {
     'opnsense01.example.com' => {
-      'general' => {
-        'enabled'          => '1',
-        'interfaces'       => 'lan',
-        'valid_lifetime'   => '4000',
-        'fwrules'          => '1',
-        'dhcp_socket_type' => 'raw',
-      },
-      'lexpire' => {
-        'reclaim_timer_wait_time' => '10',
-      },
-      'ha' => {
-        'enabled' => '0',
+      'ensure' => 'present',
+      'config' => {
+        'general' => {
+          'enabled'          => '1',
+          'interfaces'       => 'lan',
+          'valid_lifetime'   => '4000',
+          'fwrules'          => '1',
+          'dhcp_socket_type' => 'raw',
+        },
+        'lexpire' => {
+          'reclaim_timer_wait_time' => '10',
+        },
+        'ha' => {
+          'enabled' => '0',
+        },
       },
     },
   },
@@ -696,14 +755,18 @@ uses a search+get pattern to fetch full subnet details including option_data.
 class { 'opn':
   kea_dhcpv4_subnets => {
     '192.168.1.0/24' => {
-      'description'             => 'LAN DHCP',
-      'option_data_autocollect' => '1',
-      'option_data'             => {
-        'routers'             => '192.168.1.1',
-        'domain_name_servers' => '8.8.8.8,8.8.4.4',
-        'domain_name'         => 'example.com',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'description'             => 'LAN DHCP',
+        'option_data_autocollect' => '1',
+        'option_data'             => {
+          'routers'             => '192.168.1.1',
+          'domain_name_servers' => '8.8.8.8,8.8.4.4',
+          'domain_name'         => 'example.com',
+        },
+        'pools' => '192.168.1.100 - 192.168.1.200',
       },
-      'pools' => '192.168.1.100 - 192.168.1.200',
     },
   },
 }
@@ -720,10 +783,14 @@ accepts a subnet CIDR which is resolved to a UUID via the IdResolver.
 class { 'opn':
   kea_dhcpv4_reservations => {
     'Web Server' => {
-      'subnet'     => '192.168.1.0/24',
-      'hw_address' => 'AA:BB:CC:DD:EE:FF',
-      'ip_address' => '192.168.1.10',
-      'hostname'   => 'webserver',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'subnet'     => '192.168.1.0/24',
+        'hw_address' => 'AA:BB:CC:DD:EE:FF',
+        'ip_address' => '192.168.1.10',
+        'hostname'   => 'webserver',
+      },
     },
   },
 }
@@ -738,8 +805,12 @@ type. The resource title is the peer name.
 class { 'opn':
   kea_dhcpv4_peers => {
     'primary-node' => {
-      'role' => 'primary',
-      'url'  => 'http://10.0.0.1:8000',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'role' => 'primary',
+        'url'  => 'http://10.0.0.1:8000',
+      },
     },
   },
 }
@@ -755,15 +826,18 @@ DHCPv6 global settings are managed as a singleton resource per device via the
 class { 'opn':
   kea_dhcpv6s => {
     'opnsense01.example.com' => {
-      'general' => {
-        'enabled'    => '1',
-        'interfaces' => 'lan',
-      },
-      'lexpire' => {
-        'reclaim_timer_wait_time' => '10',
-      },
-      'ha' => {
-        'enabled' => '0',
+      'ensure' => 'present',
+      'config' => {
+        'general' => {
+          'enabled'    => '1',
+          'interfaces' => 'lan',
+        },
+        'lexpire' => {
+          'reclaim_timer_wait_time' => '10',
+        },
+        'ha' => {
+          'enabled' => '0',
+        },
       },
     },
   },
@@ -780,12 +854,16 @@ uses a search+get pattern to fetch full subnet details.
 class { 'opn':
   kea_dhcpv6_subnets => {
     'fd00::/64' => {
-      'description' => 'LAN DHCPv6',
-      'interface'   => 'lan',
-      'option_data' => {
-        'dns_servers' => 'fd00::1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'description' => 'LAN DHCPv6',
+        'interface'   => 'lan',
+        'option_data' => {
+          'dns_servers' => 'fd00::1',
+        },
+        'pools' => 'fd00::100 - fd00::200',
       },
-      'pools' => 'fd00::100 - fd00::200',
     },
   },
 }
@@ -800,10 +878,14 @@ DHCPv6 reservations are managed via `kea_dhcpv6_reservations` or the
 class { 'opn':
   kea_dhcpv6_reservations => {
     'Mail Server' => {
-      'subnet'     => 'fd00::/64',
-      'ip_address' => 'fd00::10',
-      'duid'       => '01:02:03:04:05:06',
-      'hostname'   => 'mailserver',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'subnet'     => 'fd00::/64',
+        'ip_address' => 'fd00::10',
+        'duid'       => '01:02:03:04:05:06',
+        'hostname'   => 'mailserver',
+      },
     },
   },
 }
@@ -818,10 +900,14 @@ DHCPv6 prefix delegation pools are managed via `kea_dhcpv6_pd_pools` or the
 class { 'opn':
   kea_dhcpv6_pd_pools => {
     'Customer PD Pool' => {
-      'subnet'        => 'fd00::/64',
-      'prefix'        => 'fd00:1::/48',
-      'prefix_len'    => '48',
-      'delegated_len' => '64',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'subnet'        => 'fd00::/64',
+        'prefix'        => 'fd00:1::/48',
+        'prefix_len'    => '48',
+        'delegated_len' => '64',
+      },
     },
   },
 }
@@ -836,8 +922,12 @@ type. The resource title is the peer name.
 class { 'opn':
   kea_dhcpv6_peers => {
     'primary-node' => {
-      'role' => 'primary',
-      'url'  => 'http://[fd00::1]:8000',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'role' => 'primary',
+        'url'  => 'http://[fd00::1]:8000',
+      },
     },
   },
 }
@@ -858,21 +948,23 @@ class { 'opn':
   },
   node_exporters => {
     'opnsense01.example.com' => {
-      'ensure'        => 'present',
-      'enabled'       => '1',
-      'listenaddress' => '0.0.0.0',
-      'listenport'    => '9100',
-      'cpu'           => '1',
-      'exec'          => '1',
-      'filesystem'    => '1',
-      'loadavg'       => '1',
-      'meminfo'       => '1',
-      'netdev'        => '1',
-      'time'          => '1',
-      'devstat'       => '1',
-      'interrupts'    => '0',
-      'ntp'           => '0',
-      'zfs'           => '1',
+      'ensure' => 'present',
+      'config' => {
+        'enabled'       => '1',
+        'listenaddress' => '0.0.0.0',
+        'listenport'    => '9100',
+        'cpu'           => '1',
+        'exec'          => '1',
+        'filesystem'    => '1',
+        'loadavg'       => '1',
+        'meminfo'       => '1',
+        'netdev'        => '1',
+        'time'          => '1',
+        'devstat'       => '1',
+        'interrupts'    => '0',
+        'ntp'           => '0',
+        'zfs'           => '1',
+      },
     },
   },
 }
@@ -894,29 +986,38 @@ class { 'opn':
   openvpn_statickeys => {
     'my-tls-auth-key' => {
       'devices' => ['opnsense01.example.com'],
-      'key'     => '-----BEGIN OpenVPN Static key-----',
-      'mode'    => 'auth',
+      'ensure'  => 'present',
+      'config'  => {
+        'key'  => '-----BEGIN OpenVPN Static key-----',
+        'mode' => 'auth',
+      },
     },
   },
   openvpn_instances => {
     'my-openvpn-server' => {
-      'devices'            => ['opnsense01.example.com'],
-      'role'               => 'server',
-      'proto'              => 'udp',
-      'port'               => '1194',
-      'server'             => '10.8.0.0/24',
-      'tls_key'            => 'my-tls-auth-key',
-      'cert'               => 'my-openvpn-server-cert',
-      'verify_client_cert' => 'required',
-      'enabled'            => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'role'               => 'server',
+        'proto'              => 'udp',
+        'port'               => '1194',
+        'server'             => '10.8.0.0/24',
+        'tls_key'            => 'my-tls-auth-key',
+        'cert'               => 'my-openvpn-server-cert',
+        'verify_client_cert' => 'required',
+        'enabled'            => '1',
+      },
     },
   },
   openvpn_csos => {
     'client1' => {
-      'devices'        => ['opnsense01.example.com'],
-      'servers'        => 'my-openvpn-server',
-      'tunnel_network' => '10.8.1.0/24',
-      'enabled'        => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'servers'        => 'my-openvpn-server',
+        'tunnel_network' => '10.8.1.0/24',
+        'enabled'        => '1',
+      },
     },
   },
 }
@@ -951,11 +1052,13 @@ class { 'opn':
   devices => { ... },
   routes => {
     'Server network' => {
-      'devices'  => ['opnsense01.example.com'],
-      'ensure'   => 'present',
-      'network'  => '10.0.0.0/24',
-      'gateway'  => 'LAN_GW',
-      'disabled' => '0',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'network'  => '10.0.0.0/24',
+        'gateway'  => 'LAN_GW',
+        'disabled' => '0',
+      },
     },
   },
 }
@@ -972,8 +1075,10 @@ class { 'opn':
     'pre-upgrade' => {
       'devices' => ['opnsense01.example.com'],
       'ensure'  => 'present',
-      'active'  => true,
-      'note'    => 'Snapshot before upgrade',
+      'config'  => {
+        'active' => true,
+        'note'   => 'Snapshot before upgrade',
+      },
     },
   },
 }
@@ -988,12 +1093,14 @@ class { 'opn':
   devices => { ... },
   syslog_destinations => {
     'Central syslog' => {
-      'devices'   => ['opnsense01.example.com'],
-      'ensure'    => 'present',
-      'transport' => 'udp4',
-      'hostname'  => 'syslog.example.com',
-      'port'      => '514',
-      'enabled'   => '1',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'transport' => 'udp4',
+        'hostname'  => 'syslog.example.com',
+        'port'      => '514',
+        'enabled'   => '1',
+      },
     },
   },
 }
@@ -1010,14 +1117,16 @@ class { 'opn':
   devices => { ... },
   trust_cas => {
     'Internal CA' => {
-      'devices'    => ['opnsense01.example.com'],
-      'ensure'     => 'present',
-      'action'     => 'internal',
-      'key_type'   => 'RSA',
-      'digest'     => 'SHA256',
-      'lifetime'   => '3650',
-      'country'    => 'DE',
-      'commonname' => 'Internal CA',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'action'     => 'internal',
+        'key_type'   => 'RSA',
+        'digest'     => 'SHA256',
+        'lifetime'   => '3650',
+        'country'    => 'DE',
+        'commonname' => 'Internal CA',
+      },
     },
   },
 }
@@ -1032,14 +1141,16 @@ class { 'opn':
   devices => { ... },
   trust_certs => {
     'web.example.com' => {
-      'devices'    => ['opnsense01.example.com'],
-      'ensure'     => 'present',
-      'action'     => 'internal',
-      'caref'      => '<ca-uuid>',
-      'key_type'   => 'RSA',
-      'digest'     => 'SHA256',
-      'lifetime'   => '365',
-      'commonname' => 'web.example.com',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'action'     => 'internal',
+        'caref'      => '<ca-uuid>',
+        'key_type'   => 'RSA',
+        'digest'     => 'SHA256',
+        'lifetime'   => '365',
+        'commonname' => 'web.example.com',
+      },
     },
   },
 }
@@ -1056,11 +1167,13 @@ class { 'opn':
   devices => { ... },
   trust_crls => {
     'Internal CA' => {
-      'devices'   => ['opnsense01.example.com'],
-      'ensure'    => 'present',
-      'descr'     => 'CRL for Internal CA',
-      'lifetime'  => '9999',
-      'crlmethod' => 'internal',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'descr'     => 'CRL for Internal CA',
+        'lifetime'  => '9999',
+        'crlmethod' => 'internal',
+      },
     },
   },
 }
@@ -1075,10 +1188,12 @@ class { 'opn':
   devices => { ... },
   tunables => {
     'kern.maxproc' => {
-      'devices'     => ['opnsense01.example.com'],
-      'ensure'      => 'present',
-      'value'       => '4096',
-      'description' => 'Maximum number of processes',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'value'       => '4096',
+        'description' => 'Maximum number of processes',
+      },
     },
   },
 }
@@ -1093,14 +1208,16 @@ class { 'opn':
   devices => { ... },
   users => {
     'jdoe' => {
-      'devices'     => ['opnsense01.example.com'],
-      'ensure'      => 'present',
-      'password'    => 'plaintextpassword',
-      'descr'       => 'John Doe',
-      'email'       => 'jdoe@example.com',
-      # The 'uid' attribute is optional. Be aware that OPNsense will
-      # change the uid if it is already taken by another user.
-      #'uid'        => '2001',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'password' => 'plaintextpassword',
+        'descr'    => 'John Doe',
+        'email'    => 'jdoe@example.com',
+        # The 'uid' attribute is optional. Be aware that OPNsense will
+        # change the uid if it is already taken by another user.
+        #'uid'     => '2001',
+      },
     },
   },
 }
@@ -1110,7 +1227,7 @@ class { 'opn':
 
 The Zabbix Agent configuration is also a singleton resource per device. It requires the `os-zabbix-agent` plugin.
 
-The `zabbix_agents` hash is keyed by **device name**. All keys other than `ensure` are passed as the `config` hash to `opn_zabbix_agent`. The config structure mirrors the nested OPNsense ZabbixAgent model (`settings.main`, `settings.tuning`, `settings.features`, `local`).
+The `zabbix_agents` hash is keyed by **device name**. The `config` hash is passed to the `opn_zabbix_agent` resource type. Its structure mirrors the nested OPNsense ZabbixAgent model (`settings.main`, `settings.tuning`, `settings.features`, `local`).
 
 UserParameter and Alias entries are managed separately via `zabbix_agent_userparameters` and `zabbix_agent_aliases`. All changes to agent resources trigger a single `zabbixagent/service/reconfigure` call per device per Puppet run.
 
@@ -1134,39 +1251,45 @@ class { 'opn':
   zabbix_agents => {
     'opnsense01.example.com' => {
       'ensure' => 'present',
-      'local' => {
-        'hostname' => 'opnsense01.example.com',
-      },
-      'settings' => {
-        'main' => {
-          'enabled'    => '1',
-          'serverList' => 'zabbix.example.com',
-          'listenPort' => '10050',
+      'config' => {
+        'local' => {
+          'hostname' => 'opnsense01.example.com',
         },
-        'features' => {
-          'enableActiveChecks'   => '1',
-          'activeCheckServers'   => 'zabbix.example.com',
-          'enableRemoteCommands' => '0',
+        'settings' => {
+          'main' => {
+            'enabled'    => '1',
+            'serverList' => 'zabbix.example.com',
+            'listenPort' => '10050',
+          },
+          'features' => {
+            'enableActiveChecks'   => '1',
+            'activeCheckServers'   => 'zabbix.example.com',
+            'enableRemoteCommands' => '0',
+          },
         },
       },
     },
   },
   zabbix_agent_userparameters => {
     'custom.uptime' => {
-      'devices'      => ['opnsense01.example.com'],
-      'ensure'       => 'present',
-      'command'      => '/usr/bin/uptime',
-      'enabled'      => '1',
-      'acceptParams' => '0',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'command'      => '/usr/bin/uptime',
+        'enabled'      => '1',
+        'acceptParams' => '0',
+      },
     },
   },
   zabbix_agent_aliases => {
     'ping' => {
-      'devices'      => ['opnsense01.example.com'],
-      'ensure'       => 'present',
-      'sourceKey'    => 'icmpping',
-      'enabled'      => '1',
-      'acceptParams' => '0',
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+      'config'  => {
+        'sourceKey'    => 'icmpping',
+        'enabled'      => '1',
+        'acceptParams' => '0',
+      },
     },
   },
 }
@@ -1176,7 +1299,7 @@ class { 'opn':
 
 The Zabbix Proxy configuration is a singleton resource — one per OPNsense device. It requires the `os-zabbix-proxy` plugin to be installed. Use `opn_plugin` to install it before applying the settings.
 
-The `zabbix_proxies` hash is keyed by **device name** (not by a `name@device` title), since only one Zabbix Proxy configuration exists per device. All keys other than `ensure` are passed as the `config` hash to `opn_zabbix_proxy`.
+The `zabbix_proxies` hash is keyed by **device name** (not by a `name@device` title), since only one Zabbix Proxy configuration exists per device. The `config` hash is passed to the `opn_zabbix_proxy` resource type.
 
 After any change, Puppet calls `zabbixproxy/service/reconfigure` once to apply the new configuration.
 
@@ -1197,11 +1320,13 @@ class { 'opn':
   },
   zabbix_proxies => {
     'opnsense01.example.com' => {
-      'ensure'     => 'present',
-      'enabled'    => '1',
-      'server'     => 'zabbix.example.com',
-      'serverport' => '10051',
-      'hostname'   => 'opnsense01-proxy',
+      'ensure' => 'present',
+      'config' => {
+        'enabled'    => '1',
+        'server'     => 'zabbix.example.com',
+        'serverport' => '10051',
+        'hostname'   => 'opnsense01-proxy',
+      },
     },
   },
 }
@@ -1505,20 +1630,24 @@ Exported resources allow application servers (client nodes) to declare OPNsense 
 class { 'opn::client':
   firewall_aliases => {
     'webserver_ips' => {
-      'devices'     => ['opnsense01.example.com'],
-      'type'        => 'host',
-      'content'     => $facts['networking']['ip'],
-      'description' => "${facts['networking']['fqdn']} - Web server IPs",
-      'enabled'     => '1',
+      'devices' => ['opnsense01.example.com'],
+      'config'  => {
+        'type'        => 'host',
+        'content'     => $facts['networking']['ip'],
+        'description' => "${facts['networking']['fqdn']} - Web server IPs",
+        'enabled'     => '1',
+      },
     },
   },
   haproxy_servers => {
     'web01' => {
-      'devices'     => ['opnsense01.example.com', 'opnsense02.example.com'],
-      'address'     => $facts['networking']['ip'],
-      'port'        => '8080',
-      'description' => "${facts['networking']['fqdn']} - Web backend",
-      'enabled'     => '1',
+      'devices' => ['opnsense01.example.com', 'opnsense02.example.com'],
+      'config'  => {
+        'address'     => $facts['networking']['ip'],
+        'port'        => '8080',
+        'description' => "${facts['networking']['fqdn']} - Web backend",
+        'enabled'     => '1',
+      },
     },
   },
 }
@@ -1549,19 +1678,21 @@ opn::client::firewall_aliases:
   webserver_ips:
     devices:
       - 'opnsense01.example.com'
-    type: 'host'
-    content: "%{facts.networking.ip}"
-    description: "%{facts.networking.fqdn} - Web server IPs"
-    enabled: '1'
+    config:
+      type: 'host'
+      content: "%{facts.networking.ip}"
+      description: "%{facts.networking.fqdn} - Web server IPs"
+      enabled: '1'
 
 opn::client::haproxy_servers:
   web01:
     devices:
       - 'opnsense01.example.com'
-    address: "%{facts.networking.ip}"
-    port: '8080'
-    description: "%{facts.networking.fqdn} - Web backend"
-    enabled: '1'
+    config:
+      address: "%{facts.networking.ip}"
+      port: '8080'
+      description: "%{facts.networking.fqdn} - Web backend"
+      enabled: '1'
 ```
 
 ### Migration
