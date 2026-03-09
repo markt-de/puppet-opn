@@ -12,21 +12,20 @@
     - [Managing ACME Client](#managing-acme-client)
     - [Managing cron jobs](#managing-cron-jobs)
     - [Managing DHCP Relay](#managing-dhcp-relay)
-    - [Managing plugins](#managing-plugins)
     - [Managing firewall aliases](#managing-firewall-aliases)
     - [Managing firewall categories](#managing-firewall-categories)
     - [Managing firewall interface groups](#managing-firewall-interface-groups)
     - [Managing firewall rules](#managing-firewall-rules)
     - [Managing gateways](#managing-gateways)
-    - [Managing users](#managing-users)
     - [Managing groups](#managing-groups)
     - [Managing HA sync](#managing-ha-sync)
+    - [Managing HAProxy](#managing-haproxy)
+    - [Managing HAProxy settings](#managing-haproxy-settings)
     - [Managing IPsec](#managing-ipsec)
     - [Managing KEA DHCP](#managing-kea-dhcp)
     - [Managing Node Exporter](#managing-node-exporter)
     - [Managing OpenVPN](#managing-openvpn)
-    - [Managing HAProxy](#managing-haproxy)
-    - [Managing HAProxy settings](#managing-haproxy-settings)
+    - [Managing plugins](#managing-plugins)
     - [Managing routes](#managing-routes)
     - [Managing snapshots](#managing-snapshots)
     - [Managing syslog destinations](#managing-syslog-destinations)
@@ -34,8 +33,9 @@
     - [Managing trust certificates](#managing-trust-certificates)
     - [Managing trust CRLs](#managing-trust-crls)
     - [Managing tunables](#managing-tunables)
-    - [Managing Zabbix Proxy](#managing-zabbix-proxy)
+    - [Managing users](#managing-users)
     - [Managing Zabbix Agent](#managing-zabbix-agent)
+    - [Managing Zabbix Proxy](#managing-zabbix-proxy)
     - [Using types directly](#using-types-directly)
     - [Exported resources](#exported-resources)
 1. [Reference](#reference)
@@ -358,26 +358,6 @@ class { 'opn':
 }
 ```
 
-### Managing plugins
-
-Plugins can be managed via the `plugins` parameter of the `opn` class or directly using the `opn_plugin` type. The `devices` key controls which firewalls the plugin is deployed to. If `devices` is omitted, the plugin is applied to all devices defined in `$devices`.
-
-```puppet
-class { 'opn':
-  devices => { ... },
-  plugins => {
-    'os-haproxy' => {
-      'devices' => ['opnsense01.example.com'],
-      'ensure'  => 'present',
-    },
-    'os-acme-client' => {
-      'devices' => ['opnsense01.example.com', 'opnsense02.example.com'],
-      'ensure'  => 'present',
-    },
-  },
-}
-```
-
 ### Managing firewall aliases
 
 Firewall aliases can be managed via the `firewall_aliases` parameter or directly via the `opn_firewall_alias` type. The alias configuration is passed directly to the OPNsense API without modification. All validation is performed by OPNsense.
@@ -490,28 +470,6 @@ class { 'opn':
 }
 ```
 
-### Managing users
-
-Local OPNsense users can be managed via the `users` parameter or directly via the `opn_user` type.
-
-```puppet
-class { 'opn':
-  devices => { ... },
-  users => {
-    'jdoe' => {
-      'devices'     => ['opnsense01.example.com'],
-      'ensure'      => 'present',
-      'password'    => 'plaintextpassword',
-      'descr'       => 'John Doe',
-      'email'       => 'jdoe@example.com',
-      # The 'uid' attribute is optional. Be aware that OPNsense will
-      # change the uid if it is already taken by another user.
-      #'uid'        => '2001',
-    },
-  },
-}
-```
-
 ### Managing groups
 
 Local OPNsense groups can be managed via the `groups` parameter or directly via the `opn_group` type.
@@ -548,6 +506,84 @@ class { 'opn':
       'synchronizetoip' => '10.0.0.2',
       'username'        => 'root',
       'password'        => 'secret',
+    },
+  },
+}
+```
+
+### Managing HAProxy
+
+HAProxy resources are managed via the `haproxy_*` parameters of the `opn` class or directly via the corresponding `opn_haproxy_*` types.
+
+After any HAProxy change (create, update, or delete), Puppet runs `haproxy/service/configtest` once per device. If the config test reports an **ALERT**, the reconfigure step is skipped and Puppet logs an error. A **WARNING** is logged but reconfigure proceeds. The actual `haproxy/service/reconfigure` call is made at most once per device per Puppet run, regardless of how many HAProxy resources changed.
+
+HAProxy frontend and backend types support automatic resolution of trust certificate, CA, and CRL references. Instead of using internal `refid` values, you can specify certificate/CA descriptions directly (e.g. `'ssl_certificates' => 'My Web Cert,My API Cert'`). Cron job references in `opn_haproxy_settings` are resolved by description.
+
+```puppet
+class { 'opn':
+  devices => {
+    'opnsense01.example.com' => {
+      'url'        => 'https://opnsense01.example.com/api',
+      'api_key'    => 'OPNSENSE_API_KEY',
+      'api_secret' => 'OPNSENSE_API_SECRET',
+    },
+  },
+  haproxy_servers => {
+    'web01' => {
+      'devices'     => ['opnsense01.example.com'],
+      'ensure'      => 'present',
+      'address'     => '10.0.0.1',
+      'port'        => '80',
+      'description' => 'Web server 01',
+      'enabled'     => '1',
+    },
+  },
+  haproxy_backends => {
+    'web_pool' => {
+      'devices'     => ['opnsense01.example.com'],
+      'ensure'      => 'present',
+      'mode'        => 'http',
+      'description' => 'Web backend pool',
+      'enabled'     => '1',
+    },
+  },
+  haproxy_frontends => {
+    'http_in' => {
+      'devices'          => ['opnsense01.example.com'],
+      'ensure'           => 'present',
+      'bind'             => '0.0.0.0:80',
+      'mode'             => 'http',
+      'description'      => 'HTTP listener',
+      'enabled'          => '1',
+    },
+  },
+}
+```
+
+### Managing HAProxy settings
+
+HAProxy global settings (`general` and `maintenance` sections) are managed via the `haproxy_settings` parameter or directly via the `opn_haproxy_settings` type. This is a singleton resource keyed by device name.
+
+User/group references in `general.stats` are resolved by name. Cron job references in `maintenance.cronjobs` are resolved by description.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  haproxy_settings => {
+    'opnsense01.example.com' => {
+      'ensure' => 'present',
+      'general' => {
+        'enabled' => '1',
+        'stats'   => {
+          'enabled' => '0',
+        },
+      },
+      'maintenance' => {
+        'cronjobs' => {
+          # Add a reference to an existing cron job.
+          'syncCertsCron' => 'HAProxy: sync certificates',
+        },
+      },
     },
   },
 }
@@ -885,79 +921,21 @@ class { 'opn':
 }
 ```
 
-### Managing HAProxy
+### Managing plugins
 
-HAProxy resources are managed via the `haproxy_*` parameters of the `opn` class or directly via the corresponding `opn_haproxy_*` types.
-
-After any HAProxy change (create, update, or delete), Puppet runs `haproxy/service/configtest` once per device. If the config test reports an **ALERT**, the reconfigure step is skipped and Puppet logs an error. A **WARNING** is logged but reconfigure proceeds. The actual `haproxy/service/reconfigure` call is made at most once per device per Puppet run, regardless of how many HAProxy resources changed.
-
-HAProxy frontend and backend types support automatic resolution of trust certificate, CA, and CRL references. Instead of using internal `refid` values, you can specify certificate/CA descriptions directly (e.g. `'ssl_certificates' => 'My Web Cert,My API Cert'`). Cron job references in `opn_haproxy_settings` are resolved by description.
-
-```puppet
-class { 'opn':
-  devices => {
-    'opnsense01.example.com' => {
-      'url'        => 'https://opnsense01.example.com/api',
-      'api_key'    => 'OPNSENSE_API_KEY',
-      'api_secret' => 'OPNSENSE_API_SECRET',
-    },
-  },
-  haproxy_servers => {
-    'web01' => {
-      'devices'     => ['opnsense01.example.com'],
-      'ensure'      => 'present',
-      'address'     => '10.0.0.1',
-      'port'        => '80',
-      'description' => 'Web server 01',
-      'enabled'     => '1',
-    },
-  },
-  haproxy_backends => {
-    'web_pool' => {
-      'devices'     => ['opnsense01.example.com'],
-      'ensure'      => 'present',
-      'mode'        => 'http',
-      'description' => 'Web backend pool',
-      'enabled'     => '1',
-    },
-  },
-  haproxy_frontends => {
-    'http_in' => {
-      'devices'          => ['opnsense01.example.com'],
-      'ensure'           => 'present',
-      'bind'             => '0.0.0.0:80',
-      'mode'             => 'http',
-      'description'      => 'HTTP listener',
-      'enabled'          => '1',
-    },
-  },
-}
-```
-
-### Managing HAProxy settings
-
-HAProxy global settings (`general` and `maintenance` sections) are managed via the `haproxy_settings` parameter or directly via the `opn_haproxy_settings` type. This is a singleton resource keyed by device name.
-
-User/group references in `general.stats` are resolved by name. Cron job references in `maintenance.cronjobs` are resolved by description.
+Plugins can be managed via the `plugins` parameter of the `opn` class or directly using the `opn_plugin` type. The `devices` key controls which firewalls the plugin is deployed to. If `devices` is omitted, the plugin is applied to all devices defined in `$devices`.
 
 ```puppet
 class { 'opn':
   devices => { ... },
-  haproxy_settings => {
-    'opnsense01.example.com' => {
-      'ensure' => 'present',
-      'general' => {
-        'enabled' => '1',
-        'stats'   => {
-          'enabled' => '0',
-        },
-      },
-      'maintenance' => {
-        'cronjobs' => {
-          # Add a reference to an existing cron job.
-          'syncCertsCron' => 'HAProxy: sync certificates',
-        },
-      },
+  plugins => {
+    'os-haproxy' => {
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+    },
+    'os-acme-client' => {
+      'devices' => ['opnsense01.example.com', 'opnsense02.example.com'],
+      'ensure'  => 'present',
     },
   },
 }
@@ -1105,36 +1083,23 @@ class { 'opn':
 }
 ```
 
-### Managing Zabbix Proxy
+### Managing users
 
-The Zabbix Proxy configuration is a singleton resource — one per OPNsense device. It requires the `os-zabbix-proxy` plugin to be installed. Use `opn_plugin` to install it before applying the settings.
-
-The `zabbix_proxies` hash is keyed by **device name** (not by a `name@device` title), since only one Zabbix Proxy configuration exists per device. All keys other than `ensure` are passed as the `config` hash to `opn_zabbix_proxy`.
-
-After any change, Puppet calls `zabbixproxy/service/reconfigure` once to apply the new configuration.
+Local OPNsense users can be managed via the `users` parameter or directly via the `opn_user` type.
 
 ```puppet
 class { 'opn':
-  devices => {
-    'opnsense01.example.com' => {
-      'url'        => 'https://opnsense01.example.com/api',
-      'api_key'    => 'OPNSENSE_API_KEY',
-      'api_secret' => 'OPNSENSE_API_SECRET',
-    },
-  },
-  plugins => {
-    'os-zabbix-proxy' => {
-      'devices' => ['opnsense01.example.com'],
-      'ensure'  => 'present',
-    },
-  },
-  zabbix_proxies => {
-    'opnsense01.example.com' => {
-      'ensure'     => 'present',
-      'enabled'    => '1',
-      'server'     => 'zabbix.example.com',
-      'serverport' => '10051',
-      'hostname'   => 'opnsense01-proxy',
+  devices => { ... },
+  users => {
+    'jdoe' => {
+      'devices'     => ['opnsense01.example.com'],
+      'ensure'      => 'present',
+      'password'    => 'plaintextpassword',
+      'descr'       => 'John Doe',
+      'email'       => 'jdoe@example.com',
+      # The 'uid' attribute is optional. Be aware that OPNsense will
+      # change the uid if it is already taken by another user.
+      #'uid'        => '2001',
     },
   },
 }
@@ -1201,6 +1166,41 @@ class { 'opn':
       'sourceKey'    => 'icmpping',
       'enabled'      => '1',
       'acceptParams' => '0',
+    },
+  },
+}
+```
+
+### Managing Zabbix Proxy
+
+The Zabbix Proxy configuration is a singleton resource — one per OPNsense device. It requires the `os-zabbix-proxy` plugin to be installed. Use `opn_plugin` to install it before applying the settings.
+
+The `zabbix_proxies` hash is keyed by **device name** (not by a `name@device` title), since only one Zabbix Proxy configuration exists per device. All keys other than `ensure` are passed as the `config` hash to `opn_zabbix_proxy`.
+
+After any change, Puppet calls `zabbixproxy/service/reconfigure` once to apply the new configuration.
+
+```puppet
+class { 'opn':
+  devices => {
+    'opnsense01.example.com' => {
+      'url'        => 'https://opnsense01.example.com/api',
+      'api_key'    => 'OPNSENSE_API_KEY',
+      'api_secret' => 'OPNSENSE_API_SECRET',
+    },
+  },
+  plugins => {
+    'os-zabbix-proxy' => {
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+    },
+  },
+  zabbix_proxies => {
+    'opnsense01.example.com' => {
+      'ensure'     => 'present',
+      'enabled'    => '1',
+      'server'     => 'zabbix.example.com',
+      'serverport' => '10051',
+      'hostname'   => 'opnsense01-proxy',
     },
   },
 }
