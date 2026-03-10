@@ -55,16 +55,13 @@ class opn::config (
     mode   => '0700',
   }
 
-  # Write one YAML credential file per device
+  # Write one YAML credential file per device via the device_config defined type
   $devices.each |String $device_name, Hash $device_config| {
-    file { "${config_dir}/${device_name}.yaml":
-      ensure    => file,
-      owner     => $owner,
-      group     => $group,
-      mode      => '0600',
-      content   => stdlib::to_yaml($device_config),
-      show_diff => false,
-      require   => File[$config_dir],
+    opn::device_config { $device_name:
+      config_dir    => $config_dir,
+      device_config => $device_config,
+      group         => $group,
+      owner         => $owner,
     }
   }
 }

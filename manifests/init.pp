@@ -43,6 +43,14 @@
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #     - config  [Hash] Configuration hash passed to opn_acmeclient_validation.
 #
+# @param additional_devices
+#   Hash of additional OPNsense devices that only need API credential files.
+#   Unlike $devices, these devices are NOT included in the default device list
+#   for resource iteration. Use this for remote devices that need credentials
+#   but should not have all resources managed on them via the main class.
+#   Each key is the device name, each value is a hash with connection parameters
+#   (url, api_key, api_secret, ssl_verify, timeout).
+#
 # @param cron_jobs
 #   Hash of cron jobs to manage across devices.
 #   Each key is the cron job description.
@@ -581,6 +589,7 @@ class opn (
   Hash                 $acmeclient_certificates,
   Hash                 $acmeclient_settings,
   Hash                 $acmeclient_validations,
+  Hash                 $additional_devices,
   Hash                 $cron_jobs,
   Hash                 $dhcrelay_destinations,
   Hash                 $dhcrelays,
@@ -650,6 +659,23 @@ class opn (
     devices => $devices,
   }
   contain 'opn::config'
+
+  # Validate no overlap between devices and additional_devices
+  $overlapping = keys($additional_devices).filter |$name| { $name in keys($devices) }
+  if !empty($overlapping) {
+    fail("opn: additional_devices contains device names already present in devices: ${overlapping.join(', ')}")
+  }
+
+  # Create credential files for additional devices (config-only, no resources)
+  $additional_devices.each |String $device_name, Hash $device_config| {
+    opn::device_config { $device_name:
+      config_dir    => $opn::config::config_dir,
+      device_config => $device_config,
+      group         => $opn::config::group,
+      owner         => $opn::config::owner,
+      require       => Class['opn::config'],
+    }
+  }
 
   # Manage ACME Client accounts across devices
   $acmeclient_accounts.each |String $item_name, Hash $item_options| {

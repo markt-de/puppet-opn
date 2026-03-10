@@ -8,6 +8,7 @@ opn::acmeclient_actions: {}
 opn::acmeclient_certificates: {}
 opn::acmeclient_settings: {}
 opn::acmeclient_validations: {}
+opn::additional_devices: {}
 opn::cron_jobs: {}
 opn::dhcrelay_destinations: {}
 opn::dhcrelays: {}

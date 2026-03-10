@@ -192,7 +192,7 @@ opn::firewall_aliases:
 
 ### Multiple devices
 
-When managing more than one OPNsense firewall, add each device to the `devices` hash. Resource titles use the `resource_name@device_name` format to identify which device a resource belongs to.
+When managing more than one OPNsense firewall, add each device to the `devices` hash. Resource titles use the `resource_name@device_name` format to identify which device a resource belongs to. All resources that do not specify an explicit `devices` array are applied to **every** device in the `devices` hash.
 
 ```puppet
 class { 'opn':
@@ -212,6 +212,49 @@ class { 'opn':
   },
 }
 ```
+
+If a remote device only needs API credentials (e.g. for targeted resources like Zabbix Proxy) but should **not** receive all default resources, use `additional_devices` instead. Devices in `additional_devices` get a credential file created, but are **not** included in the default device list for resource iteration. You can still target them explicitly via the `devices` array on individual resources.
+
+```puppet
+class { 'opn':
+  devices => {
+    'opnsense01.example.com' => {
+      'url'        => 'https://opnsense01.example.com/api',
+      'api_key'    => 'OPNSENSE_API_KEY',
+      'api_secret' => 'OPNSENSE_API_SECRET',
+    },
+  },
+  additional_devices => {
+    'opnsense-remote01.example.com' => {
+      'url'        => 'https://opnsense-remote01.example.com/api',
+      'api_key'    => 'REMOTE_API_KEY',
+      'api_secret' => 'REMOTE_API_SECRET',
+    },
+  },
+  # This Zabbix proxy is only applied to the remote device
+  zabbix_proxies => {
+    'opnsense-remote01.example.com' => {
+      'devices' => ['opnsense-remote01.example.com'],
+      'config'  => {
+        'enabled' => '1',
+      },
+    },
+  },
+  # This firewall alias is only applied to opnsense01 (the default device),
+  # NOT to opnsense-remote01
+  firewall_aliases => {
+    'webservers' => {
+      'config' => {
+        'type'    => 'host',
+        'content' => '10.0.0.1,10.0.0.2',
+        'enabled' => '1',
+      },
+    },
+  },
+}
+```
+
+A device name must not appear in both `devices` and `additional_devices` — the module raises an error if names overlap.
 
 ### Resource identifiers
 

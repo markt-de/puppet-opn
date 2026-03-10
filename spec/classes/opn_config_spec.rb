@@ -61,6 +61,14 @@ describe 'opn::config' do
 
         it { is_expected.to compile.with_all_deps }
 
+        it 'declares opn::device_config for each device' do
+          is_expected.to contain_opn__device_config('opnsense01').with(
+            config_dir: '/etc/puppet/opn',
+            group: 'root',
+            owner: 'root',
+          )
+        end
+
         it 'creates per-device YAML file with mode 0600' do
           is_expected.to contain_file('/etc/puppet/opn/opnsense01.yaml').with(
             ensure: 'file',
