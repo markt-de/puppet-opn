@@ -172,7 +172,23 @@ class { 'opn':
 }
 ```
 
-Note that for some parameters, OPNsense expects a newline as separator. In these cases the value must be provided as `"value1\nvalue2"`, as demonstrated in some examples below. One of the main goals of this module is code simplification, so this is not done by the provider.
+Note that for some parameters, OPNsense expects a newline as separator. In these cases the value must be provided as `"value1\nvalue2"`, as demonstrated in some examples below. One of the main goals of this module is code simplification, so this is not done by the provider. However, when using Hiera, there's a better solution available than using `\n`:
+
+```puppet
+opn::firewall_aliases:
+  geoip_example:
+    ensure: 'present'
+    config:
+      enabled: '1'
+      type: 'geoip'
+      description: 'List of countries'
+      content: |-
+        AO
+        BF
+        BI
+        BJ
+        BW
+```
 
 ### Multiple devices
 
