@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 require 'puppet/provider/opn_zabbix_proxy/opnsense_api'
+require 'puppet_x/opn/service_reconfigure_registry'
 
 describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
   let(:provider_class) { described_class }
@@ -11,6 +12,8 @@ describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
   before(:each) do
     allow(PuppetX::Opn::ApiClient).to receive(:device_names).and_return(['opnsense01'])
     allow(PuppetX::Opn::ApiClient).to receive(:from_device).with('opnsense01').and_return(client)
+    PuppetX::Opn::ServiceReconfigure.reset!
+    load 'puppet_x/opn/service_reconfigure_registry.rb'
   end
 
   it_behaves_like 'opn provider basics'
@@ -28,16 +31,25 @@ describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
   end
 
   describe '#create' do
-    it 'saves settings and triggers reconfigure' do
+    it 'saves settings via POST' do
       resource = type_class.new(name: 'opnsense01', config: { 'enabled' => '1' })
       provider = described_class.new
       resource.provider = provider
+      allow(PuppetX::Opn::ServiceReconfigure[:zabbix_proxy]).to receive(:mark)
       expect(client).to receive(:post).with(
         'zabbixproxy/general/set',
         hash_including('general' => { 'enabled' => '1' }),
       ).and_return({ 'result' => 'saved' })
-      expect(client).to receive(:post).with('zabbixproxy/service/reconfigure', {})
-                                      .and_return({ 'status' => 'ok' })
+      provider.create
+    end
+
+    it 'marks device for reconfigure' do
+      resource = type_class.new(name: 'opnsense01', config: { 'enabled' => '1' })
+      provider = described_class.new
+      resource.provider = provider
+      allow(client).to receive(:post).with('zabbixproxy/general/set', anything)
+                                     .and_return({ 'result' => 'saved' })
+      expect(PuppetX::Opn::ServiceReconfigure[:zabbix_proxy]).to receive(:mark).with('opnsense01', client)
       provider.create
     end
 
@@ -52,7 +64,7 @@ describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
   end
 
   describe '#destroy' do
-    it 'disables and reconfigures' do
+    it 'disables and marks for reconfigure' do
       resource = type_class.new(name: 'opnsense01')
       provider = described_class.new
       resource.provider = provider
@@ -63,14 +75,13 @@ describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
         'zabbixproxy/general/set',
         hash_including('general' => hash_including('enabled' => '0')),
       ).and_return({ 'result' => 'saved' })
-      expect(client).to receive(:post).with('zabbixproxy/service/reconfigure', {})
-                                      .and_return({ 'status' => 'ok' })
+      expect(PuppetX::Opn::ServiceReconfigure[:zabbix_proxy]).to receive(:mark).with('opnsense01', client)
       provider.destroy
     end
   end
 
   describe '#flush' do
-    it 'saves pending config and triggers reconfigure' do
+    it 'saves pending config via POST' do
       resource = type_class.new(name: 'opnsense01', config: { 'enabled' => '0' })
       provider = described_class.new
       resource.provider = provider
@@ -78,12 +89,11 @@ describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
                                        ensure: :present, name: 'opnsense01', config: { 'enabled' => '1' },
                                      })
       provider.instance_variable_set(:@pending_config, { 'enabled' => '0' })
+      allow(PuppetX::Opn::ServiceReconfigure[:zabbix_proxy]).to receive(:mark)
       expect(client).to receive(:post).with(
         'zabbixproxy/general/set',
         hash_including('general' => { 'enabled' => '0' }),
       ).and_return({ 'result' => 'saved' })
-      expect(client).to receive(:post).with('zabbixproxy/service/reconfigure', {})
-                                      .and_return({ 'status' => 'ok' })
       provider.flush
     end
 
@@ -96,6 +106,13 @@ describe Puppet::Type.type(:opn_zabbix_proxy).provider(:opnsense_api) do
                                      })
       provider.flush
       # No API call expected
+    end
+  end
+
+  describe '.post_resource_eval' do
+    it 'delegates to ServiceReconfigure[:zabbix_proxy].run' do
+      expect(PuppetX::Opn::ServiceReconfigure[:zabbix_proxy]).to receive(:run)
+      described_class.post_resource_eval
     end
   end
 end

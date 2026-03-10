@@ -2,12 +2,14 @@
 
 require 'puppet_x/opn/api_client'
 require 'puppet_x/opn/provider_base'
+require 'puppet_x/opn/service_reconfigure_registry'
 
 Puppet::Type.type(:opn_zabbix_proxy).provide(:opnsense_api) do
   desc 'Manages OPNsense Zabbix Proxy settings via the REST API.'
 
   extend  PuppetX::Opn::ProviderBase::ClassMethods
   include PuppetX::Opn::ProviderBase::InstanceMethods
+  reconfigure_group :zabbix_proxy
 
   # Fetches the current Zabbix Proxy configuration for every configured device.
   # Uses GET /api/zabbixproxy/general/get which returns { "general": { ... } }.
@@ -24,13 +26,19 @@ Puppet::Type.type(:opn_zabbix_proxy).provide(:opnsense_api) do
       instances << new(
         ensure: :present,
         name:   device_name,
-        config: settings,
+        config: normalize_config(settings),
       )
     rescue Puppet::Error => e
       Puppet.warning("opn_zabbix_proxy: failed to fetch from '#{device_name}': #{e.message}")
     end
 
     instances
+  end
+
+  # Called once after ALL opn_zabbix_proxy resources are evaluated.
+  # Delegates to shared module — first call does the work, rest are no-ops.
+  def self.post_resource_eval
+    PuppetX::Opn::ServiceReconfigure[:zabbix_proxy].run
   end
 
   # Called when ensure => present and no current instance exists (plugin not installed
@@ -44,7 +52,7 @@ Puppet::Type.type(:opn_zabbix_proxy).provide(:opnsense_api) do
     config = (@property_hash[:config] || {}).merge('enabled' => '0')
     client = api_client
     save_settings(client, config)
-    reconfigure(client)
+    mark_reconfigure(client)
     @property_hash.clear
   end
 
@@ -72,19 +80,11 @@ Puppet::Type.type(:opn_zabbix_proxy).provide(:opnsense_api) do
   def apply_config(config)
     client = api_client
     save_settings(client, config)
-    reconfigure(client)
+    mark_reconfigure(client)
   end
 
-  def reconfigure(client)
-    reconf = client.post('zabbixproxy/service/reconfigure', {})
-    status = reconf.is_a?(Hash) ? reconf['status'].to_s.strip.downcase : nil
-    if status == 'ok'
-      Puppet.notice("opn_zabbix_proxy: reconfigure of '#{resource[:name]}' completed")
-    else
-      Puppet.warning(
-        "opn_zabbix_proxy: reconfigure of '#{resource[:name]}' returned " \
-        "unexpected status: #{reconf.inspect}",
-      )
-    end
+  # Marks the device for deferred reconfigure via unified ServiceReconfigure.
+  def mark_reconfigure(client)
+    PuppetX::Opn::ServiceReconfigure[:zabbix_proxy].mark(resource[:name], client)
   end
 end

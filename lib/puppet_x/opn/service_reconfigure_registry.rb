@@ -39,6 +39,11 @@ PuppetX::Opn::ServiceReconfigure.register(:zabbix_agent,
   endpoint: 'zabbixagent/service/reconfigure',
   log_prefix: 'opn_zabbix_agent')
 
+# Zabbix Proxy: reconfigure after proxy settings changes
+PuppetX::Opn::ServiceReconfigure.register(:zabbix_proxy,
+  endpoint: 'zabbixproxy/service/reconfigure',
+  log_prefix: 'opn_zabbix_proxy')
+
 # DHCRelay: reconfigure after relay/destination changes
 PuppetX::Opn::ServiceReconfigure.register(:dhcrelay,
   endpoint: 'dhcrelay/service/reconfigure',
