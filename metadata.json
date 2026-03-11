@@ -1,8 +1,8 @@
 {
   "name": "markt-opn",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "markt.de",
-  "summary": "Manage OPNsense firewalls",
+  "summary": "Manage OPNsense firewalls using their API",
   "license": "BSD-2-Clause",
   "source": "https://github.com/markt-de/puppet-opn",
   "project_page": "https://github.com/markt-de/puppet-opn",
@@ -17,7 +17,8 @@
     {
       "operatingsystem": "FreeBSD",
       "operatingsystemrelease": [
-        "14"
+        "14",
+        "15"
       ]
     },
     {
