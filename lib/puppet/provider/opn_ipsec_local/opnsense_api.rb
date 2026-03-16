@@ -14,7 +14,7 @@ Puppet::Type.type(:opn_ipsec_local).provide(:opnsense_api) do
   def self.relation_fields
     {
       'connection' => { endpoint: 'ipsec/connections/searchConnection', multiple: false, name_field: 'description' },
-      'pubkeys'    => { endpoint: 'ipsec/keypairs/search', multiple: true },
+      'pubkeys'    => { endpoint: 'ipsec/key_pairs/search_item', multiple: true },
     }.freeze
   end
 

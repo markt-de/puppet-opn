@@ -19,7 +19,7 @@ Puppet::Type.type(:opn_ipsec_presharedkey).provide(:opnsense_api) do
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
       client   = api_client(device_name)
-      response = client.post('ipsec/presharedkeys/search', {})
+      response = client.post('ipsec/pre_shared_keys/search_item', {})
       rows     = response['rows'] || []
 
       rows.each do |row|
@@ -47,7 +47,7 @@ Puppet::Type.type(:opn_ipsec_presharedkey).provide(:opnsense_api) do
     config    = (resource[:config] || {}).dup
     config['ident'] = item_name
 
-    result = client.post('ipsec/presharedkeys/add', { 'preSharedKey' => config })
+    result = client.post('ipsec/pre_shared_keys/add_item', { 'preSharedKey' => config })
     unless result['result'].to_s.strip.downcase == 'saved'
       raise Puppet::Error, "opn_ipsec_presharedkey: failed to create '#{item_name}': #{result.inspect}"
     end
@@ -60,7 +60,7 @@ Puppet::Type.type(:opn_ipsec_presharedkey).provide(:opnsense_api) do
     uuid      = @property_hash[:uuid]
     item_name = resource_item_name
 
-    result = client.post("ipsec/presharedkeys/del/#{uuid}", {})
+    result = client.post("ipsec/pre_shared_keys/del_item/#{uuid}", {})
     unless result['result'].to_s.strip.downcase == 'deleted'
       raise Puppet::Error,
             "opn_ipsec_presharedkey: failed to delete '#{item_name}' (uuid: #{uuid}): #{result.inspect}"
@@ -79,7 +79,7 @@ Puppet::Type.type(:opn_ipsec_presharedkey).provide(:opnsense_api) do
     config    = @pending_config.dup
     config['ident'] = item_name
 
-    result = client.post("ipsec/presharedkeys/set/#{uuid}", { 'preSharedKey' => config })
+    result = client.post("ipsec/pre_shared_keys/set_item/#{uuid}", { 'preSharedKey' => config })
     unless result['result'].to_s.strip.downcase == 'saved'
       raise Puppet::Error,
             "opn_ipsec_presharedkey: failed to update '#{item_name}' (uuid: #{uuid}): #{result.inspect}"

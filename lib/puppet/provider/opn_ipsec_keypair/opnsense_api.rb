@@ -23,7 +23,7 @@ Puppet::Type.type(:opn_ipsec_keypair).provide(:opnsense_api) do
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
       client   = api_client(device_name)
-      response = client.post('ipsec/keypairs/search', {})
+      response = client.post('ipsec/key_pairs/search_item', {})
       rows     = response['rows'] || []
 
       rows.each do |row|
@@ -51,7 +51,7 @@ Puppet::Type.type(:opn_ipsec_keypair).provide(:opnsense_api) do
     config    = (resource[:config] || {}).dup
     config['name'] = item_name
 
-    result = client.post('ipsec/keypairs/add', { 'keyPair' => config })
+    result = client.post('ipsec/key_pairs/add_item', { 'keyPair' => config })
     unless result['result'].to_s.strip.downcase == 'saved'
       raise Puppet::Error, "opn_ipsec_keypair: failed to create '#{item_name}': #{result.inspect}"
     end
@@ -64,7 +64,7 @@ Puppet::Type.type(:opn_ipsec_keypair).provide(:opnsense_api) do
     uuid      = @property_hash[:uuid]
     item_name = resource_item_name
 
-    result = client.post("ipsec/keypairs/del/#{uuid}", {})
+    result = client.post("ipsec/key_pairs/del_item/#{uuid}", {})
     unless result['result'].to_s.strip.downcase == 'deleted'
       raise Puppet::Error,
             "opn_ipsec_keypair: failed to delete '#{item_name}' (uuid: #{uuid}): #{result.inspect}"
@@ -84,7 +84,7 @@ Puppet::Type.type(:opn_ipsec_keypair).provide(:opnsense_api) do
     config['name'] = item_name
     self.class.volatile_fields.each { |f| config.delete(f) }
 
-    result = client.post("ipsec/keypairs/set/#{uuid}", { 'keyPair' => config })
+    result = client.post("ipsec/key_pairs/set_item/#{uuid}", { 'keyPair' => config })
     unless result['result'].to_s.strip.downcase == 'saved'
       raise Puppet::Error,
             "opn_ipsec_keypair: failed to update '#{item_name}' (uuid: #{uuid}): #{result.inspect}"
