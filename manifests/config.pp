@@ -33,8 +33,8 @@
 class opn::config (
   Stdlib::Absolutepath $config_dir,
   Hash                 $devices,
-  String               $owner,
-  String               $group,
+  Optional[String]     $group = undef,
+  Optional[String]     $owner = undef,
 ) {
   # Write a provider config file so the Ruby providers can discover
   # $config_dir. Uses the opn_puppet_confdir fact because

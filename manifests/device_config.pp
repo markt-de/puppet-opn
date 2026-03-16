@@ -31,8 +31,8 @@
 define opn::device_config (
   Stdlib::Absolutepath $config_dir,
   Hash                 $device_config,
-  String               $group,
-  String               $owner,
+  Optional[String]     $group = undef,
+  Optional[String]     $owner = undef,
 ) {
   file { "${config_dir}/${title}.yaml":
     ensure    => file,
