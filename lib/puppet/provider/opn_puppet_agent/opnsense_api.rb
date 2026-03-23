@@ -22,8 +22,11 @@ Puppet::Type.type(:opn_puppet_agent).provide(:opnsense_api) do
 
     PuppetX::Opn::ApiClient.device_names.each do |device_name|
       client   = api_client(device_name)
+      # GET puppetagent/settings/get returns:
+      #   { "puppetagent": { "general": { ... } } }
       response = client.get('puppetagent/settings/get')
-      data     = response['general'] || {}
+      wrapper  = response['puppetagent'] || {}
+      data     = wrapper['general'] || {}
 
       config = normalize_config(data)
 
@@ -65,7 +68,7 @@ Puppet::Type.type(:opn_puppet_agent).provide(:opnsense_api) do
   end
 
   def save_settings(client, config)
-    result = client.post('puppetagent/settings/set', { 'general' => config })
+    result = client.post('puppetagent/settings/set', { 'puppetagent' => { 'general' => config } })
     return if result['result'].to_s.strip.downcase == 'saved'
     raise Puppet::Error,
           "opn_puppet_agent: failed to save settings for '#{resource[:name]}': #{result.inspect}"

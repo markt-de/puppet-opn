@@ -21,7 +21,7 @@ describe Puppet::Type.type(:opn_puppet_agent).provider(:opnsense_api) do
   describe '.instances' do
     it 'fetches settings via GET' do
       allow(client).to receive(:get).with('puppetagent/settings/get')
-                                    .and_return({ 'general' => { 'enabled' => '1' } })
+                                    .and_return({ 'puppetagent' => { 'general' => { 'enabled' => '1' } } })
       instances = described_class.instances
       expect(instances.size).to eq(1)
       expect(instances[0].name).to eq('opnsense01')
@@ -36,7 +36,7 @@ describe Puppet::Type.type(:opn_puppet_agent).provider(:opnsense_api) do
       resource.provider = provider
       expect(client).to receive(:post).with(
         'puppetagent/settings/set',
-        hash_including('general' => { 'enabled' => '1' }),
+        hash_including('puppetagent' => { 'general' => { 'enabled' => '1' } }),
       ).and_return({ 'result' => 'saved' })
       provider.create
     end
@@ -86,7 +86,7 @@ describe Puppet::Type.type(:opn_puppet_agent).provider(:opnsense_api) do
       provider.instance_variable_set(:@pending_config, { 'enabled' => '0' })
       expect(client).to receive(:post).with(
         'puppetagent/settings/set',
-        hash_including('general' => { 'enabled' => '0' }),
+        hash_including('puppetagent' => { 'general' => { 'enabled' => '0' } }),
       ).and_return({ 'result' => 'saved' })
       provider.flush
     end
