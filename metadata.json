@@ -1,6 +1,6 @@
 {
   "name": "markt-opn",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "markt.de",
   "summary": "Manage OPNsense firewalls using their API",
   "license": "BSD-2-Clause",
