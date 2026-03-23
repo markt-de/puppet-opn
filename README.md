@@ -26,6 +26,7 @@
     - [Managing Node Exporter](#managing-node-exporter)
     - [Managing OpenVPN](#managing-openvpn)
     - [Managing plugins](#managing-plugins)
+    - [Managing Puppet Agent](#managing-puppet-agent)
     - [Managing routes](#managing-routes)
     - [Managing snapshots](#managing-snapshots)
     - [Managing syslog destinations](#managing-syslog-destinations)
@@ -108,6 +109,7 @@ This module provides the following resource types for one or more OPNsense devic
 | `opn_openvpn_statickey` | OpenVPN static keys |
 | `opn_gateway` | Routing gateways |
 | `opn_plugin` | Firmware plugins / packages |
+| `opn_puppet_agent` | Puppet Agent settings (singleton per device) |
 | `opn_route` | Static routes |
 | `opn_snapshot` | ZFS snapshots |
 | `opn_syslog` | Syslog remote destinations |
@@ -282,7 +284,7 @@ opn_haproxy_server { 'new-web01@opnsense01.example.com':
 
 The same pattern applies to all list-based types: `opn_acmeclient_account`, `opn_acmeclient_action`, `opn_acmeclient_certificate`, `opn_acmeclient_validation`, `opn_cron`, `opn_dhcrelay_destination`, `opn_dhcrelay`, `opn_firewall_alias`, `opn_firewall_category`, `opn_firewall_group`, `opn_firewall_rule`, `opn_user`, `opn_group`, all `opn_haproxy_*` types, all `opn_ipsec_*` list types, all `opn_openvpn_*` types, `opn_snapshot`, `opn_syslog`, `opn_trust_ca`, `opn_trust_cert`, `opn_trust_crl`, `opn_tunable`, `opn_zabbix_agent_userparameter`, and `opn_zabbix_agent_alias`.
 
-**Singleton resources** (`opn_acmeclient_settings`, `opn_haproxy_settings`, `opn_hasync`, `opn_ipsec_settings`, `opn_node_exporter`, `opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
+**Singleton resources** (`opn_acmeclient_settings`, `opn_haproxy_settings`, `opn_hasync`, `opn_ipsec_settings`, `opn_node_exporter`, `opn_puppet_agent`, `opn_zabbix_proxy`, `opn_zabbix_agent`) are different: their title is the device name itself, and the entire `config` hash is written to the OPNsense API on every change.
 
 **Important:** Singleton resources always exist in the OPNsense API — the API always returns their current configuration, even when all values are at defaults. Because of this, `ensure => absent` will trigger a `destroy` action on **every** Puppet run (resetting the config and calling reconfigure each time). To disable a singleton service, use `ensure => present` with `'enabled' => '0'` instead. This is idempotent and only triggers a change when the current state differs from the desired state.
 
@@ -1102,6 +1104,35 @@ class { 'opn':
 }
 ```
 
+### Managing Puppet Agent
+
+Puppet Agent settings are managed as a singleton resource per device via the `puppet_agents` parameter or directly via the `opn_puppet_agent` type. The `puppet_agents` hash is keyed by **device name**. After any change, Puppet calls `puppetagent/service/reconfigure` once per device. The plugin `os-puppet-agent` must be installed on the device.
+
+```puppet
+class { 'opn':
+  devices => { ... },
+  plugins => {
+    'os-puppet-agent' => {
+      'devices' => ['opnsense01.example.com'],
+      'ensure'  => 'present',
+    },
+  },
+  puppet_agents => {
+    'opnsense01.example.com' => {
+      'ensure' => 'present',
+      'config' => {
+        'enabled'           => '1',
+        'fqdn'              => 'puppet.example.com',
+        'environment'       => 'production',
+        'runinterval'       => '30m',
+        'runtimeout'        => '1h',
+        'usecacheonfailure' => '1',
+      },
+    },
+  },
+}
+```
+
 ### Managing routes
 
 Static routes can be managed via the `routes` parameter or directly via the `opn_route` type. The route **description** (`descr`) is used as the resource identifier. After any change, Puppet calls `routes/routes/reconfigure` once per device.
@@ -1550,6 +1581,18 @@ opn_node_exporter { 'opnsense01.example.com':
   },
 }
 
+opn_puppet_agent { 'opnsense01.example.com':
+  ensure => present,
+  config => {
+    'enabled'           => '1',
+    'fqdn'              => 'puppet.example.com',
+    'environment'       => 'production',
+    'runinterval'       => '30m',
+    'runtimeout'        => '1h',
+    'usecacheonfailure' => '1',
+  },
+}
+
 opn_route { 'Server network@opnsense01.example.com':
   ensure => present,
   config => {
@@ -1727,7 +1770,7 @@ class { 'opn':
 }
 ```
 
-Singleton types (`opn_acmeclient_settings`, `opn_haproxy_settings`, `opn_hasync`, `opn_node_exporter`, `opn_zabbix_agent`, `opn_zabbix_proxy`) are excluded from exported resources because they represent per-device global settings that should only be managed on the management server.
+Singleton types (`opn_acmeclient_settings`, `opn_haproxy_settings`, `opn_hasync`, `opn_node_exporter`, `opn_puppet_agent`, `opn_zabbix_agent`, `opn_zabbix_proxy`) are excluded from exported resources because they represent per-device global settings that should only be managed on the management server.
 
 The same parameters can also be configured via Hiera with deep merge:
 

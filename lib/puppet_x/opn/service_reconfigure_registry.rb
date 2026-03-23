@@ -96,6 +96,11 @@ PuppetX::Opn::ServiceReconfigure.register(:node_exporter,
   endpoint: 'nodeexporter/service/reconfigure',
   log_prefix: 'opn_node_exporter')
 
+# Puppet Agent: reconfigure after puppet agent settings changes
+PuppetX::Opn::ServiceReconfigure.register(:puppet_agent,
+  endpoint: 'puppetagent/service/reconfigure',
+  log_prefix: 'opn_puppet_agent')
+
 # Gateway: routing reconfigure after gateway changes
 PuppetX::Opn::ServiceReconfigure.register(:gateway,
   endpoint: 'routing/settings/reconfigure',

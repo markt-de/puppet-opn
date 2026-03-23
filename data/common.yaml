@@ -61,6 +61,7 @@ opn::openvpn_csos: {}
 opn::openvpn_instances: {}
 opn::openvpn_statickeys: {}
 opn::plugins: {}
+opn::puppet_agents: {}
 opn::routes: {}
 opn::snapshots: {}
 opn::syslog_destinations: {}

@@ -459,6 +459,13 @@
 #                       Defaults to all devices in $devices.
 #     - ensure  [String] 'present' or 'absent' (default: 'present')
 #
+# @param puppet_agents
+#   Hash of Puppet Agent configurations, one per device.
+#   Each key is the device name (not a "name@device" title).
+#   Each value is a hash with:
+#     - ensure  [String] 'present' or 'absent' (default: 'present')
+#     - config  [Hash] Configuration hash passed to opn_puppet_agent.
+#
 # @param routes
 #   Hash of static routes to manage across devices.
 #   Each key is the route description.
@@ -642,6 +649,7 @@ class opn (
   Hash                 $openvpn_instances,
   Hash                 $openvpn_statickeys,
   Hash                 $plugins,
+  Hash                 $puppet_agents,
   Hash                 $routes,
   Hash                 $snapshots,
   Hash                 $syslog_destinations,
@@ -1594,6 +1602,19 @@ class opn (
     opn_node_exporter { $device_name:
       ensure  => $ne_ensure,
       config  => $ne_options['config'],
+      require => Class['opn::config'],
+    }
+  }
+
+  # Manage Puppet Agent settings per device (singleton per device)
+  $puppet_agents.each |String $device_name, Hash $pa_options| {
+    $pa_ensure = 'ensure' in $pa_options ? {
+      true    => $pa_options['ensure'],
+      default => 'present',
+    }
+    opn_puppet_agent { $device_name:
+      ensure  => $pa_ensure,
+      config  => $pa_options['config'],
       require => Class['opn::config'],
     }
   }
